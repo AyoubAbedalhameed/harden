@@ -79,7 +79,7 @@ harden-run()   {
 }
 
 take-action()   {
-    echo "Taking Actions from file " $()
+    echo "Taking Actions from file "$MAIN_DIR/last-actions""
     bash "$MAIN_DIR/last-actions"
     return $?
 }
