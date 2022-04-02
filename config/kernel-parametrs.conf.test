@@ -1,3 +1,0 @@
-net.ipv4.tcp_syncookies 1	message=Prevent against the common 'syn flood' attack
-kernel.yama.ptrace_scope 1,2,3	message=ptrace scope hardening
-net.ipv4.ip_local_port_range 32768,60999   message=Increase system IP port limits
