@@ -5,12 +5,12 @@ OPERATE_MODE=$1
 OPTION1=$2
 
 MAIN_DIR="/usr/share/harden"
-SCRIPTS_DIR="$MAIN_DIR/scripts/"
+SCRIPTS_DIR="$MAIN_DIR/scripts"
 
 STATUS_DIR="$MAIN_DIR/status"
 [[ -e $STATUS_DIR ]] && mkdir $STATUS_DIR
 
-MESSAGES_DIR="$MAIN_DIR/messages/"
+MESSAGES_DIR="$MAIN_DIR/messages"
 [[ -e $MESSAGES_DIR ]] && mkdir $MESSAGES_DIR
 
 ACTIONS_DIR="$MAIN_DIR/actions"
@@ -79,7 +79,7 @@ harden-run()   {
 }
 
 take-action()   {
-    echo "Taking Actions from file "$MAIN_DIR/last-actions""
+    echo "Taking Actions from file $MAIN_DIR/last-actions"
     bash "$MAIN_DIR/last-actions"
     return $?
 }
