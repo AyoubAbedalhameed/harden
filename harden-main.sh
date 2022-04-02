@@ -31,7 +31,8 @@ ACTIONS_FILE="$ACTIONS_DIR/$(date +%F_%H:%M:%S).sh"
 # Uncomment this line if you chose to use journald for logging
 # (by setting the StandardOutput & StandardError variables
 # in the service unit file to "journal")
-# exec 1>>$LOG_FILE 2>&1
+#   echo > $LOG_FILE
+#	exec 1>>$LOG_FILE 2>&1
 
 echo "Harden service is starting up ..."
 
@@ -39,7 +40,6 @@ harden-run()   {
     local CURRENT_PROFILE_FILE=$1
 
     # Create Log, status, messages and actions file forthe current run.
-    #echo > $LOG_FILE
     echo > $STATUS_FILE > $MESSAGES_FILE > $ACTIONS_FILE
 
     # Run tail command in follow mode in the background, so we can
