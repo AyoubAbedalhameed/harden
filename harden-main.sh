@@ -2,6 +2,7 @@
 # Written By: Adnan Omar (aalkhaldi8@gmail.com)
 
 OPERATE_MODE=$1
+OPTION1=$2
 
 MAIN_DIR="/usr/share/harden"
 SCRIPTS_DIR="$MAIN_DIR/scripts/"
@@ -73,27 +74,31 @@ take-action()   {
 
 show-messages() {
     local MESSAGES_DATE=$1
-    [[ $(ls "$MESSAGES_DIR/$MESSAGES_DATE*" | wc -w) == 0 ]] && echo "No messages found for this date"
+    [[ $(ls "$MESSAGES_DIR/$MESSAGES_DATE*" | wc -w) == 0 ]] && echo "No messages found for this date" && return 1
 
     for i in "$MESSAGES_DIR/$MESSAGES_DATE*"
     do
         cat $i
     done
+
+    return 0
 }
 
 show-actions()  {
     local ACTIONS_DATE=$1
-    [[ $(ls "$ACTIONS_DIR/$ACTIONS_DATE*" | wc -w) == 0 ]] && echo "No actions found for this date"
+    [[ $(ls "$ACTIONS_DIR/$ACTIONS_DATE*" | wc -w) == 0 ]] && echo "No actions found for this date" && return 1
 
     for i in "$ACTIONS_DIR/$ACTIONS_DATE*"
     do
         cat $i
     done
+
+    return 0
 }
 
 # Check what mode we are running in
-[[ $OPERATE_MODE == "setup" ]] && harden-run $DEFAULT_PROFILE_FILE
-[[ $OPERATE_MODE == "scan" ]] && harden-run $PROFILE_FILE
-[[ $OPERATE_MODE == "act" ]] && take-action
-[[ $OPERATE_MODE == "messages" ]] && show-messages $2
-[[ $OPERATE_MODE == "actions" ]] && show-actions $2
+[[ $OPERATE_MODE == "setup" ]] && harden-run $DEFAULT_PROFILE_FILE && return 1
+[[ $OPERATE_MODE == "scan" ]] && harden-run $PROFILE_FILE && return 1
+[[ $OPERATE_MODE == "act" ]] && take-action && return 1
+[[ $OPERATE_MODE == "messages" ]] && show-messages $OPTION1 && return 1
+[[ $OPERATE_MODE == "actions" ]] && show-actions $OPTION1 && return 1
