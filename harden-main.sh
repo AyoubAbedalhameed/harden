@@ -116,6 +116,8 @@ check-and-run()	{
 	[[ $OPERATE_MODE == "act" ]] && RETURN_VALUE=$(take-action)
 	[[ $OPERATE_MODE == "messages" ]] && RETURN_VALUE=$(show-messages $OPTION1)
 	[[ $OPERATE_MODE == "actions" ]] && RETURN_VALUE=$(show-actions $OPTION1)
+
+	return $RETURN_VALUE
 }
 
 check-and-run
