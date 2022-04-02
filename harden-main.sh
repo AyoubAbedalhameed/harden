@@ -108,12 +108,15 @@ show-actions()  {
     return 0
 }
 
-RETURN_VALUE=""
-# Check what mode we are running in
-[[ $OPERATE_MODE == "setup" ]] && RETURN_VALUE=$(harden-run $DEFAULT_PROFILE_FILE)
-[[ $OPERATE_MODE == "scan" ]] && RETURN_VALUE=$(harden-run $PROFILE_FILE)
-[[ $OPERATE_MODE == "act" ]] && RETURN_VALUE=$(take-action)
-[[ $OPERATE_MODE == "messages" ]] && RETURN_VALUE=$(show-messages $OPTION1)
-[[ $OPERATE_MODE == "actions" ]] && RETURN_VALUE=$(show-actions $OPTION1)
+check-and-run()	{
+	local RETURN_VALUE=""
+	# Check what mode we are running in
+	[[ $OPERATE_MODE == "setup" ]] && RETURN_VALUE=$(harden-run $DEFAULT_PROFILE_FILE)
+	[[ $OPERATE_MODE == "scan" ]] && RETURN_VALUE=$(harden-run $PROFILE_FILE)
+	[[ $OPERATE_MODE == "act" ]] && RETURN_VALUE=$(take-action)
+	[[ $OPERATE_MODE == "messages" ]] && RETURN_VALUE=$(show-messages $OPTION1)
+	[[ $OPERATE_MODE == "actions" ]] && RETURN_VALUE=$(show-actions $OPTION1)
+}
 
-exit $RETURN_VALUE
+check-and-run
+exit $?
