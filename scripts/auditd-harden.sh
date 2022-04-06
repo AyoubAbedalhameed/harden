@@ -32,11 +32,11 @@ CurrentRulesFileDigest=$(md5sum /etc/audit/rules.d/audit.rules)
 if [[ $CurrentRulesFileDigest == $RecommendedRulesDigest ]]; then 
 echo "$0:RULE-MATCHED: Recommedned auditd rules are used.">> $MESSAGES_FILE 
 echo "auditd.recommended-rules 0" >> $STATUS_FILE 
-case=2
+case=0
 else
 echo "$0:RULE-UNMATCHED: Recommedned auditd rules not used.">> $MESSAGES_FILE 
 echo "auditd.recommended-rules 1" >> $STATUS_FILE 
-case=4
+case=2
 fi
 
 else  
@@ -44,7 +44,8 @@ echo "Checking the status of auditd faild: UNKNOWN STATUS"
 exit 1
 fi
 
-echo "auditd.action $case" >> $ACTIONS_FILE
+
+[ $case -nq 0] && echo "auditd.action $case" >> $ACTIONS_FILE
 exit 0 
 
 
