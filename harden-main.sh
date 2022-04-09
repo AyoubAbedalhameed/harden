@@ -64,9 +64,6 @@ harden-run()   {
     [[ -e /usr/share/harden/last-actions ]] && rm /usr/share/harden/last-actions
     ln -s $ACTIONS_FILE /usr/share/harden/last-actions
 
-    echo "$(date)" >> $MESSAGES_FILE
-    echo "# Created at $(date)" >> $ACTIONS_FILE
-
     cat $CURRENT_PROFILE_FILE | while read line; do
         rule=$(echo $line | awk '{print $1;}')
         script=$(echo $line | awk '{print $2;}')
