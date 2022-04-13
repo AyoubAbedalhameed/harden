@@ -146,12 +146,16 @@ show-messages() {
 }
 
 show-actions()  {
-    [[ $(ls "$ACTIONS_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]] && echo "No actions found for this date ($DATE_TO_LIST)" && return 1
-    for i in "$ACTIONS_DIR/$DATE_TO_LIST*"
-    do
-        cat $i
-    done
-    return 0
+    if [[ $(ls "$ACTIONS_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]] then
+        echo "No actions found for this date ($DATE_TO_LIST)"
+        return 1
+    else
+        for i in "$ACTIONS_DIR/$DATE_TO_LIST*"
+        do
+            cat $i
+        done
+        return 0
+    fi
 }
 
 check-and-run()	{
