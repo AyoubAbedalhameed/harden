@@ -47,10 +47,10 @@ done
 # Restore Positional Arguments (those which has not been used)
 set -- "${POSITIONAL_ARGS[@]}"
 
-MAIN_DIR="/usr/share/harden"    # Default Main Directory
 CONFIG_DIR="/etc/harden"    # Default Configuration Directory
 DEFAULT_PROFILE_FILE="$CONFIG_DIR/default.profile"  # Default Profile File
 
+MAIN_DIR="/usr/share/harden"    # Default Main Directory
 SCRIPTS_DIR="$MAIN_DIR/scripts" # Default Scripts Directory
 
 STATUS_DIR="$MAIN_DIR/status"   # Default Status Directory
@@ -70,7 +70,7 @@ ${ACTIONS_FILE:="$ACTIONS_DIR/$RUNTIME_DATE.sh"}    # Currently used Actions fil
 # will be recorded in it. Also, due to the tail command on the
 # (status, messages, actions) files the content of it will also be recorded in the 
 # log file.
-# Uncomment this line if you chose to use journald for logging
+# Uncomment these lines if you chose to use journald for logging
 # (by setting the StandardOutput & StandardError variables
 # in the service unit file to "journal")
 #
