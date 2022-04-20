@@ -4,7 +4,7 @@
 # Kernel Parameters hardening through checking and warning with
 # recommended solutions and tips
 
-usage() {echo "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]"}
+usage() {   echo "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]"   }
 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)   # Runtime date and time
 
@@ -34,6 +34,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         -*|--*)
             echo "Unknown option $1"
+            usage
             exit 1
             ;;
         *)
