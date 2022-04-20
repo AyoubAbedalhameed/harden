@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 # Written By: Adnan Omar (aalkhaldi8@gmail.com)
 
 # Stop overwriting files
@@ -60,7 +60,8 @@ MESSAGES_DIR="$MAIN_DIR/messages"   # Default Messages Directory
 ACTIONS_DIR="$MAIN_DIR/actions" # Default Actions Directory
 [[ ! -d $ACTIONS_DIR ]] && mkdir $ACTIONS_DIR   # Check if Directory exists, and if not then create it
 
-${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}   # Default Configuration File
+${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}   # Use Default Configuration File,
+                                            # if not set by a positional parameter (command line argument)
 ${PROFILE_FILE:="$CONFIG_DIR/admin-choice.profile"} # Default User Choice Profile File
 ${STATUS_FILE:="$STATUS_DIR/$RUNTIME_DATE.status"}  # Currently used status file
 ${MESSAGES_FILE:="$MESSAGES_DIR/$RUNTIME_DATE.message"} # Currently used messages file
@@ -116,7 +117,7 @@ harden-run()   {
         rule=$(echo $line | awk '{print $1;}')
         script=$(echo $line | awk '{print $2;}')
         if [[ ${script%/*} -eq $SCRIPTS_DIR ]] then
-            bash $script -sf $STATUS_FILE -mf $MESSAGES_FILE -af $ACTIONS_FILE
+            bash $script -sf $STATUS_FILE -mf $MESSAGES_FILE -af $ACTIONS_FILE -md $MAIN_DIR
         else
             echo "Script $script does not exist not in the $SCRIPTS_DIR."
         fi
