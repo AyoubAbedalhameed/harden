@@ -55,7 +55,7 @@ ${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"} # Currently used me
 ${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}    # Currently used Actions file
 
 PARAMETERS_FILE="$MAIN_DIR/config/kernel-parametrs.rc"
-KERNEL_ACTIONS_FILE="$MAIN_DIR/config/$(date +%F_%H:%M:%S)_kernel-actions.sh"
+KERNEL_ACTIONS_FILE="$MAIN_DIR/config/$RUNTIME_DATE-kernel-actions.sh"
 
 check-pf()  {   return $(jq ".kernel.$1.$2" $PROFILE_FILE)  }
 
