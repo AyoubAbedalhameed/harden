@@ -8,7 +8,7 @@ STATUS_FILE=$1
 MESSAGES_FILE=$2
 ACTIONS_FILE=$3
 
-
+#The MD5 Digest from the recommended rules file (Removed Spaces). 
 RecommendedRulesDigest="0acd49f5b6d87997c6552e19f60da91d"
 
 
@@ -28,7 +28,7 @@ Case=1
 elif [[ $status -eq 0  || $status -eq 3 ]] ; then
 echo "$0:RULE-MATCHED: auditd is installed" >> $MESSAGES_FILE 
 echo "auditd.installed 0" >> $STATUS_FILE 
-CurrentRulesFileDigest=$(md5sum /etc/audit/rules.d/audit.rules)
+CurrentRulesFileDigest=$(cat /etc/audit/rules.d/audit.rules | tr -d " \t\n\r" | md5sum)
 if [[ $CurrentRulesFileDigest == $RecommendedRulesDigest ]]; then 
 echo "$0:RULE-MATCHED: Recommedned auditd rules are used.">> $MESSAGES_FILE 
 echo "auditd.recommended-rules 0" >> $STATUS_FILE 

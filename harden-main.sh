@@ -2,7 +2,7 @@
 # Written By: Adnan Omar (aalkhaldi8@gmail.com)
 
 # Stop overwriting files
-set -c
+set -C
 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)   # Runtime date and time
 
