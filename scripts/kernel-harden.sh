@@ -4,7 +4,8 @@
 # Kernel Parameters hardening through checking and warning with
 # recommended solutions and tips
 
-usage() {   echo "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]"   }
+usage() {   echo "Usage: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
+-st/--status-file [status file] -mf/--messages-file [messages file] -af/--actions-file [actions file]";   }
 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)   # Runtime date and time
 
@@ -47,17 +48,17 @@ done
 # Restore Positional Arguments (those which has not been used)
 set -- "${POSITIONAL_ARGS[@]}"
 
-${MAIN_DIR:="/usr/share/harden"}
-${PROFILE_FILE:="$/etc/harden/admin-choice.profile"}    # Use Default User Choice Profile File, 
+MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
+PROFILE_FILE=${PROFILE_FILE:="/etc/harden/admin-choice.profile"}    # Use Default User Choice Profile File, 
                                                         # if not set by a positional parameter (command line argument)
-${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}  # Currently used status file
-${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"} # Currently used messages file
-${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}    # Currently used Actions file
+STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}  # Currently used status file
+MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"} # Currently used messages file
+ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}    # Currently used Actions file
 
 PARAMETERS_FILE="$MAIN_DIR/config/kernel-parametrs.rc"
 KERNEL_ACTIONS_FILE="$MAIN_DIR/config/$RUNTIME_DATE-kernel-actions.sh"
 
-check-pf()  {   return $(jq ".kernel.$1.$2" $PROFILE_FILE)  }
+check-pf()  {   return $(jq ".kernel.$1.$2" $PROFILE_FILE);  }
 
 . $PARAMETERS_FILE
 
@@ -75,17 +76,20 @@ for PARAM in $(echo "${!kernel[@]}" | sed 's/[a-z\0-9\.\_\-]*,[1-2]//g'); do
 
     [[ $(check-pf $TYPE check) == 0 ]]  && continue     # Skip checking this parameter if profile file says so
     CURRENT_VAL=$(sysctl -en $PARAM)
+    CURRENT_VAL=${CURRENT_VAL//$'\t'/,}
 
     [[ -z $CURRENT_VAL ]]   && continue
+    
+    # Compare current value with recommended one
+    [[ $CURRENT_VAL != $RECOMMENDED_VAL ]] && echo "Kernel Parameter $PARAM recommended value is \
+${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" >> $MESSAGES_FILE   # Print Message
 
-    [[ $CURRENT_VAL != $RECOMMENDED_VAL ]] && \     # Compare current value with recommended one
-	echo "Kernel Parameter $PARAM recommended value is ${RECOMMENDED_VAL//$'\t'/,}, \
-but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" #>> $MESSAGES_FILE   # Print Message
-
-	echo "KernelParam($PARAM) ${RECOMMENDED_VAL//$'\t'/,}" >> $STATUS_FILE      # Save the current value
+    echo "KernelParam($PARAM) ${RECOMMENDED_VAL//$'\t'/,}" >> $STATUS_FILE      # Save the current value
 
     [[ $(check-pf $TYPE action) == 0 ]]  && continue     # Skip actions for this parameter if profile file says so
-	echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> $KERNEL_ACTIONS_FILE    # Save action
+    echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> $KERNEL_ACTIONS_FILE    # Save action
 done
 
 echo $KERNEL_ACTIONS_FILE >> $ACTIONS_FILE  # Add approved actions to the actions file
+
+
