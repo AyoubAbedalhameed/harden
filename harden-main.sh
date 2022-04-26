@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Written By: Adnan Omar (aalkhaldi8@gmail.com)
 
-# Stop overwriting files
-set -C
+# Prevent overwriting files, if then the script will exit
+set -c
+
+usage() {   echo "Usage: $0 -cf/--config-file [configuration file] -pf/--profile-file [profile file] \
+-st/--status-file [status file] -mf/--messages-file [messages file] -af/--actions-file [actions file] \
+-d/--date [date in YYYY-MM-DD format]"   }
 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)   # Runtime date and time
 
@@ -35,13 +39,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         -*|--*)
             echo "Unknown option $1"
+            usage
             exit 1
             ;;
         *)
             POSITIONAL_ARGS+=("$1") # save positional arguments
             shift
             ;;
-    esac
+        esac
 done
 
 # Restore Positional Arguments (those which has not been used)
@@ -60,12 +65,12 @@ MESSAGES_DIR="$MAIN_DIR/messages"   # Default Messages Directory
 ACTIONS_DIR="$MAIN_DIR/actions" # Default Actions Directory
 [[ ! -d $ACTIONS_DIR ]] && mkdir $ACTIONS_DIR   # Check if Directory exists, and if not then create it
 
-${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}   # Use Default Configuration File,
-                                            # if not set by a positional parameter (command line argument)
-${PROFILE_FILE:="$CONFIG_DIR/admin-choice.profile"} # Default User Choice Profile File
-${STATUS_FILE:="$STATUS_DIR/$RUNTIME_DATE.status"}  # Currently used status file
-${MESSAGES_FILE:="$MESSAGES_DIR/$RUNTIME_DATE.message"} # Currently used messages file
-${ACTIONS_FILE:="$ACTIONS_DIR/$RUNTIME_DATE.sh"}    # Currently used Actions file
+CONFIG_FILE=${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}   # Use Default Configuration File,
+                            # if not set by a positional parameter (command line argument)
+PROFILE_FILE=${PROFILE_FILE:="$CONFIG_DIR/admin-choice.profile"}    # Default User Choice Profile File
+STATUS_FILE=${STATUS_FILE:="$STATUS_DIR/$RUNTIME_DATE.status"}  # Currently used status file
+MESSAGES_FILE=${MESSAGES_FILE:="$MESSAGES_DIR/$RUNTIME_DATE.message"}   # Currently used messages file
+ACTIONS_FILE=${ACTIONS_FILE:="$ACTIONS_DIR/$RUNTIME_DATE.sh"}   # Currently used Actions file
 
 # Redirect stdout and stderr to the log file, so everything
 # will be recorded in it. Also, due to the tail command on the
@@ -77,7 +82,7 @@ ${ACTIONS_FILE:="$ACTIONS_DIR/$RUNTIME_DATE.sh"}    # Currently used Actions fil
 #
 #   LOG_FILE="/var/log/harden/$(date +%F_%H:%M:%S).log"
 #   echo > $LOG_FILE
-#	exec 1>>$LOG_FILE 2>&1
+#   exec 1>>$LOG_FILE 2>&1
 
 # Print startup message with run time settings
 echo "\
@@ -96,10 +101,10 @@ harden-run()   {
     touch $STATUS_FILE $MESSAGES_FILE $ACTIONS_FILE
 
     tail -f $STATUS_FILE &  # Run tail command in follow mode in the
-                            # background, so we can get the data from
-                            # the status file in stdout automatically.
+                # background, so we can get the data from
+                # the status file in stdout automatically.
     trap "pkill -P $$" EXIT # Set a trap condition for the tail command,
-                            # so it will end, when the process (script) exits.
+                # so it will end, when the process (script) exits.
     tail -f $MESSAGES_FILE &
     trap "pkill -P $$" EXIT
     tail -f $ACTIONS_FILE &
@@ -159,26 +164,27 @@ show-actions()  {
     fi
 }
 
-check-and-run()	{
-	local RETURN_VALUE=""
-	# Check what mode we are running in
+check-and-run() {
+    local RETURN_VALUE=""
+    # Check what mode we are running in
     case $OPERATE_MODE in
-        setup)      RETURN_VALUE=$(harden-run $DEFAULT_PROFILE_FILE)
+        setup)  RETURN_VALUE=$(harden-run $DEFAULT_PROFILE_FILE)
         ;;
-        scan)       RETURN_VALUE=$(harden-run $PROFILE_FILE)
+        scan)   RETURN_VALUE=$(harden-run $PROFILE_FILE)
         ;;
-        take-actions)        RETURN_VALUE=$(take-action)
+        take-actions)   RETURN_VALUE=$(take-action)
         ;;
-        list-messages)   RETURN_VALUE=$(show-messages)
+        list-messages)  RETURN_VALUE=$(show-messages)
         ;;
-        list-actions)    RETURN_VALUE=$(show-actions)
+        list-actions)   RETURN_VALUE=$(show-actions)
         ;;
-        *)
-            echo "Please specify one of the available modes (setup - scan - act - messages - actions)"
+        *)  echo "Please specify one of the available modes (setup - scan - act - messages - actions)"
         ;;
     esac
-	return $RETURN_VALUE
+    return $RETURN_VALUE
 }
 
 check-and-run
 exit $?
+
+
