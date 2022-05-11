@@ -118,10 +118,8 @@ harden-run()   {
 	ln -s $MESSAGES_FILE "$MAIN_DIR/last-messages"
 	ln -s $ACTIONS_FILE "$MAIN_DIR/last-actions"
 
-	cat $CURRENT_PROFILE_FILE | while read line; do
-		rule=$(echo $line | awk '{print $1;}')
-		script=$(echo $line | awk '{print $2;}')
-		if [[ ${script%/*} -eq $SCRIPTS_DIR ]] then
+	for script in $(jq '.[].script'); do
+		if [[ -e $script ]] then
 			bash $script -sf $STATUS_FILE -mf $MESSAGES_FILE -af $ACTIONS_FILE -md $MAIN_DIR
 		else
 			echo "Script $script does not exist not in the $SCRIPTS_DIR."
