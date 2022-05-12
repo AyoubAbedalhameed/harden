@@ -60,7 +60,7 @@ KERNEL_ACTIONS_FILE="$MAIN_DIR/config/$RUNTIME_DATE-kernel-actions.sh"
 
 check-pf()  {   return $(jq ".kernel.$1.$2" $PROFILE_FILE);  }
 
-. $PARAMETERS_FILE
+source $PARAMETERS_FILE
 
 VAL_INDEX=0
 MES_INDEX=1
