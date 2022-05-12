@@ -70,10 +70,6 @@ set -- "${POSITIONAL_ARGS[@]}"
 
 
 
-STATUS_FILE=$1
-MESSAGES_FILE=$2
-ACTIONS_FILE=$3
-
 
 #Cheking Firewall Services: 
 
