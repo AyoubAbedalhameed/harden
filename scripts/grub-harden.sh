@@ -48,7 +48,7 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File, 
+PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File,
 										# if not set by a positional parameter (command line argument)
 STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}	# Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
@@ -106,7 +106,7 @@ check-param()	{
 		[[ $(check-pf cpu_metigations action) == 0 ]] && continue
 		echo "GRUB_ACTION+=($PARAM)" >> $GRUB_ACTIONS_FILE
 	done
-	
+
 	if [[ $CPU_MIT == 0 ]] then
 		echo "GRUB-Hardening[$PARAM]: These recommended CPU mitigations are not applied:
 ${CPU_MIT_MISSED[@]}
@@ -114,30 +114,29 @@ $GRUB_CPU_MIT_MESSAGE" >> $MESSAGES_FILE
 	fi
 }
 
+grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX="
+grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX_DEFAULT="
+
 [[ $(check-pf general action) == 0 ]] && echo"\
 mv /etc/default/grub /etc/default/grub.old.$RUNTIME_DATE
+
 cat /etc/default/grub.old | while read line; do
 	if [[ $line =~ "GRUB_CMDLINE_LINUX=" ]] then
 		line=${line##"GRUB_CMDLINE_LINUX="}	# Substitute string to get only the CMDLINE parameters
 		line=${line#\"}
 		line=${line%\"}
-		echo "GRUB_CMDLINE_LINUX=\"$line ${GRUB_ACTION[@]}\""
+		echo "GRUB_CMDLINE_LINUX=\"$line ${GRUB_ACTION[@]}\"" >> /etc/default/grub
 
 	elif [[ $line =~ "GRUB_CMDLINE_LINUX_DEFAULT=" ]] then
 		line=${line##"GRUB_CMDLINE_LINUX_DEFAULT="}	# Substitute string to get only the CMDLINE parameters
 		line=${line#\"}
 		line=${line%\"}
-		echo "GRUB_CMDLINE_LINUX_DEFAULT=\"$line ${GRUB_ACTION[@]}\""
+		echo "GRUB_CMDLINE_LINUX_DEFAULT=\"$line ${GRUB_ACTION[@]}\"" >> /etc/default/grub
 
 	else
-		echo $line
+		echo $line >> /etc/default/grub
 	fi
 done
 " >> $GRUB_ACTIONS_FILE
-
-grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX="
-grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX_DEFAULT="
-
-echo "" >> $GRUB_ACTIONS_FILE
 
 echo $GRUB_ACTIONS_FILE >> $ACTIONS_FILE
