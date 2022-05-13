@@ -49,7 +49,7 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/admin-choice.profile"}    # Use Default User Choice Profile File, 
+PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}    # Use Default User Choice Profile File, 
                                                                     # if not set by a positional parameter (command line argument)
 STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"} # Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}  # Currently used messages file
@@ -58,7 +58,9 @@ ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}  # Currently 
 PARAMETERS_FILE="$MAIN_DIR/config/kernel-parametrs.rc"
 KERNEL_ACTIONS_FILE="$MAIN_DIR/config/$RUNTIME_DATE-kernel-actions.sh"
 
-check-pf()  {   return $(jq ".kernel.$1.$2" $PROFILE_FILE);  }
+# Queue the requested value from the JSON profile file by jq
+PROFILE=$(jq '.[] | select(.name=="kernel")' $PROFILE_FILE)	# Save our object from the array
+check-pf()  {   return $(echo $PROFILE | jq ".kernel.$1.$2");  }
 
 source $PARAMETERS_FILE
 
@@ -81,7 +83,7 @@ for PARAM in $(echo "${!kernel[@]}" | sed 's/[a-z\0-9\.\_\-]*,[1-2]//g'); do
     [[ -z $CURRENT_VAL ]]   && continue
     
     # Compare current value with recommended one
-    [[ $CURRENT_VAL != $RECOMMENDED_VAL ]] && echo "Kernel Parameter $PARAM recommended value is \
+    [[ $CURRENT_VAL != $RECOMMENDED_VAL ]] && echo "Kernel-Hardening[$PARAM]: Kernel Parameter $PARAM recommended value is \
 ${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" >> $MESSAGES_FILE  # Print Message
 
     echo "KernelParam($PARAM) ${RECOMMENDED_VAL//$'\t'/,}" >> $STATUS_FILE  # Save the current value
