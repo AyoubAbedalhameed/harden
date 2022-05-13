@@ -2,7 +2,7 @@
     {
         "name":"kernel",
         "script":"/usr/share/harden/scripts/kernel-harden.sh",
-        "types":
+        "kernel":
         {
             "network":{
                 "check":1,
@@ -19,5 +19,21 @@
     {
         "name":"auditd",
         "script":"/usr/share/harden/scripts/auditd-harden.sh"
+    },
+    {
+        "name":"grub",
+        "script":"/usr/share/harden/scripts/grub-harden.sh",
+        "grub":{
+            "general":{
+                "check":1,
+                "action":1,
+                "question":""
+            },
+            "cpu_metigations":{
+                "check":1,
+                "action":1,
+                "question":""
+            }
+        }
     }
 ]

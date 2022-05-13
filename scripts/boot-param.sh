@@ -47,40 +47,97 @@ done
 # Restore Positional Arguments (those which has not been used)
 set -- "${POSITIONAL_ARGS[@]}"
 
-check-pf()  {   return $(jq ".boot.$1.$2" $PROFILE_FILE);  }
-
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/admin-choice.profile"}    # Use Default User Choice Profile File, 
+PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}    # Use Default User Choice Profile File, 
                                                                     # if not set by a positional parameter (command line argument)
 STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"} # Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}  # Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}  # Currently used Actions file
 
-RESOURSES_FILE="$MAIN_DIR/resources/boot-parameters.rc"
+GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions.sh"
+GRUB_FILE="/etc/default/grub"
+
+RESOURSES_FILE="$MAIN_DIR/resources/grub-parameters.rc"
 source $RESOURSES_FILE
 
-GRUB_FILE="/etc/default/grub"
-LINE="GRUB_CMDLINE_LINUX="
-DLINE="GRUB_CMDLINE_LINUX_DEFAULT="
+# Queue the requested value from the JSON profile file by jq
+PROFILE=$(jq '.[] | select(.name=="grub")' $PROFILE_FILE)	# Save our object from the array
+check-pf()  {   return $(echo $PROFILE | jq ".grub.$1.$2");  }
 
-if grep -q "$LINE" "$GRUB_FILE" then
-	CURRENT=$(grep $LINE $GRUB_FILE)
-	CURRENT=${CURRENT##$LINE}
+# Prepare the GRUB_ACTIONS_FILE
+[[ $(check-pf general action) == 0 ]] && echo "\
+#!/usr/bin/env bash
+
+OLD_FILE='/etc/default/grub'
+
+GRUB_ACTION=()
+" >> $GRUB_ACTIONS_FILE
+
+check-param()	{
+	CURRENT=$(grep $1 $GRUB_FILE)
+	CURRENT=${CURRENT##$1}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT#\"}
 	CURRENT=${CURRENT%\"}
+	CURRENT=($CURRENT)	# Convert string to an array
 
-	for i in $CURRENT; do
+	# Loop through all general recommended values and check if they are applied, then save recommeneded action if required
+	for PARAM in "${!GRUB[@]}"; do
+		[[ $(check-pf general check) == 0 ]] && continue
+		[[ "${CURRENT[*]}" =~ (^|[[:space:]])"$PARAM"($|[[:space:]]) ]] && continue	# Check if recommended parameter is in the current values array
 
+		echo "GRUB-Hardening($PARAM) 0" >> STATUS_FILE
+		echo "GRUB-Hardening[$PARAM]: ${grub[$PARAM]}" >> $MESSAGES_FILE
+
+		[[ $(check-pf general action) == 0 ]] && continue
+		echo "GRUB_ACTION+=($PARAM)" >> $GRUB_ACTIONS_FILE
 	done
-fi
 
-if grep -q "$DLINE" "$GRUB_FILE" then
-	DCURRENT=$(grep $DLINE $GRUB_FILE)
-	DCURRENT=${DCURRENT##$DLINE}
-	DCURRENT=${DCURRENT#\"}
-	DCURRENT=${DCURRENT%\"}
+	CPU_MIT=1
+	CPU_MET_MISSED=()
+	# Loop through all cpu mitigations recommended values and check if they are applied, then save recommeneded action if required
+	for PARAM in "${GRUB_CPU_MIT_MESSAGE[@]}"; do
+		[[ $(check-pf cpu_metigations check) == 0 ]] && continue
+		[[ "${CURRENT[*]}" =~ (^|[[:space:]])"$PARAM"($|[[:space:]]) ]] && continue	# Check if recommended parameter is in the current values array
 
-	for i in $DCURRENT; do
+		CPU_MIT=0
+		CPU_MIT_MISSED+=($PARAM)
+		echo "GRUB-Hardening($PARAM) 0" >> STATUS_FILE
 
+		[[ $(check-pf cpu_metigations action) == 0 ]] && continue
+		echo "GRUB_ACTION+=($PARAM)" >> $GRUB_ACTIONS_FILE
 	done
-fi
+	
+	if [[ $CPU_MIT == 0 ]] then
+		echo "GRUB-Hardening[$PARAM]: These recommended CPU mitigations are not applied:
+${CPU_MIT_MISSED[@]}
+$GRUB_CPU_MIT_MESSAGE" >> $MESSAGES_FILE
+	fi
+}
+
+[[ $(check-pf general action) == 0 ]] && echo"\
+mv /etc/default/grub /etc/default/grub.old.$RUNTIME_DATE
+cat /etc/default/grub.old | while read line; do
+	if [[ $line =~ "GRUB_CMDLINE_LINUX=" ]] then
+		line=${line##"GRUB_CMDLINE_LINUX="}	# Substitute string to get only the CMDLINE parameters
+		line=${line#\"}
+		line=${line%\"}
+		echo "GRUB_CMDLINE_LINUX=\"$line ${GRUB_ACTION[@]}\""
+
+	elif [[ $line =~ "GRUB_CMDLINE_LINUX_DEFAULT=" ]] then
+		line=${line##"GRUB_CMDLINE_LINUX_DEFAULT="}	# Substitute string to get only the CMDLINE parameters
+		line=${line#\"}
+		line=${line%\"}
+		echo "GRUB_CMDLINE_LINUX_DEFAULT=\"$line ${GRUB_ACTION[@]}\""
+
+	else
+		echo $line
+	fi
+done
+" >> $GRUB_ACTIONS_FILE
+
+grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX="
+grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX_DEFAULT="
+
+echo "" >> $GRUB_ACTIONS_FILE
+
+echo $GRUB_ACTIONS_FILE >> $ACTIONS_FILE
