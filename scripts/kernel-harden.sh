@@ -49,11 +49,11 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}    # Use Default User Choice Profile File, 
-                                                                    # if not set by a positional parameter (command line argument)
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"} # Currently used status file
-MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}  # Currently used messages file
-ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}  # Currently used Actions file
+PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File, 
+								# if not set by a positional parameter (command line argument)
+STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}	# Currently used status file
+MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
+ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
 PARAMETERS_FILE="$MAIN_DIR/config/kernel-parametrs.rc"
 KERNEL_ACTIONS_FILE="$MAIN_DIR/config/$RUNTIME_DATE-kernel-actions.sh"
@@ -70,26 +70,26 @@ TYPE_INDEX=2
 
 # 'sed' here is used to extract only the dictionary keys that ends with ',0', so we loop only once on each parameter
 for PARAM in $(echo "${!kernel[@]}" | sed 's/[a-z\0-9\.\_\-]*,[1-2]//g'); do
-    PARAM=${PARAM%,*}   # Substring from the begging to the comma (,) to get the parameter name without the index
-    MESSAGE="${kernel[$PARAM,$MES_INDEX]}"
-    TYPE="${kernel[$PARAM,$TYPE_INDEX]}"
-    RECOMMENDED_VAL="${kernel[$PARAM,$VAL_INDEX]}"
-    RECOMMENDED_VAL=${RECOMMENDED_VAL//,/$'\t'} # Replace commas (,) with tabs (\t), if exists
+	PARAM=${PARAM%,*}	# Substring from the begging to the comma (,) to get the parameter name without the index
+	MESSAGE="${kernel[$PARAM,$MES_INDEX]}"
+	TYPE="${kernel[$PARAM,$TYPE_INDEX]}"
+	RECOMMENDED_VAL="${kernel[$PARAM,$VAL_INDEX]}"
+	RECOMMENDED_VAL=${RECOMMENDED_VAL//,/$'\t'}	# Replace commas (,) with tabs (\t), if exists
 
-    [[ $(check-pf $TYPE check) == 0 ]]  && continue # Skip checking this parameter if profile file says so
-    CURRENT_VAL=$(sysctl -en $PARAM)
-    CURRENT_VAL=${CURRENT_VAL//$'\t'/,}
+	[[ $(check-pf $TYPE check) == 0 ]]  && continue	# Skip checking this parameter if profile file says so
+	CURRENT_VAL=$(sysctl -en $PARAM)
+	CURRENT_VAL=${CURRENT_VAL//$'\t'/,}
 
-    [[ -z $CURRENT_VAL ]]   && continue
-    
-    # Compare current value with recommended one
-    [[ $CURRENT_VAL != $RECOMMENDED_VAL ]] && echo "Kernel-Hardening[$PARAM]: Kernel Parameter $PARAM recommended value is \
-${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" >> $MESSAGES_FILE  # Print Message
+	[[ -z $CURRENT_VAL ]]   && continue
 
-    echo "KernelParam($PARAM) ${RECOMMENDED_VAL//$'\t'/,}" >> $STATUS_FILE  # Save the current value
+	# Compare current value with recommended one
+	[[ $CURRENT_VAL != $RECOMMENDED_VAL ]] && echo "Kernel-Hardening[$PARAM]: Kernel Parameter $PARAM recommended value is \
+${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" >> $MESSAGES_FILE	# Print Message
 
-    [[ $(check-pf $TYPE action) == 0 ]]  && continue    # Skip actions for this parameter if profile file says so
-    echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> $KERNEL_ACTIONS_FILE    # Save action
+	echo "KernelParam($PARAM) ${RECOMMENDED_VAL//$'\t'/,}" >> $STATUS_FILE	# Save the current value
+
+	[[ $(check-pf $TYPE action) == 0 ]]  && continue	# Skip actions for this parameter if profile file says so
+	echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> $KERNEL_ACTIONS_FILE	# Save action
 done
 
 echo $KERNEL_ACTIONS_FILE >> $ACTIONS_FILE	# Add approved actions to the actions file

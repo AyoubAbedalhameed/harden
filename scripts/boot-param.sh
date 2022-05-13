@@ -48,11 +48,11 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}    # Use Default User Choice Profile File, 
-                                                                    # if not set by a positional parameter (command line argument)
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"} # Currently used status file
-MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}  # Currently used messages file
-ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}  # Currently used Actions file
+PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File, 
+										# if not set by a positional parameter (command line argument)
+STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}	# Currently used status file
+MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
+ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
 GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions.sh"
 GRUB_FILE="/etc/default/grub"
