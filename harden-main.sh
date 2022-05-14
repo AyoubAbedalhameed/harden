@@ -62,11 +62,11 @@ STATUS_DIR="$MAIN_DIR/status"	# Default Status Directory
 [[ ! -d $STATUS_DIR ]] && mkdir $STATUS_DIR	# Check if Directory exists, and if not then create it
 MESSAGES_DIR="$MAIN_DIR/messages"	# Default Messages Directory
 [[ ! -d $MESSAGES_DIR ]] && mkdir $MESSAGES_DIR	# Check if Directory exists, and if not then create it
-ACTIONS_DIR="$MAIN_DIR/actions" #	Default Actions Directory
+ACTIONS_DIR="$MAIN_DIR/actions"	# Default Actions Directory
 [[ ! -d $ACTIONS_DIR ]] && mkdir $ACTIONS_DIR	# Check if Directory exists, and if not then create it
 
 CONFIG_FILE=${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}	# Use Default Configuration File,
-														# if not set by a positional parameter (command line argument)
+									# if not set by a positional parameter (command line argument)
 PROFILE_FILE=${PROFILE_FILE:="$CONFIG_DIR/admin-choice.profile"}	# Default User Choice Profile File
 STATUS_FILE=${STATUS_FILE:="$STATUS_DIR/$RUNTIME_DATE.status"}	# Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MESSAGES_DIR/$RUNTIME_DATE.message"}	# Currently used messages file
@@ -101,10 +101,10 @@ harden-run()   {
 	touch $STATUS_FILE $MESSAGES_FILE $ACTIONS_FILE
 
 	tail -f $STATUS_FILE &	# Run tail command in follow mode in the
-							# background, so we can get the data from
-							# the status file in stdout automatically.
+					# background, so we can get the data from
+					# the status file in stdout automatically.
 	trap "pkill -P $$" EXIT	# Set a trap condition for the tail command,
-							# so it will end, when the process (script) exits.
+					# so it will end, when the process (script) exits.
 	tail -f $MESSAGES_FILE &
 	trap "pkill -P $$" EXIT
 	tail -f $ACTIONS_FILE &
@@ -118,10 +118,8 @@ harden-run()   {
 	ln -s $MESSAGES_FILE "$MAIN_DIR/last-messages"
 	ln -s $ACTIONS_FILE "$MAIN_DIR/last-actions"
 
-	cat $CURRENT_PROFILE_FILE | while read line; do
-		rule=$(echo $line | awk '{print $1;}')
-		script=$(echo $line | awk '{print $2;}')
-		if [[ ${script%/*} -eq $SCRIPTS_DIR ]] then
+	for script in $(jq '.[].script'); do
+		if [[ -e $script ]] then
 			bash $script -sf $STATUS_FILE -mf $MESSAGES_FILE -af $ACTIONS_FILE -md $MAIN_DIR
 		else
 			echo "Script $script does not exist not in the $SCRIPTS_DIR."

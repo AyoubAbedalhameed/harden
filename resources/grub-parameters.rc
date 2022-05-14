@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+declare -A GRUB
+
+GRUB[slab_nomerge]="This disables slab merging, which significantly increases the difficulty of heap exploitation by preventing overwriting objects from merged caches and by making it harder to influence slab cache layout."
+GRUB[init_on_alloc=1]="This (with 'init_on_free=1') enables zeroing of memory during allocation and free time, which can help mitigate use-after-free vulnerabilities and erase sensitive information in memory."
+GRUB[init_on_free=1]="This (with 'init_on_alloc=1') enables zeroing of memory during allocation and free time, which can help mitigate use-after-free vulnerabilities and erase sensitive information in memory."
+GRUB[page_alloc.shuffle=1]="This option randomises page allocator freelists, improving security by making page allocations less predictable. This also improves performance."
+GRUB[pti=on]="This enables Kernel Page Table Isolation, which mitigates Meltdown and prevents some KASLR bypasses."
+GRUB[randomize_kstack_offset=on]="This option randomises the kernel stack offset on each syscall, which makes attacks that rely on deterministic kernel stack layout significantly more difficult, such as the exploitation of CVE-2019-18683."
+GRUB[vsyscall=none]="This disables vsyscalls, as they are obsolete and have been replaced with vDSO. vsyscalls are also at fixed addresses in memory, making them a potential target for ROP attacks."
+GRUB[debugfs=off]="This disables debugfs, which exposes a lot of sensitive information about the kernel."
+GRUB[oops=panic]="Sometimes certain kernel exploits will cause what is known as an \"oops\". This parameter will cause the kernel to panic on such oopses, thereby preventing those exploits. However, sometimes bad drivers cause harmless oopses which would result in your system crashing, meaning this boot parameter can only be used on certain hardware. Note: This is not included in the actions that will be taken if you choose to act, so you have to add it manually."
+GRUB[module.sig_enforce=1]="This only allows kernel modules that have been signed with a valid key to be loaded, which increases security by making it much harder to load a malicious kernel module. This prevents all out-of-tree kernel modules, including DKMS modules from being loaded unless you have signed them (https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_monitoring_and_updating_the_kernel/signing-kernel-modules-for-secure-boot_managing-monitoring-and-updating-the-kernel), meaning that modules such as the VirtualBox or Nvidia drivers may not be usable, although that may not be important, depending on your setup. Note: This is not included in the actions that will be taken if you choose to act, so you have to add it manually."
+GRUB[lockdown=confidentiality]="(This implies module.sig_enforce=1) The kernel lockdown LSM can eliminate many methods that user space code could abuse to escalate to kernel privileges and extract sensitive information. This LSM is necessary to implement a clear security boundary between user space and the kernel. The above option enables this feature in confidentiality mode, the strictest option."
+GRUB[mce=0]="(This is unnecessary for systems without ECC memory) This causes the kernel to panic on uncorrectable errors in ECC memory which could be exploited."
+GRUB[quiet]="This parameter (with loglevel=0) prevent information leaks during boot and must be used in combination with the kernel.printk sysctl (scaned and fixed by the kernel hardening script)"
+GRUB[loglevel=0]="This parameter (with quiet) prevent information leaks during boot and must be used in combination with the kernel.printk sysctl (scaned and fixed by the kernel hardening script)"
+
+##################################
+# CPU Mitigation GRUB boot parameters
+GRUB_CPU_MIT=("spectre_v2=on" "spec_store_bypass_disable=on" "tsx=off" "tsx_async_abort=full,nosmt" "mds=full,nosmt" "l1tf=full,force" "nosmt=force" "kvm.nx_huge_pages=force")
+GRUB_CPU_MIT_MESSAGE="It is best to enable all CPU mitigations that are applicable to your CPU as to ensure that you are not affected by known vulnerabilities. This is a list that enables all built-in mitigations. You must research the CPU vulnerabilities that your system is affected by and apply a selection of the above mitigations accordingly. Keep in mind that you will need to install microcode updates to be fully protected from these vulnerabilities. All of these may cause a significant performance decrease."
