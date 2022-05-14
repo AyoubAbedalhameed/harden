@@ -1,0 +1,14 @@
+#!/usr/bin/dev bash 
+
+
+#Defining filter table chain's policies (Restrictive):
+
+-P INPUT DROP 
+-P OUTPUT DROP
+-P FORWARD DROP 
+
+
+
+
+
+
