@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+declare -A MOUNT_OPTIONS
+
+MOUNT_OPTIONS[noexec]="Do not set execution of any binaries on this partition (prevents execution of binaries but allows scripts)."
+MOUNT_OPTIONS[nodev]="Do not allow character or special devices on this partition (prevents use of device files such as zero, sda etc)."
+MOUNT_OPTIONS[nosuid]="Do not set SUID/SGID access on this partition (prevent the setuid bit)."
+
+declare -A FS_TYPES
+
+FS_TYPES[sysfs]="sysfs is a pseudo file system provided by the Linux kernel that exports information about various kernel subsystems, hardware devices, and associated device drivers from the kernel's device model to user space through virtual files.[1] In addition to providing information about various devices and kernel subsystems, exported virtual files are also used for their configuration."
+FS_TYPES[tmpfs]="tmpfs is a temporary file storage paradigm. It is intended to appear as a mounted file system, but data is stored in volatile memory instead of a persistent storage device. A similar construction is a RAM disk, which appears as a virtual disk drive and hosts a disk file system."
+FS_TYPES[proc]"The proc filesystem (procfs) is a special file-system that presents information about processes and other system information in a hierarchical file-like structure. In Linux, it can also be used to obtain information about the kernel and to change certain kernel parameters at runtime."
+FS_TYPES[devtmpfs]="devtmpfs is a file system with automated device nodes populated by the kernel. This means you don’t have to have udev running nor to create a static /dev layout with additional, unneeded and not present device nodes. Instead the kernel populates the appropriate information based on the known devices."
+FS_TYPES[securityfs]="Securityfs is a pseudo-filesystem, This filesystem is meant to be used by security modules, some of which were otherwise creating their own filesystems; it should be mounted on /sys/kernel/security. You can only have files and directories _in memory_ to configure those security modules. Securityfs is built on top of the VFS."
+FS_TYPES[configfs]="Configfs is a RAM-based virtual file system. It is for creating, managing and destroying kernel objects from user-space."
+FS_TYPES[selinuxfs]="selinuxfs is a read/write interface used by SELinux library functions for userspace SELinux-aware applications and object managers. Note: while it is possible for userspace applications to read/write to this interface, it is not recommended - use the libselinux library."
+FS_TYPES[mqueue]="The “mqueue” filesystem provides the necessary kernel features to enable the creation of a user space library that implements the POSIX message queues API."
+FS_TYPES[cgroup]="Control groups, usually referred to as cgroups, are a Linux kernel feature which allow processes to be organized into hierarchical groups whose usage of various types of resources can then be limited and monitored. The kernel's cgroup interface is provided through a pseudo-filesystem called cgroupfs."
+FS_TYPES[hugetlbfs]="Hugetlbfs is a bare interface to the huge page capabilities of the underlying hardware; taking advantage of it requires application awareness or library support. Libhugetlbfs makes heavy use of this interface when automatically backing regions with huge pages."
+FS_TYPES[systemd-1]="Used for systemd-binfmt.service which is an early boot service that registers additional binary formats for executables in the kernel. binfmt_misc (Miscellaneous Binary Format) is a capability of the Linux kernel which allows arbitrary executable file formats to be recognized and passed to certain user space applications, such as emulators and virtual machines.[1] It is one of a number of binary format handlers in the kernel that are involved in preparing a user-space program to run."
+FS_TYPES[bpf]="Usually mounted under /sys/fs/bpf. This one is meant to be mounted at /sys/fs/bpf. It is a singleton filesystem, meaning that it can be mounted multiple times within a single namespace and every mount will see the same directory tree. Each mount namespace will, however, get its own version of this filesystem. Within /sys/fs/bpf, a suitably privileged user can create and remove directories in the usual ways to set up a suitable directory hierarchy. The Berkeley Packet Filter (BPF) is a technology used for programs that need to, among other things, analyze network traffic."

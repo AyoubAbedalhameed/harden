@@ -118,8 +118,8 @@ grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX="
 grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX_DEFAULT="
 
 [[ $(check-pf general action) == 0 ]] && echo"\
-mv /etc/default/grub /etc/default/grub.old.$RUNTIME_DATE
-
+cp /etc/default/grub /etc/default/grub.old.$RUNTIME_DATE
+echo "" > /etc/default/grub
 cat /etc/default/grub.old | while read line; do
 	if [[ $line =~ "GRUB_CMDLINE_LINUX=" ]] then
 		line=${line##"GRUB_CMDLINE_LINUX="}	# Substitute string to get only the CMDLINE parameters
