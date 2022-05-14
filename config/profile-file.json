@@ -35,5 +35,13 @@
                 "question":""
             }
         }
+    },
+    {
+      "name":"fs",
+      "script":"/usr/share/harden/scripts/fs-harden.sh",
+      "fs":{
+        "check":1,
+        "action":0
+      }
     }
 ]
