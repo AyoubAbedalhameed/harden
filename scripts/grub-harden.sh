@@ -54,7 +54,7 @@ STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}	# Currently 
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
-GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions.sh"
+GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions_$RUNTIME_DATE.sh"
 GRUB_FILE="/etc/default/grub"
 
 RESOURSES_FILE="$MAIN_DIR/resources/grub-parameters.rc"
