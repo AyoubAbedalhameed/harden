@@ -9,9 +9,66 @@ RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time
 
 echo "$RUNTIME_DATE:$0   script is running .. "
 
-STATUS_FILE=$1
-MESSAGES_FILE=$2
-ACTIONS_FILE=$3
+
+
+
+# Loop through all command line arguments, and but them in
+# the case switch statement to test them
+while [[ $# -gt 0 ]]; do
+	case $1 in
+		-md|--main-directory)
+			MAIN_DIR=$2
+			shift 2
+			;;
+		-pf|--profile-file)
+			PROFILE_FILE=$2
+			shift 2
+			;;
+		-sf|--status-file)	# Use a configuration file from user choice
+			STATUS_FILE=$2
+			shift 2
+			;;
+		-mf|--messages-file)	# Use/Create a messages file from user choice
+			MESSAGES_FILE=$2
+			shift 2	# shift the arguments 2 times (we used two arguments)
+			;;
+		-af|--actions-file)	# Use/Create an actions file from user choice
+			ACTIONS_FILE=$2
+			shift 2
+			;;
+		-*|--*)
+			echo "Unknown option $1"
+			usage
+			exit 1
+			;;
+		*)
+			POSITIONAL_ARGS+=("$1")	# save positional arguments
+			shift
+			;;
+	esac
+done
+
+
+
+# Restore Positional Arguments (those which has not been used)
+set -- "${POSITIONAL_ARGS[@]}"
+
+
+
+
+# ? 
+
+#MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
+#PROFILE_FILE=${PROFILE_FILE:="/etc/harden/admin-choice.profile"}    # Use Default User Choice Profile File, 
+                                                                    # if not set by a positional parameter (command line argument)
+#STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"} # Currently used status file
+#MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}  # Currently used messages file
+#ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}  # Currently used Actions file
+
+
+
+
+
 
 
 #Cheking Firewall Services: 
