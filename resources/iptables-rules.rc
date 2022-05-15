@@ -9,8 +9,8 @@ declare -A FW_Rules
 
 
 ## 1. Defining filter table chain's policies (Restrictive):
-FW_Rules[policy,0]=3
-FW_Rules[policy,1]="-P INPUT DROP"
+FW_Rules[policy,0]=3                    #Num of rules. 
+FW_Rules[policy,1]="-P INPUT DROP"      
 FW_Rules[policy,2]="-P OUTPUT DROP"
 FW_Rules[policy,3]="-P FORWARD DROP"
 FW_Rules[policy,d]=""
