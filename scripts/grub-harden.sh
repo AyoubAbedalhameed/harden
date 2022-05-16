@@ -4,7 +4,7 @@
 # GRUB Boot Parameters hardening
 
 usage() {   echo "Usage: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
--st/--status-file [status file] -mf/--messages-file [messages file] -af/--actions-file [actions file]"; }
+-mf/--messages-file [messages file] -af/--actions-file [actions file]"; }
 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time
 
@@ -18,10 +18,6 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-pf|--profile-file)
 			PROFILE_FILE=$2
-			shift 2
-			;;
-		-sf|--status-file)	# Use a configuration file from user choice
-			STATUS_FILE=$2
 			shift 2
 			;;
 		-mf|--messages-file)	# Use/Create a messages file from user choice
@@ -50,10 +46,10 @@ set -- "${POSITIONAL_ARGS[@]}"
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
 PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File,
 										# if not set by a positional parameter (command line argument)
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}	# Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
+STATUS_FILE="$MAIN_DIR/status/grub.status"	# Currently used status file
 GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions_$RUNTIME_DATE.sh"
 GRUB_FILE="/etc/default/grub"
 
@@ -87,7 +83,7 @@ check-param()	{
 		[[ $(check-pf general check) == 0 ]] && continue
 		[[ "${CURRENT[*]}" =~ (^|[[:space:]])"$PARAM"($|[[:space:]]) ]] && continue	# Check if recommended parameter is in the current values array
 
-		echo "GRUB-Hardening($PARAM) 0" >> S$TATUS_FILE
+		echo "$PARAM=0" >> S$TATUS_FILE
 		echo "GRUB-Hardening[$PARAM]: ${grub[$PARAM]}" >> $MESSAGES_FILE
 
 		[[ $(check-pf general action) == 0 ]] && continue
@@ -103,7 +99,7 @@ check-param()	{
 
 		CPU_MIT=0
 		CPU_MIT_MISSED+=($PARAM)
-		echo "GRUB-Hardening($PARAM) 0" >> $STATUS_FILE
+		echo "$PARAM=0" >> $STATUS_FILE
 
 		[[ $(check-pf cpu_metigations action) == 0 ]] && continue
 		echo "GRUB_ACTION+=($PARAM)" >> $GRUB_ACTIONS_FILE
