@@ -74,7 +74,7 @@ GRUB_ACTION=()
 " >> $GRUB_ACTIONS_FILE
 
 check-param()	{
-	CURRENT=$(grep $1 $GRUB_FILE)
+	local CURRENT=$(grep $1 $GRUB_FILE)
 	CURRENT=${CURRENT##$1}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT#\"}
 	CURRENT=${CURRENT%\"}
