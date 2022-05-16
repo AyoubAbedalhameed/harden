@@ -85,7 +85,7 @@ check-param()	{
 		[[ $(check-pf general check) == 0 ]] && continue
 		[[ "${CURRENT[*]}" =~ (^|[[:space:]])"$PARAM"($|[[:space:]]) ]] && continue	# Check if recommended parameter is in the current values array
 
-		echo "GRUB-Hardening($PARAM) 0" >> STATUS_FILE
+		echo "GRUB-Hardening($PARAM) 0" >> S$TATUS_FILE
 		echo "GRUB-Hardening[$PARAM]: ${grub[$PARAM]}" >> $MESSAGES_FILE
 
 		[[ $(check-pf general action) == 0 ]] && continue
@@ -101,7 +101,7 @@ check-param()	{
 
 		CPU_MIT=0
 		CPU_MIT_MISSED+=($PARAM)
-		echo "GRUB-Hardening($PARAM) 0" >> STATUS_FILE
+		echo "GRUB-Hardening($PARAM) 0" >> $STATUS_FILE
 
 		[[ $(check-pf cpu_metigations action) == 0 ]] && continue
 		echo "GRUB_ACTION+=($PARAM)" >> $GRUB_ACTIONS_FILE
