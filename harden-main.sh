@@ -5,7 +5,7 @@
 set -c
 
 usage() {   echo "Usage: $0 -cf/--config-file [configuration file] -pf/--profile-file [profile file] \
--st/--status-file [status file] -mf/--messages-file [messages file] -af/--actions-file [actions file] \
+-mf/--messages-file [messages file] -af/--actions-file [actions file] \
 -d/--date [date in YYYY-MM-DD format]"   }
 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time
@@ -31,7 +31,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-pf|--profile-file)	# Use a profile file from user choice
 			PROFILE_FILE="$2"
-			shift 2 
+			shift 2
 			;;
 		-d|--date)	# This option is used in (list-messages, list-actions) operate modes
 			DATE_TO_LIST=$2
@@ -68,13 +68,12 @@ ACTIONS_DIR="$MAIN_DIR/actions"	# Default Actions Directory
 CONFIG_FILE=${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}	# Use Default Configuration File,
 									# if not set by a positional parameter (command line argument)
 PROFILE_FILE=${PROFILE_FILE:="$CONFIG_DIR/admin-choice.profile"}	# Default User Choice Profile File
-STATUS_FILE=${STATUS_FILE:="$STATUS_DIR/$RUNTIME_DATE.status"}	# Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MESSAGES_DIR/$RUNTIME_DATE.message"}	# Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$ACTIONS_DIR/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
 # Redirect stdout and stderr to the log file, so everything
 # will be recorded in it. Also, due to the tail command on the
-# (status, messages, actions) files the content of it will also be recorded in the 
+# (messages, actions) files the content of it will also be recorded in the
 # log file.
 # Uncomment these lines if you chose to use journald for logging
 # (by setting the StandardOutput & StandardError variables
@@ -90,37 +89,32 @@ Harden service is starting up ...
 CONFIG_FILE = $CONFIG_FILE
 MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
-STATUS_FILE = $STATUS_FILE
 MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE"
 
 harden-run()   {
 	local CURRENT_PROFILE_FILE=$1
 
-	# Create Log, status, messages and actions file for the current run.
-	touch $STATUS_FILE $MESSAGES_FILE $ACTIONS_FILE
+	# Create Log and messages and actions file for the current run.
+	touch $MESSAGES_FILE $ACTIONS_FILE
 
-	tail -f $STATUS_FILE &	# Run tail command in follow mode in the
+	tail -f $MESSAGES_FILE &	# Run tail command in follow mode in the
 					# background, so we can get the data from
-					# the status file in stdout automatically.
+					# the messages file in stdout automatically.
 	trap "pkill -P $$" EXIT	# Set a trap condition for the tail command,
 					# so it will end, when the process (script) exits.
-	tail -f $MESSAGES_FILE &
-	trap "pkill -P $$" EXIT
 	tail -f $ACTIONS_FILE &
 	trap "pkill -P $$" EXIT
 
-	# Create/relink a symlink to the last status file
-	[[ -e "$MAIN_DIR/last-status" ]] && rm "$MAIN_DIR/last-status"
+	# Create/relink a symlink to the last messages file
 	[[ -e "$MAIN_DIR/last-messages" ]] && rm "$MAIN_DIR/last-messages"
 	[[ -e "$MAIN_DIR/last-actions" ]] && rm "$MAIN_DIR/last-actions"
-	ln -s $STATUS_FILE "$MAIN_DIR/last-status"
 	ln -s $MESSAGES_FILE "$MAIN_DIR/last-messages"
 	ln -s $ACTIONS_FILE "$MAIN_DIR/last-actions"
 
 	for script in $(jq '.[].script'); do
 		if [[ -e $script ]] then
-			bash $script -sf $STATUS_FILE -mf $MESSAGES_FILE -af $ACTIONS_FILE -md $MAIN_DIR
+			bash $script -mf $MESSAGES_FILE -af $ACTIONS_FILE -md $MAIN_DIR
 		else
 			echo "Script $script does not exist not in the $SCRIPTS_DIR."
 		fi
@@ -184,5 +178,3 @@ check-and-run() {
 
 check-and-run
 exit $?
-
-
