@@ -4,16 +4,19 @@
         "script":"/usr/share/harden/scripts/kernel-harden.sh",
         "kernel":
         {
-            "network":{
-                "check":1,
-                "action":1,
-                "question":""
-            },
-            "security":{
-                "check":1,
-                "action":1,
-                "question":""
-            }
+          "check":1,
+          "action":0,
+
+          "network":{
+            "check":1,
+            "action":1,
+            "question":""
+          },
+          "security":{
+              "check":1,
+              "action":1,
+              "question":""
+          }
         }
     },
     {
@@ -24,6 +27,8 @@
         "name":"grub",
         "script":"/usr/share/harden/scripts/grub-harden.sh",
         "grub":{
+          "check":1,
+          "action":0,
             "general":{
                 "check":1,
                 "action":1,
@@ -41,7 +46,8 @@
       "script":"/usr/share/harden/scripts/fs-harden.sh",
       "fs":{
         "check":1,
-        "action":0
+        "action":0,
+        "question":""
       }
     }
 ]

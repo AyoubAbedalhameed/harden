@@ -49,7 +49,7 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File, 
+PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File,
 								# if not set by a positional parameter (command line argument)
 STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}	# Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
@@ -61,6 +61,8 @@ KERNEL_ACTIONS_FILE="$MAIN_DIR/config/$RUNTIME_DATE-kernel-actions.sh"
 # Queue the requested value from the JSON profile file by jq
 PROFILE=$(jq '.[] | select(.name=="kernel")' $PROFILE_FILE)	# Save our object from the array
 check-pf()  {   return $(echo $PROFILE | jq ".kernel.$1.$2");  }
+
+[[ $(check-pf check) == 0 ]] && exit
 
 source $PARAMETERS_FILE
 
@@ -92,4 +94,4 @@ ${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $
 	echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> $KERNEL_ACTIONS_FILE	# Save action
 done
 
-echo $KERNEL_ACTIONS_FILE >> $ACTIONS_FILE	# Add approved actions to the actions file
+[[ $(check-pf action) == 0 ]] && echo $KERNEL_ACTIONS_FILE >> $ACTIONS_FILE	# Add approved actions to the actions file

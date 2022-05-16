@@ -64,6 +64,8 @@ source $RESOURSES_FILE
 PROFILE=$(jq '.[] | select(.name=="grub")' $PROFILE_FILE)	# Save our object from the array
 check-pf()  {   return $(echo $PROFILE | jq ".grub.$1.$2");  }
 
+[[ $(check-pf check) == 0 ]] && exit
+
 # Prepare the GRUB_ACTIONS_FILE
 [[ $(check-pf general action) == 0 ]] && echo "\
 #!/usr/bin/env bash
@@ -74,7 +76,7 @@ GRUB_ACTION=()
 " >> $GRUB_ACTIONS_FILE
 
 check-param()	{
-	CURRENT=$(grep $1 $GRUB_FILE)
+	local CURRENT=$(grep $1 $GRUB_FILE)
 	CURRENT=${CURRENT##$1}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT#\"}
 	CURRENT=${CURRENT%\"}
@@ -139,4 +141,4 @@ cat /etc/default/grub.old | while read line; do
 done
 " >> $GRUB_ACTIONS_FILE
 
-echo $GRUB_ACTIONS_FILE >> $ACTIONS_FILE
+[[ $(check-pf general action) == 0 ]] && echo $GRUB_ACTIONS_FILE >> $ACTIONS_FILE
