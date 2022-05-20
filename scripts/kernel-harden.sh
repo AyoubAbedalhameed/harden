@@ -5,7 +5,7 @@
 # recommended solutions and tips
 
 usage() {   echo "Usage: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
--st/--status-file [status file] -mf/--messages-file [messages file] -af/--actions-file [actions file]"; }
+-mf/--messages-file [messages file] -af/--actions-file [actions file]"; }
 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time
 
@@ -19,10 +19,6 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-pf|--profile-file)
 			PROFILE_FILE=$2
-			shift 2
-			;;
-		-sf|--status-file)	# Use a configuration file from user choice
-			STATUS_FILE=$2
 			shift 2
 			;;
 		-mf|--messages-file)	# Use/Create a messages file from user choice
@@ -49,18 +45,20 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File, 
+PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File,
 								# if not set by a positional parameter (command line argument)
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}	# Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
+STATUS_FILE="$MAIN_DIR/status/kernel.status"	# Currently used status file
 PARAMETERS_FILE="$MAIN_DIR/config/kernel-parametrs.rc"
 KERNEL_ACTIONS_FILE="$MAIN_DIR/config/$RUNTIME_DATE-kernel-actions.sh"
 
 # Queue the requested value from the JSON profile file by jq
 PROFILE=$(jq '.[] | select(.name=="kernel")' $PROFILE_FILE)	# Save our object from the array
 check-pf()  {   return $(echo $PROFILE | jq ".kernel.$1.$2");  }
+
+[[ $(check-pf check) == 0 ]] && exit
 
 source $PARAMETERS_FILE
 
@@ -86,10 +84,10 @@ for PARAM in $(echo "${!kernel[@]}" | sed 's/[a-z\0-9\.\_\-]*,[1-2]//g'); do
 	[[ $CURRENT_VAL != $RECOMMENDED_VAL ]] && echo "Kernel-Hardening[$PARAM]: Kernel Parameter $PARAM recommended value is \
 ${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" >> $MESSAGES_FILE	# Print Message
 
-	echo "KernelParam($PARAM) ${RECOMMENDED_VAL//$'\t'/,}" >> $STATUS_FILE	# Save the current value
+	echo "$PARAM=\"${RECOMMENDED_VAL//$'\t'/,}\"" >> $STATUS_FILE	# Save the current value
 
 	[[ $(check-pf $TYPE action) == 0 ]]  && continue	# Skip actions for this parameter if profile file says so
 	echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> $KERNEL_ACTIONS_FILE	# Save action
 done
 
-echo $KERNEL_ACTIONS_FILE >> $ACTIONS_FILE	# Add approved actions to the actions file
+[[ $(check-pf action) == 0 ]] && echo $KERNEL_ACTIONS_FILE >> $ACTIONS_FILE	# Add approved actions to the actions file
