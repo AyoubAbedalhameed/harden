@@ -8,28 +8,20 @@ declare -A FW_Rules
 
 
 
-## 1. Defining filter table chain's policies (Restrictive):
-#FW_Rules[rules.policy,0]=3                    #Num of rules. 
-#FW_Rules[rules.policy,1]="-P INPUT DROP"      
-#FW_Rules[rules.policy,2]="-P OUTPUT DROP"
-#FW_Rules[rules.policy,3]="-P FORWARD DROP"
-#FW_Rules[rules.policy,d]=""
-
-
 
 ## 2. Blocking Specific Address Rules, Multiple Addresses (comma seperated) can be used here:
 FW_Rules[rules.addressblock,0]=1
-FW_Rules[rules.addressblock,1]="-A INPUT -s @0 -j DROP"
-FW_Rules[rules.addressblock,d]=""
+FW_Rules[rules.addressblock,1]="INPUT -s @0 -j DROP"
+FW_Rules[rules.addressblock,d]="This rule blocks all the traffic from specific networks/addresses predefined in the profile file. "
 
 
 
 
 # 3. Allow ALL incomming SSH from specific/All networks on all interfaces
 FW_Rules[rules.ssh_in,0]=2
-FW_Rules[rules.ssh_in,1]="-A INPUT -p tcp -s @1 --dport @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
-FW_Rules[rules.ssh_in,2]="-A OUTPUT -p tcp --sport @0 -m state --state ESTABLISHED -j ACCEPT"
-FW_Rules[rules.ssh_in,d]=""
+FW_Rules[rules.ssh_in,1]="INPUT -p tcp -s @1 --dport @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
+FW_Rules[rules.ssh_in,2]="OUTPUT -p tcp --sport @0 -m state --state ESTABLISHED -j ACCEPT"
+FW_Rules[rules.ssh_in,d]="This rule controls the allowance/acceptence of incomming SSH connections from different sources/networks predefined in the profile file."
 
 
 
@@ -37,36 +29,36 @@ FW_Rules[rules.ssh_in,d]=""
 
 # 4. Allow incoming HTTP requests from specific/All networks on all interfaces: 
 FW_Rules[rules.http,0]=2
-FW_Rules[rules.http,1]="-A INPUT -p tcp -s @1 --dport @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
-FW_Rules[rules.http,2]="-A OUTPU -p tcp --sport @0 -m state --state ESTABLISHED -j ACCEPT"
-FW_Rules[rules.http,d]=""
+FW_Rules[rules.http,1]="INPUT -p tcp -s @1 --dport @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
+FW_Rules[rules.http,2]="OUTPU -p tcp --sport @0 -m state --state ESTABLISHED -j ACCEPT"
+FW_Rules[rules.http,d]="This rule controls the allowance/acceptence of incomming HTTP connections from different sources/networks predefined in the profile file."
 
 
 
 
 # 5. Allow incoming HTTPS requests from specific/All networks on all interfaces:
 FW_Rules[rules.https_in,0]=2
-FW_Rules[rules.https_in,1]="-A INPUT  -p tcp --dport @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
-FW_Rules[rules.https_in,2]="-A OUTPUT -p tcp --sport @0 -m state --state ESTABLISHED -j ACCEPT"
-FW_Rules[rules.https_in,d]=""
+FW_Rules[rules.https_in,1]="INPUT  -p tcp --dport @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
+FW_Rules[rules.https_in,2]="OUTPUT -p tcp --sport @0 -m state --state ESTABLISHED -j ACCEPT"
+FW_Rules[rules.https_in,d]="This rule controls the allowance/acceptence of incomming HTTPS connections from different sources/networks predefined in the profile file."
+
 
 
 
 ## 6. MultiPorts (Allow incoming connections on user-choosen ports):
 FW_Rules[rules.allow_ports,0]=2
-FW_Rules[rules.allow_ports,1]="-A INPUT  -p tcp -m multiport --dports @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
-FW_Rules[rules.allow_ports,2]="-A OUTPUT -p tcp -m multiport --sports @0 -m state --state ESTABLISHED -j ACCEPT"
-FW_Rules[rules.allow_ports,d]=""
-
+FW_Rules[rules.allow_ports,1]="INPUT  -p tcp -m multiport --dports @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
+FW_Rules[rules.allow_ports,2]="OUTPUT -p tcp -m multiport --sports @0 -m state --state ESTABLISHED -j ACCEPT"
+FW_Rules[rules.allow_ports,d]="This rule can be used to allow incomming traffic on other specified user-choosen tcp ports"
 
 
 
 
 ## 7. Allow out SSH for specific ip(s), networks: 
 FW_Rules[rules.ssh_out,0]=2
-FW_Rules[rules.ssh_out,1]="-A OUTPUT -p tcp -d @0 --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT"
-FW_Rules[rules.ssh_out,2]="-A INPUT  -p tcp -s @0 --sport 22 -m state --state ESTABLISHED -j ACCEPT"
-FW_Rules[rules.ssh_out,d]=""
+FW_Rules[rules.ssh_out,1]="OUTPUT -p tcp -d @0 --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT"
+FW_Rules[rules.ssh_out,2]="INPUT  -p tcp -s @0 --sport 22 -m state --state ESTABLISHED -j ACCEPT"
+FW_Rules[rules.ssh_out,d]="This rule specify the list of addresses/networks for accepted outgoing SSH connections "
 
 
 
@@ -74,9 +66,10 @@ FW_Rules[rules.ssh_out,d]=""
 
 ## 8. Allow outgoing HTTPS to a specific/all/ip/network:
 FW_Rules[rules.https_out,0]=2
-FW_Rules[rules.https_out,1]="-A OUTPUT -p tcp -d @0 --dport 443 -m state --state @0 NEW,ESTABLISHED -j ACCEPT"
-FW_Rules[rules.https_out,2]="-A INPUT -p tcp --sport 443 -m state --state @0 @1 ESTABLISHE" 
-FW_Rules[rules.https_out,d]=""
+FW_Rules[rules.https_out,1]="OUTPUT -p tcp -d @0 --dport 443 -m state --state @0 NEW,ESTABLISHED -j ACCEPT"
+FW_Rules[rules.https_out,2]="INPUT -p tcp --sport 443 -m state --state @0 @1 ESTABLISHED" 
+FW_Rules[rules.https_out,d]="This rule specify the list of addresses/networks for accepted outgoing HTTPS connections "
+
 
 
 
@@ -84,24 +77,23 @@ FW_Rules[rules.https_out,d]=""
 
 ## 9. Controling outgoing Pings (ICMP ECHO Messages): 
 FW_Rules[rules.icmp_ping_out,0]=2
-FW_Rules[rules.icmp_ping_out,1]="-A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT"
-FW_Rules[rules.icmp_ping_out,2]="-A INPUT -p icmp --icmp-type echo-reply -j ACCEPT"
-FW_Rules[rules.icmp_ping_out,d]=""
+FW_Rules[rules.icmp_ping_out,1]="OUTPUT -p icmp --icmp-type echo-request -j ACCEPT"
+FW_Rules[rules.icmp_ping_out,2]="INPUT -p icmp --icmp-type echo-reply -j ACCEPT"
+FW_Rules[rules.icmp_ping_out,d]="This rule is used to allow  outgoing  ICMP pings"
 
 
 
 ## 10. Controling incoming Pings (ICMP ECHO Messages):
 FW_Rules[rules.icmp_ping_in,0]=2
-FW_Rules[rules.icmp_ping_in,1]="-A INPUT -p icmp --icmp-type echo-request -j ACCEPT" 
-FW_Rules[rules.icmp_ping_in,2]="-A OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT"
-FW_Rules[rules.icmp_ping_in,d]=""
-
+FW_Rules[rules.icmp_ping_in,1]="INPUT -p icmp --icmp-type echo-request -j ACCEPT" 
+FW_Rules[rules.icmp_ping_in,2]="OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT"
+FW_Rules[rules.icmp_ping_in,d]="This rule is used to allow incoming ICMP pings"
 
 # 11. Allow loopback access:
 FW_Rules[rules.loopback_access,0]=2
-FW_Rules[rules.loopback_access,1]="-A INPUT -i lo -j ACCEPT"
-FW_Rules[rules.loopback_access,2]="-A OUTPUT -o lo -j ACCEPT"
-FW_Rules[rules.loopback_access,d]=""
+FW_Rules[rules.loopback_access,1]="INPUT -i lo -j ACCEPT"
+FW_Rules[rules.loopback_access,2]="OUTPUT -o lo -j ACCEPT"
+FW_Rules[rules.loopback_access,d]="This rules is used to allow/pass traffic on loopback interface."
 
 
 
