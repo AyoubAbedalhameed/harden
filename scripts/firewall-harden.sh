@@ -71,7 +71,7 @@ STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}	# Currently 
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
-SOURCE_FILE="$MAIN_DIR/config/iptables-rules.rc"
+SOURCE_FILE="$MAIN_DIR/resources/iptables-rules.rc"
 FIREWALL_ACTIONS_FILE="$MAIN_DIR/config/$RUNTIME_DATE-firewall-actions.sh"
  
 # Preparing not initialized other Variables:
