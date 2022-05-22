@@ -21,6 +21,7 @@
                 "vidi_testing":{"check":1,"action":0,"question":""},
                 "bluetooth":{"check":1,"action":0,"question":""},
                 "webcam":{"check":1,"action":0,"question":""}
+            }
         }
     },
     {
