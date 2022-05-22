@@ -4,16 +4,23 @@
         "script":"/usr/share/harden/scripts/kernel-harden.sh",
         "kernel":
         {
-            "network":{
+            "check":1,
+            "action":0,
+            "network":{"check":1,"action":1,"question":""},
+            "security":{"check":1,"action":1,"question":""},
+            "self-protection":{"check":1,"action":1,"question":""},
+            "user-space":{"check":1,"action":1,"question":""},
+
+            "module":{
                 "check":1,
-                "action":1,
-                "question":""
-            },
-            "security":{
-                "check":1,
-                "action":1,
-                "question":""
-            }
+                "action":0,
+                "question":"",
+                "weak_net_proto":{"check":1,"action":0,"question":""},
+                "rare_fs":{"check":1,"action":0,"question":""},
+                "net_fs":{"check":1,"action":0,"question":""},
+                "vidi_testing":{"check":1,"action":0,"question":""},
+                "bluetooth":{"check":1,"action":0,"question":""},
+                "webcam":{"check":1,"action":0,"question":""}
         }
     },
     {
@@ -24,24 +31,13 @@
         "name":"grub",
         "script":"/usr/share/harden/scripts/grub-harden.sh",
         "grub":{
-            "general":{
-                "check":1,
-                "action":1,
-                "question":""
-            },
-            "cpu_metigations":{
-                "check":1,
-                "action":1,
-                "question":""
-            }
+            "general":{"check":1,"action":1,"question":""},
+            "cpu_metigations":{"check":1,"action":1,"question":""}
         }
     },
     {
       "name":"fs",
       "script":"/usr/share/harden/scripts/fs-harden.sh",
-      "fs":{
-        "check":1,
-        "action":0
-      }
+      "fs":{"check":1,"action":0}
     }
 ]
