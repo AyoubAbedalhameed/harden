@@ -39,5 +39,100 @@
       "name":"fs",
       "script":"/usr/share/harden/scripts/fs-harden.sh",
       "fs":{"check":1,"action":0}
+    },
+    {
+        "name":"firewall",
+        "script":"/usr/share/harden/scripts/firewall-harden.sh",
+        "firewall":{
+
+            "check":1,
+            "action":0,
+            "rules":{
+                "addressblock":{
+                    "check":1,
+                    "action":0,
+                    "question":"",
+                    "parameters_question":"",
+                    "parameters":null
+
+                },
+
+                "ssh_in":{
+                    "check":1,
+                    "action":0,
+                    "auestion":"",
+                    "parameters_question":"",
+                    "parameters":null
+
+                },
+
+                "http":{
+                    "check":1,
+                    "action":0,
+                    "question":"",
+                    "parameters_question":"",
+                    "parameters":null
+                },
+
+                "https_in":{
+                    "check":1,
+                    "action":0,
+                    "question":"",
+                    "parameters_question":"",
+                    "parameters":null
+                },
+
+                "allow_ports":{
+                    "check":1,
+                    "action":0,
+                    "question":"",
+                    "parameters_question":"",
+                    "parameters":null
+
+                },
+
+                "ssh_out":{
+                    "check":1,
+                    "action":0,
+                    "question":"",
+                    "parameters_question":"",
+                    "parameters":null
+                },
+
+                "https_out":{
+                    "check":1,
+                    "action":0,
+                    "question":"",
+                    "parameters_question":"",
+                    "parameters":"httpsParameter1 httpsParameter2"
+                },
+
+                "icmp_ping_out":{
+                    "check":1,
+                    "action":0,
+                    "question":"",
+                    "parameters_question":null
+
+
+                },
+
+                "icmp_ping_in":{
+                    "check":1,
+                    "action":0,
+                    "question":"",
+                    "parameters_question":null
+
+                },
+
+                "loopback_access":{
+                    "check":1,
+                    "action":0,
+                    "question":"",
+                    "parameters_question":null
+
+                }
+            }
+        }
+
     }
 ]
