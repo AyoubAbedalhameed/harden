@@ -3,8 +3,10 @@
 
 # Different recommended file system hardening options and configuration
 
-usage() {   echo "Usage: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
--mf/--messages-file [messages file] -af/--actions-file [actions file]"; }
+usage() {
+	echo "Usage: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
+-mf/--messages-file [messages file] -af/--actions-file [actions file]";
+}
 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time
 

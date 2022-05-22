@@ -4,9 +4,11 @@
 # Prevent overwriting files, if then the script will exit
 set -c
 
-usage() {   echo "Usage: $0 -cf/--config-file [configuration file] -pf/--profile-file [profile file] \
+usage() {
+	echo "Usage: $0 -cf/--config-file [configuration file] -pf/--profile-file [profile file] \
 -st/--status-file [status file] -mf/--messages-file [messages file] -af/--actions-file [actions file] \
--d/--date [date in YYYY-MM-DD format]"   }
+-d/--date [date in YYYY-MM-DD format]"
+}
 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time
 
@@ -59,11 +61,11 @@ MAIN_DIR="/usr/share/harden"	# Default Main Directory
 SCRIPTS_DIR="$MAIN_DIR/scripts"	# Default Scripts Directory
 
 STATUS_DIR="$MAIN_DIR/status"	# Default Status Directory
-[[ ! -d $STATUS_DIR ]] && mkdir $STATUS_DIR	# Check if Directory exists, and if not then create it
+[[ ! -d "$STATUS_DIR" ]] && mkdir "$STATUS_DIR"	# Check if Directory exists, and if not then create it
 MESSAGES_DIR="$MAIN_DIR/messages"	# Default Messages Directory
-[[ ! -d $MESSAGES_DIR ]] && mkdir $MESSAGES_DIR	# Check if Directory exists, and if not then create it
+[[ ! -d "$MESSAGES_DIR" ]] && mkdir "$MESSAGES_DIR"	# Check if Directory exists, and if not then create it
 ACTIONS_DIR="$MAIN_DIR/actions"	# Default Actions Directory
-[[ ! -d $ACTIONS_DIR ]] && mkdir $ACTIONS_DIR	# Check if Directory exists, and if not then create it
+[[ ! -d "$ACTIONS_DIR" ]] && mkdir "$ACTIONS_DIR"	# Check if Directory exists, and if not then create it
 
 CONFIG_FILE=${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}	# Use Default Configuration File,
 									# if not set by a positional parameter (command line argument)
@@ -98,29 +100,30 @@ harden-run()   {
 	local CURRENT_PROFILE_FILE=$1
 
 	# Create Log, status, messages and actions file for the current run.
-	touch $STATUS_FILE $MESSAGES_FILE $ACTIONS_FILE
+	touch "$STATUS_FILE" "$MESSAGES_FILE" "$ACTIONS_FILE"
 
-	tail -f $STATUS_FILE &	# Run tail command in follow mode in the
+	tail -f "$STATUS_FILE" &	# Run tail command in follow mode in the
 					# background, so we can get the data from
 					# the status file in stdout automatically.
 	trap "pkill -P $$" EXIT	# Set a trap condition for the tail command,
 					# so it will end, when the process (script) exits.
-	tail -f $MESSAGES_FILE &
+	tail -f "$MESSAGES_FILE" &
 	trap "pkill -P $$" EXIT
-	tail -f $ACTIONS_FILE &
+	tail -f "$ACTIONS_FILE" &
 	trap "pkill -P $$" EXIT
 
 	# Create/relink a symlink to the last status file
 	[[ -e "$MAIN_DIR/last-status" ]] && rm "$MAIN_DIR/last-status"
 	[[ -e "$MAIN_DIR/last-messages" ]] && rm "$MAIN_DIR/last-messages"
 	[[ -e "$MAIN_DIR/last-actions" ]] && rm "$MAIN_DIR/last-actions"
-	ln -s $STATUS_FILE "$MAIN_DIR/last-status"
-	ln -s $MESSAGES_FILE "$MAIN_DIR/last-messages"
-	ln -s $ACTIONS_FILE "$MAIN_DIR/last-actions"
+	ln -s "$STATUS_FILE" "$MAIN_DIR/last-status"
+	ln -s "$MESSAGES_FILE" "$MAIN_DIR/last-messages"
+	ln -s "$ACTIONS_FILE" "$MAIN_DIR/last-actions"
 
 	for script in $(jq '.[].script'); do
-		if [[ -e $script ]] then
-			bash $script -sf $STATUS_FILE -mf $MESSAGES_FILE -af $ACTIONS_FILE -md $MAIN_DIR
+		if [[ -e $script ]]
+		then
+			bash "$script" -mf "$MESSAGES_FILE" -af "$ACTIONS_FILE" -md "$MAIN_DIR"
 		else
 			echo "Script $script does not exist not in the $SCRIPTS_DIR."
 		fi
@@ -137,11 +140,12 @@ take-action()   {
 }
 
 show-messages() {
-	if [[ $(ls "$MESSAGES_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]] then
+	if [[ $(ls "$MESSAGES_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]]
+	then
 		echo "No messages found for this date ($DATE_TO_LIST)"
 		return 1
 	else
-		for i in "$MESSAGES_DIR/$DATE_TO_LIST*"
+		for i in $MESSAGES_DIR/$DATE_TO_LIST*
 		do
 			cat $i
 		done
@@ -150,11 +154,12 @@ show-messages() {
 }
 
 show-actions()  {
-	if [[ $(ls "$ACTIONS_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]] then
+	if [[ $(ls "$ACTIONS_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]]
+	then
 		echo "No actions found for this date ($DATE_TO_LIST)"
 		return 1
 	else
-		for i in "$ACTIONS_DIR/$DATE_TO_LIST*"
+		for i in $ACTIONS_DIR/$DATE_TO_LIST*
 		do
 			cat $i
 		done
@@ -179,7 +184,7 @@ check-and-run() {
 		*)	echo "Please specify one of the available modes (setup - scan - act - messages - actions)"
 		;;
 	esac
-	return $RETURN_VALUE
+	return "$RETURN_VALUE"
 }
 
 check-and-run
