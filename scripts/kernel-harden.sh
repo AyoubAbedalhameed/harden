@@ -9,7 +9,7 @@ usage() {
 -mf/--messages-file [messages file] -af/--actions-file [actions file]";
 }
 
-RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time
+RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
 
 # Loop through all command line arguments, and but them in
 # the case switch statement to test them
@@ -54,12 +54,14 @@ ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently u
 
 STATUS_FILE="$MAIN_DIR/status/kernel.status"	# Currently used status file
 PARAMETERS_FILE="$MAIN_DIR/resources/kernel-parametrs.rc"
+MODULES_FILE="$MAIN_DIR/resources/kernel-blocked-modules.rc"
 KERNEL_ACTIONS_FILE="$MAIN_DIR/actions/kernel-actions.sh"
 
 # Queue the requested value from the JSON profile file by jq
 PROFILE=$(jq '.[] | select(.name=="kernel")' "$PROFILE_FILE")	# Save our object from the array
+
 check-pf()  {
-	return "$(echo $PROFILE | jq ".kernel.$1.$2")"
+	return $(echo "$PROFILE" | jq ".kernel.$1.$2")
 }
 
 [[ $(check-pf check) == 0 ]] && exit
@@ -97,19 +99,25 @@ check-param()	{
 }
 
 module-blacklist()	{
-	source "../resources/kernel-blocked-modules.rc"
-
+	local MODULE_BLACKLIST_FILE
 	MODULE_BLACKLIST_FILE="/etc/modprobe.d/blacklist.conf"
+
+	source "$MODULES_FILE"
+
 	[[ $(check-pf module action) ]] && [[ ! -f $MODULE_BLACKLIST_FILE ]] && touch $MODULE_BLACKLIST_FILE
-	for MODULE in "${!MODULE_BLACKLIST[@]}"; do
-		[[ $(check-pf module "${MODULE_BLACKLIST[$MODULE]}" check) == 0 ]] && continue
 
-		grep -q "$MODULE" "$MODULE_BLACKLIST_FILE" && continue
-		echo "kernel_module_$MODULE=0" >> "$STATUS_FILE"
-		echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because it has a history of vulnerabilities." >> "$MESSAGES_FILE"
+	for TYPE in $MOD_TYPES; do
+		if [[ $(check-pf module "$TYPE" check) == 1 ]]
+		then
+			for MODULE in ${!TYPE}; do
+				grep -q "$MODULE" "$MODULE_BLACKLIST_FILE" && continue
+				echo "kernel_module_$MODULE=0" >> "$STATUS_FILE"
+				echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
 
-		lsmod | grep -q "$MODULE" && echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is loaded on you currently running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
-		[[ $(check-pf module "${MODULE_BLACKLIST[$MODULE]}" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
+				lsmod | grep -q "$MODULE" && echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is loaded on you currently running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
+				[[ $(check-pf module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
+			done
+		fi
 	done
 }
 

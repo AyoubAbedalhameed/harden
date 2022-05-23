@@ -10,7 +10,7 @@ usage() {
 -d/--date [date in YYYY-MM-DD format]"
 }
 
-RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time
+RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
 
 # First argument should specify which mode we are running in
 OPERATE_MODE=$1
@@ -55,7 +55,6 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 CONFIG_DIR="/etc/harden"	# Default Configuration Directory
-DEFAULT_PROFILE_FILE="$CONFIG_DIR/default.profile"	# Default Profile File
 
 MAIN_DIR="/usr/share/harden"	# Default Main Directory
 SCRIPTS_DIR="$MAIN_DIR/scripts"	# Default Scripts Directory
@@ -69,7 +68,7 @@ ACTIONS_DIR="$MAIN_DIR/actions"	# Default Actions Directory
 
 CONFIG_FILE=${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}	# Use Default Configuration File,
 									# if not set by a positional parameter (command line argument)
-PROFILE_FILE=${PROFILE_FILE:="$CONFIG_DIR/admin-choice.profile"}	# Default User Choice Profile File
+PROFILE_FILE=${PROFILE_FILE:="$CONFIG_DIR/profile-file.json"}	# Default User Choice Profile File
 STATUS_FILE=${STATUS_FILE:="$STATUS_DIR/$RUNTIME_DATE.status"}	# Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MESSAGES_DIR/$RUNTIME_DATE.message"}	# Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$ACTIONS_DIR/$RUNTIME_DATE.sh"}	# Currently used Actions file
@@ -82,9 +81,9 @@ ACTIONS_FILE=${ACTIONS_FILE:="$ACTIONS_DIR/$RUNTIME_DATE.sh"}	# Currently used A
 # (by setting the StandardOutput & StandardError variables
 # in the service unit file to "journal")
 #
-#	LOG_FILE="/var/log/harden/$(date +%F_%H:%M:%S).log"
-#	echo > $LOG_FILE
-#	exec 1>>$LOG_FILE 2>&1
+LOG_FILE="/var/log/harden/$(date +%F_%H-%M-%S).log"
+echo > "$LOG_FILE"
+exec 2>>"$LOG_FILE"
 
 # Print startup message with run time settings
 echo "\
@@ -94,23 +93,20 @@ MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
 STATUS_FILE = $STATUS_FILE
 MESSAGES_FILE = $MESSAGES_FILE
-ACTIONS_FILE = $ACTIONS_FILE"
+ACTIONS_FILE = $ACTIONS_FILE
+LOG_FILE=$LOG_FILE"
 
 harden-run()   {
-	local CURRENT_PROFILE_FILE=$1
-
 	# Create Log, status, messages and actions file for the current run.
-	touch "$STATUS_FILE" "$MESSAGES_FILE" "$ACTIONS_FILE"
+	touch "$MESSAGES_FILE" "$ACTIONS_FILE"
 
-	tail -f "$STATUS_FILE" &	# Run tail command in follow mode in the
+	tail -f "$MESSAGES_FILE" &	# Run tail command in follow mode in the
 					# background, so we can get the data from
 					# the status file in stdout automatically.
-	trap "pkill -P $$" EXIT	# Set a trap condition for the tail command,
+	trap "pkill -P $!" EXIT	# Set a trap condition for the tail command,
 					# so it will end, when the process (script) exits.
-	tail -f "$MESSAGES_FILE" &
-	trap "pkill -P $$" EXIT
 	tail -f "$ACTIONS_FILE" &
-	trap "pkill -P $$" EXIT
+	trap "pkill -P $!" EXIT
 
 	# Create/relink a symlink to the last status file
 	[[ -e "$MAIN_DIR/last-status" ]] && rm "$MAIN_DIR/last-status"
@@ -120,7 +116,7 @@ harden-run()   {
 	ln -s "$MESSAGES_FILE" "$MAIN_DIR/last-messages"
 	ln -s "$ACTIONS_FILE" "$MAIN_DIR/last-actions"
 
-	for script in $(jq '.[].script'); do
+	for script in $(jq '.[].script' $PROFILE_FILE); do
 		if [[ -e $script ]]
 		then
 			bash "$script" -mf "$MESSAGES_FILE" -af "$ACTIONS_FILE" -md "$MAIN_DIR" -pf "$PROFILE_FILE"
@@ -171,9 +167,7 @@ check-and-run() {
 	local RETURN_VALUE=""
 	# Check what mode we are running in
 	case $OPERATE_MODE in
-		setup)	RETURN_VALUE=$(harden-run $DEFAULT_PROFILE_FILE)
-		;;
-		scan)	RETURN_VALUE=$(harden-run $PROFILE_FILE)
+		scan)	RETURN_VALUE=$(harden-run)
 		;;
 		take-actions)	RETURN_VALUE=$(take-action)
 		;;
@@ -189,5 +183,3 @@ check-and-run() {
 
 check-and-run
 exit $?
-
-

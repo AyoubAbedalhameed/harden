@@ -1,47 +1,11 @@
 #!/usr/bin/env bash
 # Written by: Adnan Omar (aalkhaldi8@gmail.com)
 
-declare -A MODULE_BLACKLIST
+export MOD_TYPES="weak_net_proto rare_fs net_fs vivid bluetooth webcam"
 
-# dictionary keys are the modules names, and vluse represent the type
-MODULE_BLACLIST[dccp]="weak_net_proto"
-MODULE_BLACLIST[sctp]="weak_net_proto"
-MODULE_BLACLIST[rds]="weak_net_proto"
-MODULE_BLACLIST[tipc]="weak_net_proto"
-MODULE_BLACLIST[n-hdlc]="weak_net_proto"
-MODULE_BLACLIST[ax25]="weak_net_proto"
-MODULE_BLACLIST[netrom]="weak_net_proto"
-MODULE_BLACLIST[x25]="weak_net_proto"
-MODULE_BLACLIST[rose]="weak_net_proto"
-MODULE_BLACLIST[decnet]="weak_net_proto"
-MODULE_BLACLIST[econet]="weak_net_proto"
-MODULE_BLACLIST[af_802154]="weak_net_proto"
-MODULE_BLACLIST[ipx]="weak_net_proto"
-MODULE_BLACLIST[appletalk]="weak_net_proto"
-MODULE_BLACLIST[psnap]="weak_net_proto"
-MODULE_BLACLIST[p8023]="weak_net_proto"
-MODULE_BLACLIST[p8022]="weak_net_proto"
-MODULE_BLACLIST[can]="weak_net_proto"
-MODULE_BLACLIST[atm]="weak_net_proto"
-
-MODULE_BLACLIST[cramfs]="rare_fs"
-MODULE_BLACLIST[freevxfs]="rare_fs"
-MODULE_BLACLIST[jffs2]="rare_fs"
-MODULE_BLACLIST[hfs]="rare_fs"
-MODULE_BLACLIST[hfsplus]="rare_fs"
-MODULE_BLACLIST[squashfs]="rare_fs"
-MODULE_BLACLIST[udf]="rare_fs"
-
-MODULE_BLACLIST[cifs]="net_fs"
-MODULE_BLACLIST[nfs]="net_fs"
-MODULE_BLACLIST[nfsv3]="net_fs"
-MODULE_BLACLIST[nfsv4]="net_fs"
-MODULE_BLACLIST[ksmbd]="net_fs"
-MODULE_BLACLIST[gfs2]="net_fs"
-
-MODULE_BLACLIST[vivid]="vidi_testing"
-
-MODULE_BLACLIST[bluetooth]="bluetooth"
-MODULE_BLACLIST[btusb]="buetooth"
-
-MODULE_BLACLIST[uvcvideo]="webcam"
+export weak_net_proto="dccp sctp rds tipc n-hdlc ax25 netrom x25 rose decnet econet af_802154 ipx appletalk psnap p8023 p8022 can atm"
+export rare_fs="cramfs freevxfs jffs2 hfs hfsplus squashfs udf"
+export net_fs="cifs nfs nfsv3 nfsv4 ksmbd gfs2"
+export vivid="vidi_testing"
+export bluetooth="bluetooth btusb"
+export webcam="uvcvideo"
