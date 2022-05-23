@@ -6,6 +6,7 @@
         {
             "check":1,
             "action":0,
+
             "network":{"check":1,"action":1,"question":""},
             "security":{"check":1,"action":1,"question":""},
             "self-protection":{"check":1,"action":1,"question":""},

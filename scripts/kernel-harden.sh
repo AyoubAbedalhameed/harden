@@ -47,50 +47,54 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File,
+PROFILE_FILE=${PROFILE_FILE:="/etc/harden/profile-file.json"}	# Use Default User Choice Profile File,
 								# if not set by a positional parameter (command line argument)
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
 STATUS_FILE="$MAIN_DIR/status/kernel.status"	# Currently used status file
-PARAMETERS_FILE="$MAIN_DIR/config/kernel-parametrs.rc"
-KERNEL_ACTIONS_FILE="$MAIN_DIR/config/$RUNTIME_DATE-kernel-actions.sh"
+PARAMETERS_FILE="$MAIN_DIR/resources/kernel-parametrs.rc"
+KERNEL_ACTIONS_FILE="$MAIN_DIR/actions/kernel-actions.sh"
 
 # Queue the requested value from the JSON profile file by jq
 PROFILE=$(jq '.[] | select(.name=="kernel")' "$PROFILE_FILE")	# Save our object from the array
-check-pf()  {   return $(echo $PROFILE | jq ".kernel.$1.$2");  }
+check-pf()  {
+	return "$(echo $PROFILE | jq ".kernel.$1.$2")"
+}
 
 [[ $(check-pf check) == 0 ]] && exit
 
-source "$PARAMETERS_FILE"
+check-param()	{
+	source "$PARAMETERS_FILE"
 
-VAL_INDEX=0
-MES_INDEX=1
-TYPE_INDEX=2
+	VAL_INDEX=0
+	MES_INDEX=1
+	TYPE_INDEX=2
 
-# 'sed' here is used to extract only the dictionary keys that ends with ',0', so we loop only once on each parameter once
-for PARAM in $(echo "${!kernel[@]}" | sed 's/[a-z\0-9\.\_\-]*,[1-2]//g'); do
-	PARAM=${PARAM%,*}	# Substring from the begging to the comma (,) to get the parameter name without the index
-	MESSAGE="${kernel[$PARAM,$MES_INDEX]}"
-	TYPE="${kernel[$PARAM,$TYPE_INDEX]}"
-	RECOMMENDED_VAL="${kernel[$PARAM,$VAL_INDEX]}"
-	RECOMMENDED_VAL=${RECOMMENDED_VAL//,/$'\t'}	# Replace commas (,) with tabs (\t), if exists
+	# 'sed' here is used to extract only the dictionary keys that ends with ',0', so we loop only once on each parameter once
+	for PARAM in $(echo "${!kernel[@]}" | sed 's/[a-z\0-9\.\_\-]*,[1-2]//g'); do
+		PARAM=${PARAM%,*}	# Substring from the begging to the comma (,) to get the parameter name without the index
+		MESSAGE="${kernel[$PARAM,$MES_INDEX]}"
+		TYPE="${kernel[$PARAM,$TYPE_INDEX]}"
+		RECOMMENDED_VAL="${kernel[$PARAM,$VAL_INDEX]}"
+		RECOMMENDED_VAL=${RECOMMENDED_VAL//,/$'\t'}	# Replace commas (,) with tabs (\t), if exists
 
-	[[ $(check-pf "$TYPE" check) == 0 ]]  && continue	# Skip checking this parameter if profile file says so
-	CURRENT_VAL=$(sysctl -en "$PARAM")
-	CURRENT_VAL=${CURRENT_VAL//$'\t'/,}
+		[[ $(check-pf "$TYPE" check) == 0 ]]  && continue	# Skip checking this parameter if profile file says so
+		CURRENT_VAL=$(sysctl -en "$PARAM")
+		CURRENT_VAL=${CURRENT_VAL//$'\t'/,}
 
-	[[ -z "$CURRENT_VAL" ]]   && continue
+		[[ -z "$CURRENT_VAL" ]]   && continue
 
-	# Compare current value with recommended one
-	[[ "$CURRENT_VAL" != "$RECOMMENDED_VAL" ]] && echo "Kernel-Hardening[$PARAM]: Kernel Parameter $PARAM recommended value is \
-${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" >> "$MESSAGES_FILE"	# Print Message
+		# Compare current value with recommended one
+		[[ "$CURRENT_VAL" != "$RECOMMENDED_VAL" ]] && echo "Kernel-Hardening[$PARAM]: Kernel Parameter $PARAM recommended value is \
+	${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" >> "$MESSAGES_FILE"	# Print Message
 
-	echo "kernel_$PARAM=\"${RECOMMENDED_VAL//$'\t'/,}\"" >> "$STATUS_FILE"	# Save the current value
+		echo "kernel_$PARAM=\"${RECOMMENDED_VAL//$'\t'/,}\"" >> "$STATUS_FILE"	# Save the current value
 
-	[[ $(check-pf "$TYPE" action) == 0 ]]  && continue	# Skip actions for this parameter if profile file says so
-	echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> "$KERNEL_ACTIONS_FILE"	# Save action
-done
+		[[ $(check-pf "$TYPE" action) == 0 ]]  && continue	# Skip actions for this parameter if profile file says so
+		echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> "$KERNEL_ACTIONS_FILE"	# Save action
+	done
+}
 
 module-blacklist()	{
 	source "../resources/kernel-blocked-modules.rc"
@@ -105,7 +109,7 @@ module-blacklist()	{
 		echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because it has a history of vulnerabilities." >> "$MESSAGES_FILE"
 
 		lsmod | grep -q "$MODULE" && echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is loaded on you currently running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
-		[[ $(check-pf module "${MODULE_BLACKLIST}" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
+		[[ $(check-pf module "${MODULE_BLACKLIST[$MODULE]}" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
 	done
 }
 

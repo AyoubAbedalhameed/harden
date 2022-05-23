@@ -52,22 +52,23 @@ set -- "${POSITIONAL_ARGS[@]}"
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
 PROFILE_FILE=${PROFILE_FILE:="/etc/harden/default.profile"}	# Use Default User Choice Profile File,
 										# if not set by a positional parameter (command line argument)
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/$RUNTIME_DATE.status"}	# Currently used status file
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
+STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub.status"}	# Currently used status file
 GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions.sh"
 GRUB_FILE="/etc/default/grub"
 
-RESOURSES_FILE="$MAIN_DIR/resources/grub-parameters.rc"
-source $RESOURSES_FILE
+source "../resources/grub-parameters.rc"
 
 # Queue the requested value from the JSON profile file by jq
 PROFILE=$(jq '.[] | select(.name=="grub")' $PROFILE_FILE)	# Save our object from the array
-check-pf()  {   return $(echo $PROFILE | jq ".grub.$1.$2");  }
+check-pf()  {
+	return $(echo "$PROFILE" | jq ".grub.$1.$2");
+}
 
 # Prepare the GRUB_ACTIONS_FILE
-[[ $(check-pf general action) == 0 ]] && echo "\
+[[ $(check-pf general action) == 1 ]] && echo "\
 #!/usr/bin/env bash
 
 OLD_FILE='/etc/default/grub'
@@ -76,8 +77,8 @@ GRUB_ACTION=()
 " >> $GRUB_ACTIONS_FILE
 
 check-param()	{
-	CURRENT=$(grep $1 $GRUB_FILE)
-	CURRENT=${CURRENT##$1}	# Substitute string to get only the CMDLINE parameters
+	CURRENT=$(grep "$1" "$GRUB_FILE")
+	CURRENT=${CURRENT##"$1"}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT#\"}
 	CURRENT=${CURRENT%\"}
 	CURRENT=($CURRENT)	# Convert string to an array
@@ -87,15 +88,15 @@ check-param()	{
 		[[ $(check-pf general check) == 0 ]] && continue
 		[[ "${CURRENT[*]}" =~ (^|[[:space:]])"$PARAM"($|[[:space:]]) ]] && continue	# Check if recommended parameter is in the current values array
 
-		echo "GRUB-Hardening($PARAM) 0" >> STATUS_FILE
-		echo "GRUB-Hardening[$PARAM]: ${grub[$PARAM]}" >> $MESSAGES_FILE
+		echo "GRUB-Hardening($PARAM)=0" ">> STATUS_FILE"
+		echo "GRUB-Hardening[$PARAM]: ${grub[$PARAM]}" >> "$MESSAGES_FILE"
 
 		[[ $(check-pf general action) == 0 ]] && continue
-		echo "GRUB_ACTION+=($PARAM)" >> $GRUB_ACTIONS_FILE
+		echo "GRUB_ACTION+=($PARAM)" >> "$GRUB_ACTIONS_FILE"
 	done
 
 	CPU_MIT=1
-	CPU_MET_MISSED=()
+	CPU_MIT_MISSED=()
 	# Loop through all cpu mitigations recommended values and check if they are applied, then save recommeneded action if required
 	for PARAM in "${GRUB_CPU_MIT_MESSAGE[@]}"; do
 		[[ $(check-pf cpu_metigations check) == 0 ]] && continue
@@ -109,10 +110,13 @@ check-param()	{
 		echo "GRUB_ACTION+=($PARAM)" >> $GRUB_ACTIONS_FILE
 	done
 
-	if [[ $CPU_MIT == 0 ]] then
-		echo "GRUB-Hardening[$PARAM]: These recommended CPU mitigations are not applied:" >> "$MESSAGES_FILE"
-		echo "${CPU_MIT_MISSED[@]}" >> "$MESSAGES_FILE"
-		echo "$GRUB_CPU_MIT_MESSAGE" >> "$MESSAGES_FILE"
+	if [[ $CPU_MIT == 0 ]] 
+	then
+	{
+		echo "GRUB-Hardening[$PARAM]: These recommended CPU mitigations are not applied:"
+		echo "${CPU_MIT_MISSED[@]}"
+		echo "$GRUB_CPU_MIT_MESSAGE"
+	} >> "$MESSAGES_FILE"
 	fi
 }
 
@@ -121,6 +125,7 @@ grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_
 
 write-to-actions-file()	{
 	{
+		echo ""
 		echo "cp /etc/default/grub /etc/default/grub.old.\$RUNTIME_DATE1"
 		echo "echo \"\" > /etc/default/grub"
 		echo "cat /etc/default/grub.old | while read line; do"

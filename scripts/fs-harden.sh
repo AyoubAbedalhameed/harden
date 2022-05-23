@@ -54,8 +54,8 @@ ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently u
 STATUS_FILE="$MAIN_DIR/status/fs.status"	# Currently used status file
 FS_ACTIONS_FILE="$MAIN_DIR/scripts/fs-actions_$RUNTIME_DATE.sh"
 
-source $MAIN_DIR/resources/fs-options.rc
-[[ -f $STATUS_FILE ]] && source $STATUS_FILE
+source "$MAIN_DIR/resources/fs-options.rc"
+[[ -f "$STATUS_FILE" ]] && source "$STATUS_FILE"
 
 # Queue the requested value from the JSON profile file by jq
 PROFILE=$(jq '.[] | select(.name=="fs")' $PROFILE_FILE)	# Save our object from the array
@@ -78,17 +78,19 @@ check-mount-options()	{
 	local L_FS_TYPE=$3
 
 	# Subititue the options from the MOUNT_OPTIONS dictionary that is after the 'options=' string, then save them as array
-	local REC_MOUNT_OPTIONS=(${MOUNT_OPTIONS[L_MOUNT_POINT]#*options=})
+	local REC_MOUNT_OPTIONS
+	REC_MOUNT_OPTIONS=(${MOUNT_OPTIONS[L_MOUNT_POINT]#*options=})
 
 	# Loop through the mount options of the mount point and check if they are the suitable recommended ones
 	for opt in "${REC_MOUNT_OPTIONS[@]}"; do
-		if [[ $opt == "hidepid" ]] then
+		if [[ $opt == "hidepid" ]]
+		then
 			[[ ! -f  "/etc/systemd/system/systemd-logind.service.d/hidepid.conf" ]] && write-hidepid
 		fi
 
 		[[ $L_MOUNT_OPTIONS =~ (^|[[:space:]])"$opt"($|[[:space:]]) ]]  && continue
 
-		echo "mounts${L_MOUNT_POINT//\//_}-$opt 0" >> $STATUS_FILE
+		echo "mounts${L_MOUNT_POINT//\//_}-$opt 0" >> "$STATUS_FILE"
 		echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: Mount option $opt is not currently set for $L_MOUNT_POINT mount point, it's recommended to be used." >> $MESSAGES_FILE
 		[[ -n ${MOUNT_OPTIONS[$opt]} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $opt: ${MOUNT_OPTIONS[$opt]}" >> $MESSAGES_FILE
 	done
@@ -101,30 +103,36 @@ cmp-fstab()	{
 	local L_DEVICE=$4
 
 	# Compare the current mount point information with the same mount point entry in /etc/fstab
-	local FSTAB_LINE="$(grep $L_MOUNT_POINT /etc/fstab)"
-
-	local FSTAB_DEVICE="$(echo $FSTAB_LINE | awk '{print $1;}')"
-	local FSTAB_MOUNT_OPTIONS="$(echo $FSTAB_LINE | awk '{print $4;}')"
-	local FSTAB_FS_TYPE="$(echo $FSTAB_LINE | awk '{print $3;}')"
+	local FSTAB_LINE
+	local FSTAB_FS_TYPE
+	local FSTAB_DEVICE
+	local FSTAB_MOUNT_OPTIONS
+	FSTAB_LINE="$(grep $L_MOUNT_POINT /etc/fstab)"
+	FSTAB_DEVICE="$(echo $FSTAB_LINE | awk '{print $1;}')"
+	FSTAB_MOUNT_OPTIONS="$(echo $FSTAB_LINE | awk '{print $4;}')"
+	FSTAB_FS_TYPE="$(echo $FSTAB_LINE | awk '{print $3;}')"
 
 	# Compare Device name used for mount point
-	if [[ $FSTAB_DEVICE == $L_DEVICE ]] then
-		echo "fstab${L_MOUNT_POINT//\//_}-$L_DEVICE=0" >> $STATUS_FILE
-		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point device $L_DEVICE is different from the one in /etc/fstab which is $FSTAB_DEVICE." >> $MESSAGES_FILE
+	if [[ "$FSTAB_DEVICE" == "$L_DEVICE" ]]
+	then
+		echo "fstab${L_MOUNT_POINT//\//_}-$L_DEVICE=0" >> "$STATUS_FILE"
+		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point device $L_DEVICE is different from the one in /etc/fstab which is $FSTAB_DEVICE." >> "$MESSAGES_FILE"
 	fi
+
 	# Compare file system type used for moint point
-	if [[ $FSTAB_FS_TYPE == $L_FS_TYPE ]] then
-		echo "fstab${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> $STATUS_FILE
-		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currenlty applied file system type $L_FS_TYPE is different from the one in /etc/fstab which is $FSTAB_FS_TYPE." >> $MESSAGES_FILE
-		[[ -n ${FS_TYPES[$FSTAB_FS_TYPE]} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $FSTAB_FS_TYPE: ${FS_TYPES[$FSTAB_FS_TYPE]}" >> $MESSAGES_FILE
-		[[ -n ${FS_TYPES[$L_FS_TYPE]} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $L_FS_TYPE: ${FS_TYPES[$L_FS_TYPE]}" >> $MESSAGES_FILE
+	if [[ "$FSTAB_FS_TYPE" == "$L_FS_TYPE" ]]
+	then
+		echo "fstab${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> "$STATUS_FILE"
+		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currenlty applied file system type $L_FS_TYPE is different from the one in /etc/fstab which is $FSTAB_FS_TYPE." >> "$MESSAGES_FILE"
+		[[ -n ${FS_TYPES[$FSTAB_FS_TYPE]} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $FSTAB_FS_TYPE: ${FS_TYPES[$FSTAB_FS_TYPE]}" >> "$MESSAGES_FILE"
+		[[ -n ${FS_TYPES[$L_FS_TYPE]} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $L_FS_TYPE: ${FS_TYPES[$L_FS_TYPE]}" >> "$MESSAGES_FILE"
 	fi
 
 	for opt in $FSTAB_MOUNT_OPTIONS; do
 		[[ $L_MOUNT_OPTIONS =~ (^|[[:space:]])"$opt"($|[[:space:]]) ]] && continue
-		echo "fstab${L_MOUNT_POINT//\//_}-$opt=0" >> $STATUS_FILE
-		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currently running (applied) mount options is missing $opt option which is specified in /etc/fstab, if it wasn't from you and feels suspeciuos, remount it by (mount -a)." >> $MESSAGES_FILE
-		[[ -n ${MOUNT_OPTIONS[$opt]} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $opt: ${MOUNT_OPTIONS[$opt]}" >> $MESSAGES_FILE
+		echo "fstab${L_MOUNT_POINT//\//_}-$opt=0" >> "$STATUS_FILE"
+		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currently running (applied) mount options is missing $opt option which is specified in /etc/fstab, if it wasn't from you and feels suspeciuos, remount it by (mount -a)." >> "$MESSAGES_FILE"
+		[[ -n ${MOUNT_OPTIONS[$opt]} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $opt: ${MOUNT_OPTIONS[$opt]}" >> "$MESSAGES_FILE"
 	done
 }
 
@@ -135,21 +143,24 @@ check-mount-point()	{
 	local L_DEVICE=$4
 
 	# Check if the mount point in /proc/mounts exists in our list of covered mount points
-	if [[ -n "${MOUNT_POINTS[$L_MOUNT_POINT]}" ]] then
+	if [[ -n "${MOUNT_POINTS[$L_MOUNT_POINT]}" ]]
+	then
 		# Check if file system type is the one recommended
-		local REC_FS_TYPE="$(echo ${MOUNT_POINTS[$L_MOUNT_POINT]} | awk '{print $1;}')"
+		local REC_FS_TYPE
+		REC_FS_TYPE="$(echo ${MOUNT_POINTS[$L_MOUNT_POINT]} | awk '{print $1;}')"
 
-		if [[ $L_FS_TYPE != $REC_FS_TYPE ]] then
-			echo "mounts${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> $STATUS_FILE
-			echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: the currently used file system type $L_FS_TYPE is different from the expected one $REC_FS_TYPE." >> $MESSAGES_FILE
-			[[ -n ${FS_TYPES[$REC_FS_TYPE]} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $REC_FS_TYPE: ${FS_TYPES[$REC_FS_TYPE]}" >> $MESSAGES_FILE
-			[[ -n ${FS_TYPES[$L_FS_TYPE]} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $L_FS_TYPE: ${FS_TYPES[$L_FS_TYPE]}" >> $MESSAGES_FILE
+		if [[ "$L_FS_TYPE" != "$REC_FS_TYPE" ]]
+		then
+			echo "mounts${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> "$STATUS_FILE"
+			echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: the currently used file system type $L_FS_TYPE is different from the expected one $REC_FS_TYPE." >> "$MESSAGES_FILE"
+			[[ -n ${FS_TYPES[$REC_FS_TYPE]} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $REC_FS_TYPE: ${FS_TYPES[$REC_FS_TYPE]}" >> "$MESSAGES_FILE"
+			[[ -n ${FS_TYPES[$L_FS_TYPE]} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $L_FS_TYPE: ${FS_TYPES[$L_FS_TYPE]}" >> "$MESSAGES_FILE"
 		fi
 
-		check-mount-options $L_MOUNT_POINT $L_MOUNT_OPTIONS
+		check-mount-options "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS"
 	fi
 
-	cmp-fstab $L_MOUNT_POINT $L_MOUNT_OPTIONS $L_FS_TYPE $L_DEVICE
+	cmp-fstab "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
 }
 
 # Start by extracting information from /proc/mounts line by line, then check them
@@ -161,7 +172,7 @@ cat /proc/mounts | while read line; do
 	L_MOUNT_OPTIONS="$(echo $line | awk '{print $4;}')"
 	L_MOUNT_OPTIONS="${L_MOUNT_OPTIONS/,/ /}"	# Replace ',' with ' ' to have them separated for comparison
 
-	check-mount-point $L_MOUNT_POINT $L_MOUNT_OPTIONS $L_FS_TYPE $L_DEVICE
+	check-mount-point "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
 done
 
-[[ $(check-pf action) == 0 ]] && echo "$FS_ACTIONS_FILE" >> $ACTIONS_FILE
+[[ $(check-pf action) == 0 ]] && echo "$FS_ACTIONS_FILE" >> "$ACTIONS_FILE"

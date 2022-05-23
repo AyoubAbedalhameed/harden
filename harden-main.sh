@@ -123,7 +123,7 @@ harden-run()   {
 	for script in $(jq '.[].script'); do
 		if [[ -e $script ]]
 		then
-			bash "$script" -mf "$MESSAGES_FILE" -af "$ACTIONS_FILE" -md "$MAIN_DIR"
+			bash "$script" -mf "$MESSAGES_FILE" -af "$ACTIONS_FILE" -md "$MAIN_DIR" -pf "$PROFILE_FILE"
 		else
 			echo "Script $script does not exist not in the $SCRIPTS_DIR."
 		fi
