@@ -59,7 +59,7 @@ STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub.status"}	# Currently used stat
 GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions.sh"
 GRUB_FILE="/etc/default/grub"
 
-source "../resources/grub-parameters.rc"
+source "$MAIN_DIR/resources/grub-parameters.rc"
 
 # Queue the requested value from the JSON profile file by jq
 PROFILE=$(jq '.[] | select(.name=="grub")' $PROFILE_FILE)	# Save our object from the array
