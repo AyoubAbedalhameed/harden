@@ -59,6 +59,9 @@ STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub.status"}	# Currently used stat
 GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions.sh"
 GRUB_FILE="/etc/default/grub"
 
+echo ""
+echo "GRUB Hardening script has started..."
+
 source "$MAIN_DIR/resources/grub-parameters.rc"
 
 # Queue the requested value from the JSON profile file by jq
@@ -91,13 +94,13 @@ check-param()	{
 		[[ $(check-pf general check) == 0 ]] && continue
 		[[ $CURRENT =~ $PARAM ]] && continue	# Check if recommended parameter is in the current values array
 
-		echo "GRUB_$PARAM=0" ">> STATUS_FILE"
+		echo "GRUB_$PARAM=0" >> "$STATUS_FILE"
 		P=${PARAM//=/_}
 		P=${P//./_}
-		echo "GRUB-Hardening[$PARAM]: ${!P}" >> "$MESSAGES_FILE"
+		echo "GRUB-Hardening[$PARAM]: $PARAM option is recommended for grub in GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub." >> "$MESSAGES_FILE"
+		echo "$PARAM: ${!P}" >> "$MESSAGES_FILE"
 
-		[[ $(check-pf general action) == 0 ]] && continue
-		echo "GRUB_ACTION=\"\$GRUB_ACTION $PARAM\"" >> "$GRUB_ACTIONS_FILE"
+		[[ $(check-pf general action) == 1 ]] && echo "GRUB_ACTION=\"\$GRUB_ACTION $PARAM\"" >> "$GRUB_ACTIONS_FILE"
 	done
 
 	CPU_MIT=1
@@ -108,7 +111,7 @@ check-param()	{
 
 		CPU_MIT=0
 		CPU_MIT_MISSED="$CPU_MIT_MISSED $PARAM"
-		echo "GRUB_$PARAM=0" >> STATUS_FILE
+		echo "GRUB_$PARAM=0" >> "$STATUS_FILE"
 
 		[[ $(check-pf cpu_metigations action) == 0 ]] && continue
 		echo "GRUB_ACTION=\"\$GRUB_ACTION $PARAM\"" >> "$GRUB_ACTIONS_FILE"
@@ -156,3 +159,7 @@ write-to-actions-file()	{
 [[ $(check-pf general action) == 0 ]] && write-to-actions-file
 
 echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
+
+echo ""
+echo "GRUB Hardening script has finished"
+echo ""

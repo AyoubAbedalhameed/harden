@@ -7,10 +7,10 @@
             "check":1,
             "action":0,
 
-            "network":{"check":1,"action":1,"question":""},
-            "security":{"check":1,"action":1,"question":""},
-            "self-protection":{"check":1,"action":1,"question":""},
-            "user-space":{"check":1,"action":1,"question":""},
+            "network":{"check":1,"action":0,"question":""},
+            "security":{"check":1,"action":0,"question":""},
+            "self-protection":{"check":1,"action":0,"question":""},
+            "user-space":{"check":1,"action":0,"question":""},
 
             "module":{
                 "check":1,
@@ -33,8 +33,8 @@
         "name":"grub",
         "script":"/usr/share/harden/scripts/grub-harden.sh",
         "grub":{
-            "general":{"check":1,"action":1,"question":""},
-            "cpu_metigations":{"check":1,"action":1,"question":""}
+            "general":{"check":1,"action":0,"question":""},
+            "cpu_metigations":{"check":1,"action":0,"question":""}
         }
     },
     {

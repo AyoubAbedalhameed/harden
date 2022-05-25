@@ -2,7 +2,7 @@
 # Written By: Adnan Omar (aalkhaldi8@gmail.com)
 
 # Prevent overwriting files, if then the script will exit
-set -c
+set -C
 
 usage() {
 	echo "Usage: $0 -cf/--config-file [configuration file] -pf/--profile-file [profile file] \
@@ -14,6 +14,7 @@ RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
 
 # First argument should specify which mode we are running in
 OPERATE_MODE=$1
+DEBUG_X=" "
 shift
 # Loop through all command line arguments, and but them in
 # the case switch statement to test them
@@ -38,6 +39,10 @@ while [[ $# -gt 0 ]]; do
 		-d|--date)	# This option is used in (list-messages, list-actions) operate modes
 			DATE_TO_LIST=$2
 			shift 2
+			;;
+		-x)
+			DEBUG_X="-x"
+			shift 1
 			;;
 		-*|--*)
 			echo "Unknown option $1"
@@ -82,8 +87,10 @@ ACTIONS_FILE=${ACTIONS_FILE:="$ACTIONS_DIR/$RUNTIME_DATE.sh"}	# Currently used A
 # in the service unit file to "journal")
 #
 LOG_FILE="/var/log/harden/$(date +%F_%H-%M-%S).log"
+[[ ! -d /var/log/harden ]] && mkdir /var/log/harden
+
 echo > "$LOG_FILE"
-exec 2>>"$LOG_FILE"
+#exec 2>>"$LOG_FILE"
 
 # Print startup message with run time settings
 echo "\
@@ -98,7 +105,8 @@ LOG_FILE=$LOG_FILE"
 
 harden-run()   {
 	# Create Log, status, messages and actions file for the current run.
-	touch "$MESSAGES_FILE" "$ACTIONS_FILE"
+	echo > "$MESSAGES_FILE"
+	echo > "$ACTIONS_FILE"
 
 	tail -f "$MESSAGES_FILE" &	# Run tail command in follow mode in the
 					# background, so we can get the data from
@@ -116,7 +124,9 @@ harden-run()   {
 	ln -s "$MESSAGES_FILE" "$MAIN_DIR/last-messages"
 	ln -s "$ACTIONS_FILE" "$MAIN_DIR/last-actions"
 
-	for script in $(jq '.[].script' $PROFILE_FILE); do
+	SCRIPTS_NAMES=$(jq '.[].script' $PROFILE_FILE)
+	SCRIPTS_NAMES=${SCRIPTS_NAMES//\"/}
+	for script in $SCRIPTS_NAMES; do
 		if [[ -e $script ]]
 		then
 			bash "$script" -mf "$MESSAGES_FILE" -af "$ACTIONS_FILE" -md "$MAIN_DIR" -pf "$PROFILE_FILE"
@@ -167,15 +177,15 @@ check-and-run() {
 	local RETURN_VALUE=""
 	# Check what mode we are running in
 	case $OPERATE_MODE in
-		scan)	RETURN_VALUE=$(harden-run)
+		scan)	harden-run
 		;;
-		take-actions)	RETURN_VALUE=$(take-action)
+		take-actions)	take-action
 		;;
-		list-messages)	RETURN_VALUE=$(show-messages)
+		list-messages)	show-messages
 		;;
-		list-actions)	RETURN_VALUE=$(show-actions)
+		list-actions)	show-actions
 		;;
-		*)	echo "Please specify one of the available modes (setup - scan - act - messages - actions)"
+		*)	echo "Please specify one of the available modes (scan - act - messages - actions)"
 		;;
 	esac
 	return "$RETURN_VALUE"
