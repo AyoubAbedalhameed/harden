@@ -61,12 +61,11 @@ echo ""
 echo "Kernel Hardening script has started..."
 
 # Queue the requested value from the JSON profile file by jq
-PROFILE=$(jq '.[] | select(.name=="kernel")' "$PROFILE_FILE")	# Save our object from the array
+#PROFILE=$(jq '.[] | select(.name=="kernel")' "$PROFILE_FILE")	# Save our object from the array
 
 check-pf()  {
-	PF_VALUE="$@"
-	PF_VALUE="${PF_VALUE// /.}"
-	return $(echo $PROFILE | jq ".kernel.$PF_VALUE")
+	PF_VALUE="$*"
+	jq '.[] | select(.name=="kernel")' "$PROFILE_FILE" | jq ".kernel.${PF_VALUE// /.}"
 }
 
 check-param()	{
@@ -91,12 +90,13 @@ check-param()	{
 		[[ -z "$CURRENT_VAL" ]]   && continue
 
 		# Compare current value with recommended one
-		[[ "$CURRENT_VAL" != "$RECOMMENDED_VAL" ]] && echo "Kernel-Hardening[$PARAM]: Kernel Parameter $PARAM recommended value is \
+		[[ "$CURRENT_VAL" == "$RECOMMENDED_VAL" ]] && continue
+		echo "Kernel-Parameter-Hardening[$PARAM]: Kernel Parameter $PARAM recommended value is \
 ${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" >> "$MESSAGES_FILE"	# Print Message
 
 		echo "kernel_$PARAM=\"${RECOMMENDED_VAL//$'\t'/,}\"" >> "$STATUS_FILE"	# Save the current value
 
-		[[ $(check-pf "$TYPE" action) == 0 ]]  && echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> "$KERNEL_ACTIONS_FILE"	# Save action
+		[[ $(check-pf "$TYPE" action) == 1 ]]  && echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> "$KERNEL_ACTIONS_FILE"	# Save action
 	done
 }
 
@@ -106,7 +106,7 @@ module-blacklist()	{
 
 	source "$MODULES_FILE"
 
-	[[ $(check-pf module action) ]] && [[ ! -f $MODULE_BLACKLIST_FILE ]] && touch $MODULE_BLACKLIST_FILE
+	[[ $(check-pf module action) == 1 ]] && [[ ! -f $MODULE_BLACKLIST_FILE ]] && touch $MODULE_BLACKLIST_FILE
 
 	for TYPE in $MOD_TYPES; do
 		if [[ $(check-pf module "$TYPE" check) == 1 ]]
@@ -114,7 +114,7 @@ module-blacklist()	{
 			for MODULE in ${!TYPE}; do
 				grep -q "$MODULE" "$MODULE_BLACKLIST_FILE" && continue
 				echo "kernel_module_$MODULE=0" >> "$STATUS_FILE"
-				echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
+				echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
 
 				lsmod | grep -q "$MODULE" && echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is loaded on you currently running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
 				[[ $(check-pf module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"

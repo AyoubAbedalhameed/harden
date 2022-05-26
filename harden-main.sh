@@ -119,10 +119,10 @@ harden-run()   {
 	# Create/relink a symlink to the last status file
 	[[ -e "$MAIN_DIR/last-status" ]] && rm "$MAIN_DIR/last-status"
 	[[ -e "$MAIN_DIR/last-messages" ]] && rm "$MAIN_DIR/last-messages"
-	[[ -e "$MAIN_DIR/last-actions" ]] && rm "$MAIN_DIR/last-actions"
+	[[ -e "$MAIN_DIR/last-action" ]] && rm "$MAIN_DIR/last-action"
 	ln -s "$STATUS_FILE" "$MAIN_DIR/last-status"
 	ln -s "$MESSAGES_FILE" "$MAIN_DIR/last-messages"
-	ln -s "$ACTIONS_FILE" "$MAIN_DIR/last-actions"
+	ln -s "$ACTIONS_FILE" "$MAIN_DIR/last-action"
 
 	SCRIPTS_NAMES=$(jq '.[].script' $PROFILE_FILE)
 	SCRIPTS_NAMES=${SCRIPTS_NAMES//\"/}
@@ -136,26 +136,22 @@ harden-run()   {
 	done
 
 	echo "Harden service has finished"
-	return 0
 }
 
 take-action()   {
 	echo "Taking Actions from file $MAIN_DIR/last-actions"
 	bash "$MAIN_DIR/last-actions"
-	return $?
 }
 
 show-messages() {
 	if [[ $(ls "$MESSAGES_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]]
 	then
 		echo "No messages found for this date ($DATE_TO_LIST)"
-		return 1
 	else
 		for i in $MESSAGES_DIR/$DATE_TO_LIST*
 		do
 			cat $i
 		done
-		return 0
 	fi
 }
 
@@ -163,18 +159,15 @@ show-actions()  {
 	if [[ $(ls "$ACTIONS_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]]
 	then
 		echo "No actions found for this date ($DATE_TO_LIST)"
-		return 1
 	else
 		for i in $ACTIONS_DIR/$DATE_TO_LIST*
 		do
 			cat $i
 		done
-		return 0
 	fi
 }
 
 check-and-run() {
-	local RETURN_VALUE=""
 	# Check what mode we are running in
 	case $OPERATE_MODE in
 		scan)	harden-run
@@ -185,11 +178,11 @@ check-and-run() {
 		;;
 		list-actions)	show-actions
 		;;
-		*)	echo "Please specify one of the available modes (scan - act - messages - actions)"
+		clean)	rm -f $MESSAGES_DIR/* $ACTIONS_DIR/* $STATUS_DIR/* $MAIN_DIR/last-action $MAIN_DIR/last-messages $MAIN_DIR/last-status
+		;;
+		*)	echo "Please specify one of the available modes (scan - act - messages - actions - clean)"
 		;;
 	esac
-	return "$RETURN_VALUE"
 }
 
 check-and-run
-exit $?

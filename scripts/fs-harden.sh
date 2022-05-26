@@ -46,7 +46,7 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="$CONFIG_DIR/profile-file.json"}	# Use Default User Choice Profile File,
+PROFILE_FILE=${PROFILE_FILE:="etc/harden/profile-file.json"}	# Use Default User Choice Profile File,
 										# if not set by a positional parameter (command line argument)
 MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
 ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
@@ -58,10 +58,9 @@ source "$MAIN_DIR/resources/fs-options.rc"
 [[ -f "$STATUS_FILE" ]] && source "$STATUS_FILE"
 
 # Queue the requested value from the JSON profile file by jq
-PROFILE=$(jq '.[] | select(.name=="fs")' $PROFILE_FILE)	# Save our object from the array
-
 check-pf()  {
-	return $(echo $PROFILE | jq ".fs.$1")
+	PF_VALUE="$*"
+	jq '.[] | select(.name=="fs")' "$PROFILE_FILE" | jq ".fs.${PF_VALUE// /.}"
 }
 
 [[ $(check-pf check) == 0 ]] && exit
