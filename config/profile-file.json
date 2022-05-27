@@ -46,75 +46,81 @@
     },
     {
         "name":"firewall",
+        "question":"Do you want to harden firewall services in your system and to add the recommended iptables rules (configurable), (That may requires installing some extra packages). ? ",
         "script":"/usr/share/harden/scripts/firewall-harden.sh",
         "firewall":{
 
             "check":1,
-            "action":0,
+            "action":1,
             "rules":{
                 "addressblock":{
                     "check":1,
-                    "action":0,
+                    "action":1,
                     "question":"",
-                    "parameters_question":"",
-                    "parameters":null
+                    "parameters_question":"Enter a comma-separetd list of ip address/network-addresses you want to block traffic from",
+                    "Parameters_Example":"",
+                    "parameters":"90.90.90.90/32,99.99.90/31,1.1.1.1" 
 
                 },
 
                 "ssh_in":{
                     "check":1,
-                    "action":0,
+                    "action":1,
                     "auestion":"",
-                    "parameters_question":"",
-                    "parameters":null
+                    "parameters_question":"Enter one <PORT> number and Comma-separetd <ADDRESSES> list for Allowing incomming ssh request to your choosed PORT from ADDRESSES. Default(22 All)",
+                    "Parameters_Example":"",
+                    "parameters":"22 0.0.0.0/0"
 
                 },
 
                 "http":{
                     "check":1,
-                    "action":0,
-                    "question":"",
-                    "parameters_question":"",
-                    "parameters":null
+                    "action":1,
+                    "question":"Do you want to allow incoming HTTP requests from specific/All networks on all interfaces ? Default (y)",
+                    "parameters_question":"Enter one <PORT> number and Comma-separetd <ADDRESSES> list for Allowing incomming HTTP request to your choosed PORT from ADDRESSES. Default(80 All)",
+                    "Parameters_Example":"",
+                    "parameters":"80 0.0.0.0/0"
                 },
 
                 "https_in":{
                     "check":1,
                     "action":0,
-                    "question":"",
-                    "parameters_question":"",
-                    "parameters":null
+                    "question":"Do you want to allow incoming HTTP requests from specific/All networks on all interfaces ? <Default (y)>",
+                    "parameters_question":"Enter a comma-separted ip addresses/network-address list to allow incomming HTTPS requests from. <Default (All)>",
+                    "Parameters_Example":"",
+                    "parameters":"0.0.0.0/0"
                 },
 
                 "allow_ports":{
-                    "check":1,
+                    "check":0,
                     "action":0,
-                    "question":"",
-                    "parameters_question":"",
-                    "parameters":null
+                    "question":"Enter a comma separated list for specifc ports you wish to allow trafic into",
+                    "parameters_question":"Enter a comma separated list for specifc ports you wish to allow trafic into",
+                    "Parameters_Example":"",
+                    "parameters":"0,1,2,3"
 
                 },
 
                 "ssh_out":{
                     "check":1,
                     "action":0,
-                    "question":"",
-                    "parameters_question":"",
-                    "parameters":null
+                    "question":"Do you want to allow (pass) outgoing ssh-connection's traffic for specific addresses/networks ? <Default (Yes)>",
+                    "parameters_question":"Enter a comma-separated list of IP addresses and/or networks you wish to allow outgoing SSH requests to. <Default (All)>",
+                    "parameters":"0.0.0.0/0"
                 },
 
                 "https_out":{
                     "check":1,
                     "action":0,
-                    "question":"",
-                    "parameters_question":"",
-                    "parameters":"httpsParameter1 httpsParameter2"
+                    "question":"Do you want to allow (pass) outgoing HTTPS connections requests from this machine? <Default (No)>",
+                    "parameters_question":"Enter a comma separated list of destination IP addresses you wish to pass outgoing HTTPS requests to",
+                    "parameters":"0.0.0.0/0"
                 },
 
                 "icmp_ping_out":{
                     "check":1,
                     "action":0,
-                    "question":"",
+                    "question":"Do you want to allow outgoing ICMP Pings traffic? <Default (Yes)>",
                     "parameters_question":null
 
 
@@ -123,7 +129,7 @@
                 "icmp_ping_in":{
                     "check":1,
                     "action":0,
-                    "question":"",
+                    "question":"Do you want to allow incomming ICMP Pings traffic? <Default (No)>",
                     "parameters_question":null
 
                 },
@@ -131,8 +137,9 @@
                 "loopback_access":{
                     "check":1,
                     "action":0,
-                    "question":"",
+                    "question":"Do you want to allow all kinds of traffic on loopback access? <Default (Yes)>",
                     "parameters_question":null
+                    
 
                 }
             }
