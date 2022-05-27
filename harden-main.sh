@@ -42,6 +42,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-x)
 			DEBUG_X="-x"
+			set -x
 			shift 1
 			;;
 		-*|--*)
@@ -90,7 +91,7 @@ LOG_FILE="/var/log/harden/$(date +%F_%H-%M-%S).log"
 [[ ! -d /var/log/harden ]] && mkdir /var/log/harden
 
 echo > "$LOG_FILE"
-#exec 2>>"$LOG_FILE"
+exec 2>>"$LOG_FILE"
 
 # Print startup message with run time settings
 echo "\
