@@ -139,6 +139,7 @@
                     "action":0,
                     "question":"Do you want to allow all kinds of traffic on loopback access? <Default (Yes)>",
                     "parameters_question":null
+                    
 
                 }
             }
