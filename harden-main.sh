@@ -90,8 +90,10 @@ ACTIONS_FILE=${ACTIONS_FILE:="$ACTIONS_DIR/$RUNTIME_DATE.sh"}	# Currently used A
 LOG_FILE="/var/log/harden/$(date +%F_%H-%M-%S).log"
 [[ ! -d /var/log/harden ]] && mkdir /var/log/harden
 
-#echo > "$LOG_FILE"
-#exec 2>>"$LOG_FILE"
+[[ -e $MAIN_DIR/last-log ]] && rm $MAIN_DIR/last-log
+ln -s "$LOG_FILE" $MAIN_DIR/last-log
+echo > "$LOG_FILE"
+exec 2>>"$LOG_FILE"
 
 # Print startup message with run time settings
 echo "\
@@ -130,7 +132,7 @@ harden-run()   {
 	for script in $SCRIPTS_NAMES; do
 		if [[ -e $script ]]
 		then
-			bash "$script" -mf "$MESSAGES_FILE" -af "$ACTIONS_FILE" -md "$MAIN_DIR" -pf "$PROFILE_FILE"
+			bash "$script" -mf "$MESSAGES_FILE" -af "$ACTIONS_FILE" -md "$MAIN_DIR" -pf "$PROFILE_FILE" 2>>"$LOG_FILE"
 		else
 			echo "Script $script does not exist not in the $SCRIPTS_DIR."
 		fi

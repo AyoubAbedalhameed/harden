@@ -89,8 +89,7 @@ check-param()	{
 			echo "GRUB_$PARAM=0" >> "$STATUS_FILE"
 			P=${PARAM//=/_}
 			P=${P//./_}
-			echo "GRUB-Hardening[$PARAM]: $PARAM option is recommended for grub in GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub." >> "$MESSAGES_FILE"
-			echo "$PARAM: ${!P}" >> "$MESSAGES_FILE"
+			echo "GRUB-Hardening[$PARAM]: $PARAM option is recommended for grub in GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub. $PARAM: ${!P}" >> "$MESSAGES_FILE"
 
 			GRUB_ACTION="$GRUB_ACTION $PARAM"
 		done
