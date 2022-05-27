@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Written by: Adnan Omar (aalkhaldi8@gmail.com)
+
+export MOD_TYPES="weak_net_proto rare_fs net_fs vivid bluetooth webcam"
+
+export weak_net_proto="dccp sctp rds tipc n-hdlc ax25 netrom x25 rose decnet econet af_802154 ipx appletalk psnap p8023 p8022 can atm"
+export rare_fs="cramfs freevxfs jffs2 hfs hfsplus squashfs udf"
+export net_fs="cifs nfs nfsv3 nfsv4 ksmbd gfs2"
+export vivid="vidi_testing"
+export bluetooth="bluetooth btusb"
+export webcam="uvcvideo"
