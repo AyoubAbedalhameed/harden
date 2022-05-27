@@ -66,8 +66,8 @@ FW_Rules[rules.ssh_out,d]="This rule specify the list of addresses/networks for 
 
 ## 8. Allow outgoing HTTPS to a specific/all/ip/network:
 FW_Rules[rules.https_out,0]=2
-FW_Rules[rules.https_out,1]="OUTPUT -p tcp -d @0 --dport 443 -m state --state @0 NEW,ESTABLISHED -j ACCEPT"
-FW_Rules[rules.https_out,2]="INPUT -p tcp --sport 443 -m state --state @0 @1 ESTABLISHED" 
+FW_Rules[rules.https_out,1]="OUTPUT -p tcp -d @0 --dport 443 -m state --state  NEW,ESTABLISHED -j ACCEPT"
+FW_Rules[rules.https_out,2]="INPUT -p tcp --sport 443 -m state --state  ESTABLISHED" 
 FW_Rules[rules.https_out,d]="This rule specify the list of addresses/networks for accepted outgoing HTTPS connections "
 
 
@@ -94,8 +94,3 @@ FW_Rules[rules.loopback_access,0]=2
 FW_Rules[rules.loopback_access,1]="INPUT -i lo -j ACCEPT"
 FW_Rules[rules.loopback_access,2]="OUTPUT -o lo -j ACCEPT"
 FW_Rules[rules.loopback_access,d]="This rules is used to allow/pass traffic on loopback interface."
-
-
-
-
-
