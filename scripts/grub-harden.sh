@@ -56,8 +56,9 @@ MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Cur
 ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 
 STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub.status"}	# Currently used status file
-GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions.sh"
+GRUB_ACTIONS_FILE="$MAIN_DIR/actions/grub-actions.sh"
 GRUB_FILE="/etc/default/grub"
+GRUB_ACTION=""
 
 echo ""
 echo "GRUB Hardening script has started..."
@@ -70,15 +71,6 @@ check-pf()  {
 	PF_VALUE="$*"
 	jq '.[] | select(.name=="grub")' "$PROFILE_FILE" | jq ".grub.${PF_VALUE// /.}"
 }
-
-# Prepare the GRUB_ACTIONS_FILE
-[[ $(check-pf general action) == 1 ]] && echo "\
-#!/usr/bin/env bash
-
-OLD_FILE='/etc/default/grub'
-
-GRUB_ACTION=''
-" >> $GRUB_ACTIONS_FILE
 
 check-param()	{
 	local CURRENT
@@ -100,7 +92,7 @@ check-param()	{
 			echo "GRUB-Hardening[$PARAM]: $PARAM option is recommended for grub in GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub." >> "$MESSAGES_FILE"
 			echo "$PARAM: ${!P}" >> "$MESSAGES_FILE"
 
-			[[ $(check-pf general action) == 1 ]] && echo "GRUB_ACTION=\"\$GRUB_ACTION $PARAM\"" >> "$GRUB_ACTIONS_FILE"
+			GRUB_ACTION="$GRUB_ACTION $PARAM"
 		done
 	fi
 
@@ -116,8 +108,7 @@ check-param()	{
 			CPU_MIT_MISSED="$CPU_MIT_MISSED $PARAM"
 			echo "GRUB_$PARAM=0" >> "$STATUS_FILE"
 
-			[[ $(check-pf cpu_metigations action) == 0 ]] && continue
-			echo "GRUB_ACTION=\"\$GRUB_ACTION $PARAM\"" >> "$GRUB_ACTIONS_FILE"
+			GRUB_ACTION="$GRUB_ACTION $PARAM"
 		done
 
 		if [[ $CPU_MIT == 0 ]] 
@@ -133,6 +124,9 @@ check-param()	{
 
 write-to-actions-file()	{
 	{
+		echo "#!/usr/bin/env bash"
+		echo ""
+		echo "OLD_FILE='/etc/default/grub'"
 		echo ""
 		echo "cp /etc/default/grub /etc/default/grub.old.$RUNTIME_DATE"
 		echo "echo \"\" > /etc/default/grub"
@@ -142,20 +136,20 @@ write-to-actions-file()	{
 		echo "		line=\"\${line##\"GRUB_CMDLINE_LINUX=\"}\"	# Substitute string to get only the CMDLINE parameters"
 		echo "		line=\"\${line#\\\"}\""
 		echo "		line=\"\${line%\\\"}\""
-		echo "		echo \"GRUB_CMDLINE_LINUX=\"\$line \$GRUB_ACTION\"\" >> /etc/default/grub"
+		echo "		echo \"GRUB_CMDLINE_LINUX=\"\$line $GRUB_ACTION\"\" >> /etc/default/grub"
 		echo ""
 		echo "	elif [[ \$line =~ \"GRUB_CMDLINE_LINUX_DEFAULT=\" ]] then"
 		echo "		line=\${line##\"GRUB_CMDLINE_LINUX_DEFAULT=\"}	# Substitute string to get only the CMDLINE parameters"
 		echo "		line=\${line#\\\"}"
 		echo "		line=\${line%\\\"}"
-		echo "		echo \"GRUB_CMDLINE_LINUX_DEFAULT=\"\$line \${GRUB_ACTION[@]}\"\" >> /etc/default/grub"
+		echo "		echo \"GRUB_CMDLINE_LINUX_DEFAULT=\"\$line $GRUB_ACTION\"\" >> /etc/default/grub"
 		echo ""
 		echo "	else"
 		echo "		echo \$line >> /etc/default/grub"
 		echo "	fi"
 		echo "done"
 		echo ""
-	} >> "$GRUB_ACTIONS_FILE"
+	} > "$GRUB_ACTIONS_FILE"
 }
 
 if [[ $(check-pf check) == 1 ]]
