@@ -1,0 +1,9 @@
+[Unit]
+Description=Run oneshot service for harden.service periodically
+
+[Timer]
+Unit=harden.service
+OnCalendar=*-*-* 01:00
+
+[Install]
+WantedBy=timers.target

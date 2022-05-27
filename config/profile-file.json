@@ -9,8 +9,8 @@
 
             "network":{"check":1,"action":0,"question":""},
             "security":{"check":1,"action":0,"question":""},
-            "self-protection":{"check":1,"action":0,"question":""},
-            "user-space":{"check":1,"action":0,"question":""},
+            "self_protection":{"check":1,"action":0,"question":""},
+            "user_space":{"check":1,"action":0,"question":""},
 
             "module":{
                 "check":1,

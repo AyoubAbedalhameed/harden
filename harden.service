@@ -1,26 +1,21 @@
 [Unit]
 Description=Hardening service
-After=systemd-journald
 StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-Restart=always
-RestartSec=1
 User=root
-#Group=
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=harden
+SyslogIdentifier=harden-service
 LogLevelMax=alert
 SyslogFacility=daemon
-SyslogLevel=debug
+SyslogLevel=alert
 SyslogLevelPrefix=true
 ExecStart=/usr/bin/harden-main scan
-StartLimitBurst=5
-StartLimitIntervalSec=10
+#StartLimitBurst=5
 #ExecStop=
-#SELinuxContext=-
+#SELinuxContext=
 
 [Install]
 WantedBy=multi-user.target
