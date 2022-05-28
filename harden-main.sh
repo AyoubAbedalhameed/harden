@@ -176,7 +176,7 @@ _TAKE_ACTION_FUNCTION()   {
 }
 
 _SHOW_MESSAGES_FUNCTION() {
-	if [[ $(ls "$MESSAGES_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]]; then
+	if [[ $(find $MESSAGES_DIR/ -maxdepth 1 -type f -name "$DATE_TO_LIST*" | wc -w) == 0 ]]; then
 		echo "No messages found for this date ($DATE_TO_LIST)"
 	else
 		for i in $MESSAGES_DIR/$DATE_TO_LIST*
@@ -187,7 +187,7 @@ _SHOW_MESSAGES_FUNCTION() {
 }
 
 _SHOW_ACTIONS_FUNCTION()  {
-	if [[ $(ls "$ACTIONS_DIR/$DATE_TO_LIST*" | wc -w) == 0 ]]; then
+	if [[ $(find "$ACTIONS_DIR/" -maxdepth 1 -type f -name "$DATE_TO_LIST*" | wc -w) == 0 ]]; then
 		echo "No actions found for this date ($DATE_TO_LIST)"
 	else
 		for i in $ACTIONS_DIR/$DATE_TO_LIST*

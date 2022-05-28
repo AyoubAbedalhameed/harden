@@ -1,6 +1,7 @@
 [Unit]
 Description=Hardening service
-StartLimitIntervalSec=0
+StartLimitIntervalSec=60
+StartLimitBurst=1
 
 [Service]
 Type=simple
