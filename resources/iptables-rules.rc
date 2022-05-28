@@ -6,7 +6,7 @@
 
 declare -A FW_Rules 
 
-
+ 
 
 
 ## 2. Blocking Specific Address Rules, Multiple Addresses (comma seperated) can be used here:
