@@ -1,0 +1,23 @@
+[Unit]
+Description=Hardening service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+StandardOutput=journal
+#StandardError=file:/var/log/harden/harden-service.debug.log
+StandardError=null
+SyslogIdentifier=harden-service
+LogLevelMax=alert
+SyslogFacility=daemon
+SyslogLevel=warning
+SyslogLevelPrefix=true
+#LogExtraFields="__REALTIME_TIMESTAMP __MONOTONIC_TIMESTAMP _BOOT_ID _MACHINE_ID _HOSTNAME SYSLOG_FACILITY=daemon _UID _GID _TRANSPORT _SELINUX_CONTEXT _STREAM_ID PRIORITY=7 SYSLOG_IDENTIFIER=harden-service-debug _SYSTEMD_CGROUP _SYSTEMD_UNIT #_COMM #_EXE _PID _SYSTEMD_INVOCATION_ID _CMDLINE MESSAGE"
+ExecStart=/usr/bin/harden-main scan -pf /etc/harden/profile-file.json
+#StartLimitBurst=5
+#ExecStop=
+#SELinuxContext=
+
+[Install]
+WantedBy=multi-user.target

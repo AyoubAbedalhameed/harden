@@ -3,9 +3,14 @@
 
 # GRUB Boot Parameters hardening
 
-usage() {
-	echo "Usage: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
--st/--status-file [status file] -mf/--messages-file [messages file] -af/--actions-file [actions file]";
+_USAGE_FUNCTION() {
+	echo "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]";
+}
+
+[[ $(id -u) != 0 ]] && {
+	echo "$0: Must run as a root, either by 'systemctl start harden.service' or by 'sudo $0' ."
+	_USAGE_FUNCTION
+	exit 0
 }
 
 RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
@@ -14,29 +19,27 @@ RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
 # the case switch statement to test them
 while [[ $# -gt 0 ]]; do
 	case $1 in
-		-md|--main-directory)
-			MAIN_DIR=$2
-			shift 2
-			;;
 		-pf|--profile-file)
-			PROFILE_FILE=$2
+			if [[ ! -e $2 ]]; then echo "$0: Invalid input for profile file (-pf) $PROFILE_FILE, file doesn't exist. Going to use the default ones (/etc/harden/profile-file.json or /usr/share/harden/config/profile-file.json)"
+			else PROFILE_FILE=$2
+			fi
 			shift 2
 			;;
 		-sf|--status-file)
 			STATUS_FILE=$2
 			shift 2
 			;;
-		-mf|--messages-file)
+		-mf|--messages-file)	# Use/Create a messages file from user choice
 			MESSAGES_FILE=$2
-			shift 2
+			shift 2	# shift the arguments 2 times (we used two arguments)
 			;;
-		-af|--actions-file)
+		-af|--actions-file)	# Use/Create an actions file from user choice
 			ACTIONS_FILE=$2
 			shift 2
 			;;
 		-*|--*)
-			echo "Unknown option $1"
-			usage
+			echo "$0: Invalid argument $1"
+			_USAGE_FUNCTION
 			exit 1
 			;;
 		*)
@@ -49,15 +52,30 @@ done
 # Restore Positional Arguments (those which has not been used)
 set -- "${POSITIONAL_ARGS[@]}"
 
-MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/profile-file.json"}	# Use Default User Choice Profile File,
-										# if not set by a positional parameter (command line argument)
-MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
-ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
+MAIN_DIR=$(pwd)
+MAIN_DIR=${MAIN_DIR%/scripts}
 
+if [[ ! -e $PROFILE_FILE ]]; then
+	if [[ -h /etc/harden/profile-file.json ]]; then
+		PROFILE_FILE="etc/harden/profile-file.json"	# Use Default User Choice Profile File,
+	elif [[ -h $MAIN_DIR/config/profile-file.json ]]; then
+		PROFILE_FILE="$MAIN_DIR/config/profile-file.json"	# if not set by a positional parameter (command line argument)
+	else
+		echo "$0: Critical Error: JSON file \"profile-file.json\" which is the main congifuration file for the Linux Hardening Project, is missing."
+		echo "Couldn't find it in: $PROFILE_FILE, or /etc/harden/profile-file.json, or /usr/share/harden/config/profile-file.json"
+		exit 1
+	fi
+
+	echo "$0: Using $PROFILE_FILE for the current run as profile-file."
+fi
+
+MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/grub-harden-$RUNTIME_DATE.message"}	# Currently used messages file
+ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub.status"}	# Currently used status file
-GRUB_ACTIONS_FILE="$MAIN_DIR/scripts/grub-actions.sh"
+
+GRUB_ACTIONS_FILE="$MAIN_DIR/actions/grub-actions.sh"
 GRUB_FILE="/etc/default/grub"
+GRUB_ACTION=""
 
 echo ""
 echo "GRUB Hardening script has started..."
@@ -66,21 +84,12 @@ echo ""
 source "$MAIN_DIR/resources/grub-parameters.rc"
 
 # Queue the requested value from the JSON profile file by jq
-check-pf()  {
+_CHECK_PROFILE_FILE_FUNCTION()  {
 	PF_VALUE="$*"
 	jq '.[] | select(.name=="grub")' "$PROFILE_FILE" | jq ".grub.${PF_VALUE// /.}"
 }
 
-# Prepare the GRUB_ACTIONS_FILE
-[[ $(check-pf general action) == 1 ]] && echo "\
-#!/usr/bin/env bash
-
-OLD_FILE='/etc/default/grub'
-
-GRUB_ACTION=''
-" >> $GRUB_ACTIONS_FILE
-
-check-param()	{
+_CHECK_PARAM()	{
 	local CURRENT
 	local CPU_MIT
 	local CPU_MIT_MISSED
@@ -89,7 +98,7 @@ check-param()	{
 	CURRENT=${CURRENT##"$1"}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT//\"/}
 
-	if [[ $(check-pf general check) == 1 ]]
+	if [[ $(_CHECK_PROFILE_FILE_FUNCTION general check) == 1 ]]
 	then
 		# Loop through all general recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_OPTIONS; do
@@ -97,16 +106,15 @@ check-param()	{
 			echo "GRUB_$PARAM=0" >> "$STATUS_FILE"
 			P=${PARAM//=/_}
 			P=${P//./_}
-			echo "GRUB-Hardening[$PARAM]: $PARAM option is recommended for grub in GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub." >> "$MESSAGES_FILE"
-			echo "$PARAM: ${!P}" >> "$MESSAGES_FILE"
+			echo "GRUB-Hardening[$PARAM]: $PARAM option is recommended for grub in GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub. $PARAM: ${!P}" >> "$MESSAGES_FILE"
 
-			[[ $(check-pf general action) == 1 ]] && echo "GRUB_ACTION=\"\$GRUB_ACTION $PARAM\"" >> "$GRUB_ACTIONS_FILE"
+			GRUB_ACTION="$GRUB_ACTION $PARAM"
 		done
 	fi
 
 	CPU_MIT=1
 	CPU_MIT_MISSED=""
-	if [[ $(check-pf cpu_metigations check) == 1 ]]
+	if [[ $(_CHECK_PROFILE_FILE_FUNCTION cpu_metigations check) == 1 ]]
 	then
 		# Loop through all cpu mitigations recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_CPU_MIT; do
@@ -116,8 +124,7 @@ check-param()	{
 			CPU_MIT_MISSED="$CPU_MIT_MISSED $PARAM"
 			echo "GRUB_$PARAM=0" >> "$STATUS_FILE"
 
-			[[ $(check-pf cpu_metigations action) == 0 ]] && continue
-			echo "GRUB_ACTION=\"\$GRUB_ACTION $PARAM\"" >> "$GRUB_ACTIONS_FILE"
+			GRUB_ACTION="$GRUB_ACTION $PARAM"
 		done
 
 		if [[ $CPU_MIT == 0 ]] 
@@ -133,6 +140,9 @@ check-param()	{
 
 write-to-actions-file()	{
 	{
+		echo "#!/usr/bin/env bash"
+		echo ""
+		echo "OLD_FILE='/etc/default/grub'"
 		echo ""
 		echo "cp /etc/default/grub /etc/default/grub.old.$RUNTIME_DATE"
 		echo "echo \"\" > /etc/default/grub"
@@ -142,29 +152,29 @@ write-to-actions-file()	{
 		echo "		line=\"\${line##\"GRUB_CMDLINE_LINUX=\"}\"	# Substitute string to get only the CMDLINE parameters"
 		echo "		line=\"\${line#\\\"}\""
 		echo "		line=\"\${line%\\\"}\""
-		echo "		echo \"GRUB_CMDLINE_LINUX=\"\$line \$GRUB_ACTION\"\" >> /etc/default/grub"
+		echo "		echo \"GRUB_CMDLINE_LINUX=\"\$line $GRUB_ACTION\"\" >> /etc/default/grub"
 		echo ""
 		echo "	elif [[ \$line =~ \"GRUB_CMDLINE_LINUX_DEFAULT=\" ]] then"
 		echo "		line=\${line##\"GRUB_CMDLINE_LINUX_DEFAULT=\"}	# Substitute string to get only the CMDLINE parameters"
 		echo "		line=\${line#\\\"}"
 		echo "		line=\${line%\\\"}"
-		echo "		echo \"GRUB_CMDLINE_LINUX_DEFAULT=\"\$line \${GRUB_ACTION[@]}\"\" >> /etc/default/grub"
+		echo "		echo \"GRUB_CMDLINE_LINUX_DEFAULT=\"\$line $GRUB_ACTION\"\" >> /etc/default/grub"
 		echo ""
 		echo "	else"
 		echo "		echo \$line >> /etc/default/grub"
 		echo "	fi"
 		echo "done"
 		echo ""
-	} >> "$GRUB_ACTIONS_FILE"
+	} > "$GRUB_ACTIONS_FILE"
 }
 
-if [[ $(check-pf check) == 1 ]]
+if [[ $(_CHECK_PROFILE_FILE_FUNCTION check) == 1 ]]
 then
-	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX="
-	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX_DEFAULT="
+	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" && _CHECK_PARAM "GRUB_CMDLINE_LINUX="
+	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && _CHECK_PARAM "GRUB_CMDLINE_LINUX_DEFAULT="
 fi
 
-[[ $(check-pf action) == 1 ]] && write-to-actions-file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
+[[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 1 ]] && write-to-actions-file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
 
 echo ""
 echo "GRUB Hardening script has finished"

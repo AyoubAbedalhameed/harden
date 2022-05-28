@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer to run a cleanup service (harden-cleanup.service) for the Linux Hardening Service (harden.service) old and unwanted files periodically
+
+[Timer]
+Unit=harden-cleanup.service
+OnCalendar=*-*-* 02:00
+
+[Install]
+WantedBy=timers.target
