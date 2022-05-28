@@ -4,7 +4,7 @@ StartLimitIntervalSec=60
 StartLimitBurst=1
 
 [Service]
-Type=simple
+Type=oneshot
 User=root
 StandardOutput=journal
 #StandardError=file:/var/log/harden/harden-service.debug.log
