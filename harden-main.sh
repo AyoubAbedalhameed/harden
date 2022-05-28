@@ -116,10 +116,12 @@ LOGS_DIR="/var/log/harden"	# Default Actions Directory
 [[ ! -d $LOGS_DIR ]] && mkdir $LOGS_DIR	# Check if Directory exists, and if not then create it
 LOG_FILE="$LOGS_DIR/$(date +%F_%H-%M-%S).log"
 
-[[ -e $LOGS_DIR/harden-last-log ]] && unlink $LOGS_DIR/harden-last-log
-ln -s "$LOG_FILE" $LOGS_DIR/harden-last-log
-echo > "$LOG_FILE"
-exec 2>> "$LOG_FILE"
+if [[ -z $DEBUG_X ]]; then
+	[[ -e $LOGS_DIR/harden-last-log ]] && unlink $LOGS_DIR/harden-last-log
+	ln -s "$LOG_FILE" $LOGS_DIR/harden-last-log
+	echo > "$LOG_FILE"
+	exec 2>> "$LOG_FILE"
+fi
 ########################################################
 
 # Print startup message with run time settings
@@ -130,7 +132,7 @@ MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
 MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
-LOG_FILE=$LOG_FILE" >> "$LOG_FILE"
+LOG_FILE=$LOG_FILE" 1>&2
 
 _HARDEN_RUN_FUNCTION()   {
 	# Create status and messages and actions file for the current run.
@@ -147,7 +149,7 @@ _HARDEN_RUN_FUNCTION()   {
 	# Create/relink a symlink to the last (actions,messages) files
 	[[ -h $MESSAGES_DIR/harden-last-messages ]] && unlink $MESSAGES_DIR/harden-last-messages
 	[[ -h $ACTIONS_DIR/harden-last-action ]] && unlink $ACTIONS_DIR/harden-last-action
-	ln -s "$MESSAGES_FILE" "$MESSAGES_DIR /harden-last-messages"
+	ln -s "$MESSAGES_FILE" "$MESSAGES_DIR/harden-last-messages"
 	ln -s "$ACTIONS_FILE" "$ACTIONS_DIR/harden-last-action"
 
 	SCRIPTS_NAMES=$(jq '.[].script' $PROFILE_FILE)
@@ -156,12 +158,12 @@ _HARDEN_RUN_FUNCTION()   {
 	for script in $SCRIPTS_NAMES; do
 		if [[ -e $script ]]; then
 			if [[ ${script%"$(basename $script)"} != "$SCRIPTS_DIR/" ]]; then
-				echo "Script $script does not exist in the scripts directory $SCRIPTS_DIR. Skipping $script, due to potential suspecious ." >> "$LOG_FILE"
+				echo "Script $script does not exist in the scripts directory $SCRIPTS_DIR. Skipping $script, due to potential suspecious ." 1>&2
 				continue
 			fi
-			bash "$DEBUG_X" "$script" -mf "$MESSAGES_FILE" -af "$ACTIONS_FILE" -md "$MAIN_DIR" -pf "$PROFILE_FILE" 2>>"$LOG_FILE"
+			bash "$DEBUG_X" "$script" -mf "$MESSAGES_FILE" -af "$ACTIONS_FILE" -pf "$PROFILE_FILE" 2>>"$LOG_FILE"
 		else
-			echo "Script $script does not exist not in the $SCRIPTS_DIR."
+			echo "Script $script does not exist. Please, check what is wrong either in the profile-file.json, or if there's any missing package files." 1>&2
 		fi
 	done
 
