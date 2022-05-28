@@ -4,7 +4,13 @@
 # GRUB Boot Parameters hardening
 
 _USAGE_FUNCTION() {
-	echo "_USAGE_FUNCTION: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]";
+	echo "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]";
+}
+
+[[ $(id -u) != 0 ]] && {
+	echo "$0: Must run as a root, either by 'systemctl start harden.service' or by 'sudo $0' ."
+	_USAGE_FUNCTION
+	exit 0
 }
 
 RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
@@ -13,28 +19,26 @@ RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
 # the case switch statement to test them
 while [[ $# -gt 0 ]]; do
 	case $1 in
-		-md|--main-directory)
-			MAIN_DIR=$2
-			shift 2
-			;;
 		-pf|--profile-file)
-			PROFILE_FILE=$2
+			if [[ ! -e $2 ]]; then echo "$0: Invalid input for profile file (-pf) $PROFILE_FILE, file doesn't exist. Going to use the default ones (/etc/harden/profile-file.json or /usr/share/harden/config/profile-file.json)"
+			else PROFILE_FILE=$2
+			fi
 			shift 2
 			;;
 		-sf|--status-file)
 			STATUS_FILE=$2
 			shift 2
 			;;
-		-mf|--messages-file)
+		-mf|--messages-file)	# Use/Create a messages file from user choice
 			MESSAGES_FILE=$2
-			shift 2
+			shift 2	# shift the arguments 2 times (we used two arguments)
 			;;
-		-af|--actions-file)
+		-af|--actions-file)	# Use/Create an actions file from user choice
 			ACTIONS_FILE=$2
 			shift 2
 			;;
 		-*|--*)
-			echo "Unknown option $1"
+			echo "$0: Invalid argument $1"
 			_USAGE_FUNCTION
 			exit 1
 			;;
@@ -48,13 +52,27 @@ done
 # Restore Positional Arguments (those which has not been used)
 set -- "${POSITIONAL_ARGS[@]}"
 
-MAIN_DIR=${MAIN_DIR:="/usr/share/harden"}
-PROFILE_FILE=${PROFILE_FILE:="/etc/harden/profile-file.json"}	# Use Default User Choice Profile File,
-										# if not set by a positional parameter (command line argument)
-MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/$RUNTIME_DATE.message"}	# Currently used messages file
-ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
+MAIN_DIR=$(pwd)
+MAIN_DIR=${MAIN_DIR%/scripts}
 
+if [[ ! -e $PROFILE_FILE ]]; then
+	if [[ -h /etc/harden/profile-file.json ]]; then
+		PROFILE_FILE="etc/harden/profile-file.json"	# Use Default User Choice Profile File,
+	elif [[ -h $MAIN_DIR/config/profile-file.json ]]; then
+		PROFILE_FILE="$MAIN_DIR/config/profile-file.json"	# if not set by a positional parameter (command line argument)
+	else
+		echo "$0: Critical Error: JSON file \"profile-file.json\" which is the main congifuration file for the Linux Hardening Project, is missing."
+		echo "Couldn't find it in: $PROFILE_FILE, or /etc/harden/profile-file.json, or /usr/share/harden/config/profile-file.json"
+		exit 1
+	fi
+
+	echo "$0: Using $PROFILE_FILE for the current run as profile-file."
+fi
+
+MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/grub-harden-$RUNTIME_DATE.message"}	# Currently used messages file
+ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
 STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub.status"}	# Currently used status file
+
 GRUB_ACTIONS_FILE="$MAIN_DIR/actions/grub-actions.sh"
 GRUB_FILE="/etc/default/grub"
 GRUB_ACTION=""
