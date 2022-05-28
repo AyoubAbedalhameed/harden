@@ -3,9 +3,8 @@
 
 # GRUB Boot Parameters hardening
 
-usage() {
-	echo "Usage: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
--st/--status-file [status file] -mf/--messages-file [messages file] -af/--actions-file [actions file]";
+_USAGE_FUNCTION() {
+	echo "_USAGE_FUNCTION: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]";
 }
 
 RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
@@ -36,7 +35,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-*|--*)
 			echo "Unknown option $1"
-			usage
+			_USAGE_FUNCTION
 			exit 1
 			;;
 		*)
@@ -67,12 +66,12 @@ echo ""
 source "$MAIN_DIR/resources/grub-parameters.rc"
 
 # Queue the requested value from the JSON profile file by jq
-check-pf()  {
+_CHECK_PROFILE_FILE_FUNCTION()  {
 	PF_VALUE="$*"
 	jq '.[] | select(.name=="grub")' "$PROFILE_FILE" | jq ".grub.${PF_VALUE// /.}"
 }
 
-check-param()	{
+_CHECK_PARAM()	{
 	local CURRENT
 	local CPU_MIT
 	local CPU_MIT_MISSED
@@ -81,7 +80,7 @@ check-param()	{
 	CURRENT=${CURRENT##"$1"}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT//\"/}
 
-	if [[ $(check-pf general check) == 1 ]]
+	if [[ $(_CHECK_PROFILE_FILE_FUNCTION general check) == 1 ]]
 	then
 		# Loop through all general recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_OPTIONS; do
@@ -97,7 +96,7 @@ check-param()	{
 
 	CPU_MIT=1
 	CPU_MIT_MISSED=""
-	if [[ $(check-pf cpu_metigations check) == 1 ]]
+	if [[ $(_CHECK_PROFILE_FILE_FUNCTION cpu_metigations check) == 1 ]]
 	then
 		# Loop through all cpu mitigations recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_CPU_MIT; do
@@ -151,13 +150,13 @@ write-to-actions-file()	{
 	} > "$GRUB_ACTIONS_FILE"
 }
 
-if [[ $(check-pf check) == 1 ]]
+if [[ $(_CHECK_PROFILE_FILE_FUNCTION check) == 1 ]]
 then
-	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX="
-	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && check-param "GRUB_CMDLINE_LINUX_DEFAULT="
+	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" && _CHECK_PARAM "GRUB_CMDLINE_LINUX="
+	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && _CHECK_PARAM "GRUB_CMDLINE_LINUX_DEFAULT="
 fi
 
-[[ $(check-pf action) == 1 ]] && write-to-actions-file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
+[[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 1 ]] && write-to-actions-file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
 
 echo ""
 echo "GRUB Hardening script has finished"

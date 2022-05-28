@@ -4,8 +4,8 @@
 # Kernel Parameters hardening through checking and warning with
 # recommended solutions and tips
 
-usage() {
-	echo "Usage: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
+_USAGE_FUNCTION() {
+	echo "_USAGE_FUNCTION: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
 -mf/--messages-file [messages file] -af/--actions-file [actions file]";
 }
 
@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-*|--*)
 			echo "Unknown option $1"
-			usage
+			_USAGE_FUNCTION
 			exit 1
 			;;
 		*)
@@ -63,12 +63,12 @@ echo "Kernel Hardening script has started..."
 # Queue the requested value from the JSON profile file by jq
 #PROFILE=$(jq '.[] | select(.name=="kernel")' "$PROFILE_FILE")	# Save our object from the array
 
-check-pf()  {
+_CHECK_PROFILE_FILE_FUNCTION()  {
 	PF_VALUE="$*"
 	jq '.[] | select(.name=="kernel")' "$PROFILE_FILE" | jq ".kernel.${PF_VALUE// /.}"
 }
 
-check-param()	{
+_CHECK_PARAM_FUNCTION()	{
 	source "$PARAMETERS_FILE"
 
 	VAL_INDEX=0
@@ -83,7 +83,7 @@ check-param()	{
 		RECOMMENDED_VAL="${kernel[$PARAM,$VAL_INDEX]}"
 		RECOMMENDED_VAL="${RECOMMENDED_VAL//,/$'\t'}"	# Replace commas (,) with tabs (\t), if exists
 
-		[[ $(check-pf "$TYPE" check) == 0 ]]  && continue	# Skip checking this parameter if profile file says so
+		[[ $(_CHECK_PROFILE_FILE_FUNCTION "$TYPE" check) != 1 ]]  && continue	# Skip checking this parameter if profile file says so
 		CURRENT_VAL="$(sysctl -en "$PARAM")"
 		CURRENT_VAL="${CURRENT_VAL//$'\t'/,}"
 
@@ -96,20 +96,20 @@ ${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $
 
 		echo "kernel_$PARAM=\"${RECOMMENDED_VAL//$'\t'/,}\"" >> "$STATUS_FILE"	# Save the current value
 
-		[[ $(check-pf "$TYPE" action) == 1 ]]  && echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> "$KERNEL_ACTIONS_FILE"	# Save action
+		[[ $(_CHECK_PROFILE_FILE_FUNCTION "$TYPE" action) == 1 ]]  && echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> "$KERNEL_ACTIONS_FILE"	# Save action
 	done
 }
 
-module-blacklist()	{
+_CHECK_MODULE_BLACKLISTING_FUNCTION()	{
 	local MODULE_BLACKLIST_FILE
 	MODULE_BLACKLIST_FILE="/etc/modprobe.d/blacklist.conf"
 
 	source "$MODULES_FILE"
 
-	[[ $(check-pf module action) == 1 ]] && [[ ! -f $MODULE_BLACKLIST_FILE ]] && touch $MODULE_BLACKLIST_FILE
+	[[ $(_CHECK_PROFILE_FILE_FUNCTION module action) == 1 ]] && [[ ! -f $MODULE_BLACKLIST_FILE ]] && touch $MODULE_BLACKLIST_FILE
 
 	for TYPE in $MOD_TYPES; do
-		if [[ $(check-pf module "$TYPE" check) == 1 ]]
+		if [[ $(_CHECK_PROFILE_FILE_FUNCTION module "$TYPE" check) == 1 ]]
 		then
 			for MODULE in ${!TYPE}; do
 				grep -q "$MODULE" "$MODULE_BLACKLIST_FILE" && continue
@@ -117,16 +117,16 @@ module-blacklist()	{
 				echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
 
 				lsmod | grep -q "$MODULE" && echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is loaded on you currently running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
-				[[ $(check-pf module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
+				[[ $(_CHECK_PROFILE_FILE_FUNCTION module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
 			done
 		fi
 	done
 }
 
-[[ $(check-pf check) == 1 ]] && check-param
-[[ $(check-pf module check) == 1 ]] && module-blacklist
+[[ $(_CHECK_PROFILE_FILE_FUNCTION check) == 1 ]] && _CHECK_PARAM_FUNCTION
+[[ $(_CHECK_PROFILE_FILE_FUNCTION module check) == 1 ]] && _CHECK_MODULE_BLACKLISTING_FUNCTION
 
-[[ $(check-pf action) == 1 ]] && echo "$KERNEL_ACTIONS_FILE" >> "$ACTIONS_FILE"	# Add approved actions to the actions file
+[[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 1 ]] && echo "$KERNEL_ACTIONS_FILE" >> "$ACTIONS_FILE"	# Add approved actions to the actions file
 
 echo ""
 echo "Kernel Hardening script has finished"

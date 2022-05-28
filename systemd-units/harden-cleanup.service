@@ -1,0 +1,20 @@
+[Unit]
+Description=Cleanup service for harden.service files (logs,messages,actions,status) files.
+StartLimitIntervalSec=60
+StartLimitBurst=2
+
+[Service]
+Type=simple
+User=root
+#StandardError=journal
+SyslogIdentifier=harden-cleanup-service
+LogLevelMax=alert
+SyslogFacility=daemon
+SyslogLevel=alert
+SyslogLevelPrefix=true
+ExecStart=/usr/bin/harden-main clean
+#ExecStop=
+#SELinuxContext=
+
+[Install]
+WantedBy=multi-user.target

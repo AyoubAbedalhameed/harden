@@ -1,5 +1,5 @@
 [Unit]
-Description=Run oneshot service for harden.service periodically
+Description=Timer to run Linux Hardening Service (harden.service) periodically
 
 [Timer]
 Unit=harden.service

@@ -3,8 +3,8 @@
 
 # Different recommended file system hardening options and configuration
 
-usage() {
-	echo "Usage: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
+_USAGE_FUNCTION() {
+	echo "_USAGE_FUNCTION: $0 -md/--main-directory [main directory] -pf/--profile-file [profile file] \
 -mf/--messages-file [messages file] -af/--actions-file [actions file]";
 }
 
@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-*|--*)
 			echo "Unknown option $1"
-			usage
+			_USAGE_FUNCTION
 			exit 1
 			;;
 		*)
@@ -58,15 +58,15 @@ source "$MAIN_DIR/resources/fs-options.rc"
 [[ -f "$STATUS_FILE" ]] && source "$STATUS_FILE"
 
 # Queue the requested value from the JSON profile file by jq
-check-pf()  {
+_CHECK_PROFILE_FILE_FUNCTION()  {
 	PF_VALUE="$*"
 	jq '.[] | select(.name=="fs")' "$PROFILE_FILE" | jq ".fs.${PF_VALUE// /.}"
 }
 
-[[ $(check-pf check) == 0 ]] && exit
+[[ $(_CHECK_PROFILE_FILE_FUNCTION check) == 0 ]] && exit
 
-write-hidepid()	{
-	[[ $(check-pf action) == 0 ]] && return
+_WRITE_HIDEPID_FUNCTION()	{
+	[[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 0 ]] && return
 
 	SYSTEMD_LOGIND_HIDEPID_FILE="/etc/systemd/system/systemd-logind.service.d/hidepid.conf"
 	[[ ! -f $SYSTEMD_LOGIND_HIDEPID_FILE ]] && touch $SYSTEMD_LOGIND_HIDEPID_FILE
@@ -74,7 +74,7 @@ write-hidepid()	{
 	echo "SupplementaryGroups=proc" >> $SYSTEMD_LOGIND_HIDEPID_FILE
 }
 
-check-mount-options()	{
+_CHECK_MOUNT_OPTIONS_FUNCTION()	{
 	local L_MOUNT_POINT=$1
 	local L_MOUNT_OPTIONS=$2
 	local L_FS_TYPE=$3
@@ -87,7 +87,7 @@ check-mount-options()	{
 	for opt in $REC_MOUNT_OPTIONS; do
 		if [[ $opt == "hidepid" ]]
 		then
-			[[ ! -f  "/etc/systemd/system/systemd-logind.service.d/hidepid.conf" ]] && write-hidepid
+			[[ ! -f  "/etc/systemd/system/systemd-logind.service.d/hidepid.conf" ]] && _WRITE_HIDEPID_FUNCTION
 		fi
 
 		[[ $L_MOUNT_OPTIONS =~ (^|[[:space:]])"$opt"($|[[:space:]]) ]]  && continue
@@ -99,7 +99,7 @@ check-mount-options()	{
 	done
 }
 
-cmp-fstab()	{
+_CMP_FSTAB_FUNCTION()	{
 	local L_MOUNT_POINT=$1
 	local L_MOUNT_OPTIONS=$2
 	local L_FS_TYPE=$2
@@ -140,7 +140,7 @@ cmp-fstab()	{
 	done
 }
 
-check-mount-point()	{
+_CHECK_MOUNT_POINT_FUNCTION()	{
 	local L_MOUNT_POINT=$1
 	local L_MOUNT_OPTIONS=$2
 	local L_FS_TYPE=$2
@@ -161,10 +161,10 @@ check-mount-point()	{
 			[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
 		fi
 
-		check-mount-options "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS"
+		_CHECK_MOUNT_OPTIONS_FUNCTION "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS"
 	fi
 
-	cmp-fstab "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
+	_CMP_FSTAB_FUNCTION "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
 }
 
 # Start by extracting information from /proc/mounts line by line, then check them
@@ -176,7 +176,7 @@ cat /proc/mounts | while read line; do
 	L_MOUNT_OPTIONS="$(echo $line | awk '{print $4;}')"
 	L_MOUNT_OPTIONS="${L_MOUNT_OPTIONS/,/ /}"	# Replace ',' with ' ' to have them separated for comparison
 
-	check-mount-point "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
+	_CHECK_MOUNT_POINT_FUNCTION "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
 done
 
-[[ $(check-pf action) == 0 ]] && echo "$FS_ACTIONS_FILE" >> "$ACTIONS_FILE"
+[[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 0 ]] && echo "$FS_ACTIONS_FILE" >> "$ACTIONS_FILE"
