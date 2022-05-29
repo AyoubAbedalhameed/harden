@@ -33,14 +33,27 @@
             "action":1,
             "rules":{
                 "auditd_auditing":{"check":1, "action":1, "question":""},
+                "filter":{"check":1, "action":1, "question":""},
                 "kernel":{"check":1, "action":1, "question":""},
                 "critical_sys_call":{"check":1, "action":1, "question":""},
                 "critical_etc_file":{"check":1, "action":1, "question":""},
-                "pam_config":{"check":1, "action":1, "question":""}          
-                
-                
-                
-                
+                "pam_config":{"check":1, "action":1, "question":""},          
+                "cron":{"check":1, "action":1, "question":""},
+                "critical_commands":{"check":1, "action":1, "question":""},
+                "login":{"check":1, "action":1, "question":""},
+                "network_environment":{"check":1, "action":1, "question":""},
+                "power_state":{"check":1, "action":1, "question":""},
+                "access_failures":{"check":1, "action":1, "question":""},
+                "sudo":{"check":1, "action":1, "question":""},
+                "dac":{"check":1, "action":1, "question":""},
+                "suspicious_activities":{"check":1, "action":1, "question":""},
+                "code_injection":{"check":1, "action":1, "question":""},
+                "software_managmenet_auditing":{"check":1, "action":1, "question":""},
+                "docker":{"check":1, "action":1, "question":""},
+                "root_command_execution":{"check":1, "action":1, "question":""},
+                "file_deletion":{"check":1, "action":1, "question":""},
+                "unauthorized_file_system_actions":{"check":1, "action":1, "question":""},
+                "detect_32":{"check":1, "action":1, "question":""}
                 
                 
             }

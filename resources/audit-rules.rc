@@ -247,16 +247,16 @@ audit_rules[rules.power_state,d]="These rules are used to monitor the use of pow
 
 ## Auditing the Critical elements access failures. 
 
-audit_rules[rules_access_failures,0]=8
-audit_rules[rules_access_failures,1]="-a always,exit -F arch=b64 -S open -F dir=/etc -F success=0 -k unauthedfileaccess"
-audit_rules[rules_access_failures,2]="-a always,exit -F arch=b64 -S open -F dir=/bin -F success=0 -k unauthedfileaccess"
-audit_rules[rules_access_failures,3]="-a always,exit -F arch=b64 -S open -F dir=/sbin -F success=0 -k unauthedfileaccess"
-audit_rules[rules_access_failures,4]="-a always,exit -F arch=b64 -S open -F dir=/usr/bin -F success=0 -k unauthedfileaccess"
-audit_rules[rules_access_failures,5]="-a always,exit -F arch=b64 -S open -F dir=/usr/sbin -F success=0 -k unauthedfileaccess"
-audit_rules[rules_access_failures,6]="-a always,exit -F arch=b64 -S open -F dir=/var -F success=0 -k unauthedfileaccess"
-audit_rules[rules_access_failures,7]="-a always,exit -F arch=b64 -S open -F dir=/home -F success=0 -k unauthedfileaccess"
-audit_rules[rules_access_failures,8]="-a always,exit -F arch=b64 -S open -F dir=/srv -F success=0 -k unauthedfileaccess"
-audit_rules[rules_access_failures,d]="These rules are used for auditing the Failed Accesses to any system element"
+audit_rules[rules.access_failures,0]=8
+audit_rules[rules.access_failures,1]="-a always,exit -F arch=b64 -S open -F dir=/etc -F success=0 -k unauthedfileaccess"
+audit_rules[rules.access_failures,2]="-a always,exit -F arch=b64 -S open -F dir=/bin -F success=0 -k unauthedfileaccess"
+audit_rules[rules.access_failures,3]="-a always,exit -F arch=b64 -S open -F dir=/sbin -F success=0 -k unauthedfileaccess"
+audit_rules[rules.access_failures,4]="-a always,exit -F arch=b64 -S open -F dir=/usr/bin -F success=0 -k unauthedfileaccess"
+audit_rules[rules.access_failures,5]="-a always,exit -F arch=b64 -S open -F dir=/usr/sbin -F success=0 -k unauthedfileaccess"
+audit_rules[rules.access_failures,6]="-a always,exit -F arch=b64 -S open -F dir=/var -F success=0 -k unauthedfileaccess"
+audit_rules[rules.access_failures,7]="-a always,exit -F arch=b64 -S open -F dir=/home -F success=0 -k unauthedfileaccess"
+audit_rules[rules.access_failures,8]="-a always,exit -F arch=b64 -S open -F dir=/srv -F success=0 -k unauthedfileaccess"
+audit_rules[rules.access_failures,d]="These rules are used for auditing the Failed Accesses to any system element"
 
 
 
