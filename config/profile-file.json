@@ -27,7 +27,24 @@
     },
     {
         "name":"auditd",
-        "script":"/usr/share/harden/scripts/auditd-harden.sh"
+        "script":"/usr/share/harden/scripts/auditd-harden.sh",
+        "auditd":{
+            "check":1,
+            "action":1,
+            "rules":{
+                "auditd_auditing":{"check":1, "action":1, "question":""},
+                "kernel":{"check":1, "action":1, "question":""},
+                "critical_sys_call":{"check":1, "action":1, "question":""},
+                "critical_etc_file":{"check":1, "action":1, "question":""},
+                "pam_config":{"check":1, "action":1, "question":""}          
+                
+                
+                
+                
+                
+                
+            }
+        }
     },
     {
         "name":"grub",
