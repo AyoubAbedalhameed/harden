@@ -2,28 +2,25 @@
 
 declare -A audit_rules 
 
-
 # Remove any existing rules
--D
+#-D
 
 
 # Buffer Size
 ## Feel free to increase this if the machine panic's
--b 8192
+#-b 8192
 
 # Failure Mode
 ## Possible values: 0 (silent), 1 (printk, print a failure message), 2 (panic, halt the system)
--f 1
+#-f 1
 
 # Ignore errors
 ## e.g. caused by users or files not found in the local environment
--i
+#-i
 
 # Self Auditing ---------------------------------------------------------------
 
 audit_rules[rules.auditd_auditing,0]=7
-
-
 audit_rules[rules.auditd_auditing,1]="-w /var/log/audit/ -k auditlog"   ## Audit the audit logs
 
 audit_rules[rules.auditd_auditing,2]="-w /etc/audit/ -p wa -k auditconfig" ## Auditd configuration Auditing
@@ -36,23 +33,12 @@ audit_rules[rules.auditd_auditing,7]="-w /usr/sbin/augenrules -p x -k audittools
 
 audit_rules[rules.auditd_auditing,d]="Auditing auditd related configuration, Logs access & monitoring auditd management tools usage"
 
-
-
-
-
-
-
-
-
-
-
 # Filters ---------------------------------------------------------------------
-
-### We put these early because audit is a first match wins system.
 
 
 audit_rules[rules.filters,0]=14
 audit_rules[rules.filters,1]="-a always,exclude -F msgtype=AVC"     ## Ignore SELinux AVC records
+
 audit_rules[rules.filters,2]="-a always,exclude -F msgtype=CWD"     ## Ignore current working directory records
 
 audit_rules[rules.filters,3]="-a never,user -F subj_type=crond_t"   ## Cron jobs fill the logs with stuff we normally don't want (works with SELinux)
@@ -94,7 +80,10 @@ audit_rules[rules.kernel,d]="These rules are used for auditing the modification 
 
 
 
-audit_rules[rules.critical_sys_call,0]=
+
+
+
+audit_rules[rules.critical_sys_call,0]=10
 audit_rules[rules.critical_sys_call,1]="-a always,exit -F arch=b64 -S kexec_load -k KEXEC"  ## KExec usage (all actions)
 audit_rules[rules.critical_sys_call,2]="-a always,exit -F arch=b32 -S sys_kexec_load -k KEXEC"
 
@@ -119,7 +108,7 @@ audit_rules[rules.critical_sys_call,d]="These rules are used for monitoring crit
 
 
 #Auditing the access of critical configuration files: 
-audit_rules[rules.critical_etc_file,0]=
+audit_rules[rules.critical_etc_file,0]=30
 audit_rules[rules.critical_etc_file,1]="-w /etc/localtime -p wa -k localtime"   ### Local time zone
 audit_rules[rules.critical_etc_file,2]="-w /etc/group -p wa -k etcgroup"        ## User, group, password databases
 audit_rules[rules.critical_etc_file,3]="-w /etc/passwd -p wa -k etcpasswd"
@@ -135,42 +124,35 @@ audit_rules[rules.critical_etc_file,10]="-w /etc/init.d/ -p wa -k init"
 audit_rules[rules.critical_etc_file,11]="-w /etc/init/ -p wa -k init"
 
 audit_rules[rules.critical_etc_file,12]="-w /etc/ld.so.conf -p wa -k libpath"    ## Library search paths
-audit_rules[rules.critical_etc_file,14]="-w /etc/ld.so.conf.d -p wa -k libpath"
+audit_rules[rules.critical_etc_file,13]="-w /etc/ld.so.conf.d -p wa -k libpath"
 
-audit_rules[rules.critical_etc_file,15]="-w /etc/ld.so.preload -p wa -k systemwide_preloads"     ## Systemwide library preloads (LD_PRELOAD)
+audit_rules[rules.critical_etc_file,14]="-w /etc/ld.so.preload -p wa -k systemwide_preloads"     ## Systemwide library preloads (LD_PRELOAD)
 
-audit_rules[rules.critical_etc_file,16]="-w /etc/issue -p wa -k etcissue"       ### Changes to issue
-audit_rules[rules.critical_etc_file,17]="-w /etc/issue.net -p wa -k etcissue"
-audit_rules[rules.critical_etc_file,18]="-w /etc/ssh/sshd_config -k sshd"       ## SSH configuration
-audit_rules[rules.critical_etc_file,19]="-w /etc/ssh/sshd_config.d -k sshd"
+audit_rules[rules.critical_etc_file,15]="-w /etc/issue -p wa -k etcissue"       ### Changes to issue
+audit_rules[rules.critical_etc_file,16]="-w /etc/issue.net -p wa -k etcissue"
+audit_rules[rules.critical_etc_file,17]="-w /etc/ssh/sshd_config -k sshd"       ## SSH configuration
+audit_rules[rules.critical_etc_file,18]="-w /etc/ssh/sshd_config.d -k sshd"
 
 audit_rules[rules.critical_etc_file,19]="-w /etc/systemd/ -p wa -k systemd"     ## systemd configuration.
 
-audit_rules[rules.critical_etc_file,19]="-w /etc/selinux/ -p wa -k mac_policy"      ## SELinux events that modify the system's Mandatory Access Controls (MAC)
-audit_rules[rules.critical_etc_file,19]=
+audit_rules[rules.critical_etc_file,20]="-w /etc/selinux/ -p wa -k mac_policy"      ## SELinux events that modify the system's Mandatory Access Controls (MAC)
+
+audit_rules[rules.critical_etc_file,21]="-w /etc/issue -p r -k recon"               ##re
+audit_rules[rules.critical_etc_file,22]="-w /etc/hostname -p r -k recon"
+
+audit_rules[rules.critical_etc_file,23]="-w /etc/profile.d/ -p wa -k shell_profiles"    ## Shell/profile configurations
+audit_rules[rules.critical_etc_file,24]="-w /etc/profile -p wa -k shell_profiles"
+audit_rules[rules.critical_etc_file,25]="-w /etc/shells -p wa -k shell_profiles"
+audit_rules[rules.critical_etc_file,26]="-w /etc/bashrc -p wa -k shell_profiles"
+audit_rules[rules.critical_etc_file,27]="-w /etc/csh.cshrc -p wa -k shell_profiles"
+audit_rules[rules.critical_etc_file,28]="-w /etc/csh.login -p wa -k shell_profiles"
+audit_rules[rules.critical_etc_file,29]="-w /etc/fish/ -p wa -k shell_profiles"
+audit_rules[rules.critical_etc_file,30]="-w /etc/zsh/ -p wa -k shell_profiles"
 
 audit_rules[rules.critical_etc_file,d]="These rules are used for auditing the access/modifications of some critical configuration under /etc/ Directory"
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Pam configuration
+## PAM configuration
 audit_rules[rules.pam_config,0]=7
 audit_rules[rules.pam_config,1]="-w /etc/pam.d/ -p wa -k pam"
 audit_rules[rules.pam_config,2]="-w /etc/security/limits.conf -p wa  -k pam"
@@ -180,13 +162,6 @@ audit_rules[rules.pam_config,5]="-w /etc/security/namespace.conf -p wa -k pam"
 audit_rules[rules.pam_config,6]="-w /etc/security/namespace.d -p wa -k pam"
 audit_rules[rules.pam_config,7]="-w /etc/security/namespace.init -p wa -k pam"
 audit_rules[rules.pam_config,d]="These rules are used for auditing yout system's PAM configuration, which is a suite of libraries that allows a Linux system administrator to configure methods to authenticate users."
-
-
-
-
-
-
-
 
 
 
@@ -206,9 +181,8 @@ audit_rules[rules.cron,d]="These rules are used to audit and monitor the modific
 
 
 
-
 #Monitoring the execution/use of critical commands/binaries: 
-audit_rules[rules.critical_commands,0]=
+audit_rules[rules.critical_commands,0]=15
 
 audit_rules[rules.critical_commands,1]="-w /usr/sbin/stunnel -p x -k stunnel"       ## Stunnel
 audit_rules[rules.critical_commands,2]="-w /usr/bin/stunnel -p x -k stunnel"        
@@ -224,16 +198,12 @@ audit_rules[rules.critical_commands,9]="-w /usr/sbin/usermod -p x -k user_modifi
 audit_rules[rules.critical_commands,10]="-w /usr/sbin/adduser -p x -k user_modification"
 
 audit_rules[rules.critical_commands,11]="-w /bin/systemctl -p x -k systemd"        ## systemctl command execution.
-audit_rules[rules.critical_commands,10]=
-audit_rules[rules.critical_commands,10]=
 
-
-
-
-
-
-
-
+audit_rules[rules.critical_commands,12]="-w /usr/bin/whoami -p x -k recon"      ## Reconnaissance
+audit_rules[rules.critical_commands,13]="-w /usr/bin/id -p x -k recon"
+audit_rules[rules.critical_commands,14]="-w /bin/hostname -p x -k recon"
+audit_rules[rules.critical_commands,15]="-w /bin/uname -p x -k recon"
+audit_rules[rules.critical_commands,d]="These rules is used for monitoring the execution and uses of critical commands and binaries"
 
 ## Login configuration and information
 audit_rules[rules.login,0]=5
@@ -245,12 +215,8 @@ audit_rules[rules.login,5]="-w /var/log/tallylog -p wa -k login"
 audit_rules[rules.login,d]="These rules are used to monitor the modifications of User's Logins logs and related configuration files which are /etc/login.defs and /etc/securetty"
 
 
-
-
-
-
 ## Network Environment
-audit_rules[rules.network_environment,0]=
+audit_rules[rules.network_environment,0]=11
 audit_rules[rules.network_environment,1]="-a always,exit -F arch=b32 -S sethostname -S setdomainname -k network_modifications"      ### Changes to hostname
 audit_rules[rules.network_environment,2]="-a always,exit -F arch=b64 -S sethostname -S setdomainname -k network_modifications"
 
@@ -270,17 +236,6 @@ audit_rules[rules.network_environment,11]="-a always,exit -F dir=/etc/NetworkMan
 audit_rules[rules.network_environment,d]="These rules are used to audit the Network Environment in your system, in terms of configuration files modificatoins & Networking system calls"
 
 
-
-
-
-
-
-
-
-
-
-
-
 ## Monitoring Power state related commands/binaries. 
 audit_rules[rules.power_state,0]=4
 audit_rules[rules.power_state,1]="-w /sbin/shutdown -p x -k power"
@@ -288,18 +243,6 @@ audit_rules[rules.power_state,2]="-w /sbin/poweroff -p x -k power"
 audit_rules[rules.power_state,3]="-w /sbin/reboot -p x -k power"
 audit_rules[rules.power_state,4]="-w /sbin/halt -p x -k power"
 audit_rules[rules.power_state,d]="These rules are used to monitor the use of power-state related commands on your machine which are: shudown, poweroff, reboot, halt"
-
-
-
-
-## root ssh key tampering
--w /root/.ssh -p wa -k rootkey
-
-
-
-
-
-
 
 
 ## Auditing the Critical elements access failures. 
@@ -317,12 +260,7 @@ audit_rules[rules_access_failures,d]="These rules are used for auditing the Fail
 
 
 
-
-
-
-
 ## Process ID change (switching accounts) applications
-
 audit_rules[rules.sudo,0]=4
 audit_rules[rules.sudo,1]="-w /bin/su -p x -k priv_esc"
 audit_rules[rules.sudo,2]="-w /usr/bin/sudo -p x -k priv_esc"
@@ -335,16 +273,11 @@ audit_rules[rules.sudo,d]="These rules are used for auditing switching accounts 
 
 
 
-## Session initiation information
--w /var/run/utmp -p wa -k session
--w /var/log/btmp -p wa -k session
--w /var/log/wtmp -p wa -k session
-
 
 
 
 ## Discretionary Access Control (DAC) modifications
-audit_rules[rules.DAC,0]=
+audit_rules[rules.DAC,0]=26
 audit_rules[rules.DAC,1]="-a always,exit -F arch=b32 -S chmod -F auid>=1000 -F auid!=-1 -k perm_mod"
 audit_rules[rules.DAC,2]="-a always,exit -F arch=b32 -S chown -F auid>=1000 -F auid!=-1 -k perm_mod"
 audit_rules[rules.DAC,3]="-a always,exit -F arch=b32 -S fchmod -F auid>=1000 -F auid!=-1 -k perm_mod"
@@ -374,205 +307,153 @@ audit_rules[rules.DAC,26]="-a always,exit -F arch=b64 -S setxattr -F auid>=1000 
 audit_rules[rules.DAC,d]="There rules are used to audit Discretionary Access Control (DAC) modifications"
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Special Rules ---------------------------------------------------------------
 
-## Reconnaissance
--w /usr/bin/whoami -p x -k recon
--w /usr/bin/id -p x -k recon
--w /bin/hostname -p x -k recon
--w /bin/uname -p x -k recon
--w /etc/issue -p r -k recon
--w /etc/hostname -p r -k recon
-
 ## Suspicious activity
--w /usr/bin/wget -p x -k susp_activity
--w /usr/bin/curl -p x -k susp_activity
--w /usr/bin/base64 -p x -k susp_activity
--w /bin/nc -p x -k susp_activity
--w /bin/netcat -p x -k susp_activity
--w /usr/bin/ncat -p x -k susp_activity
--w /usr/bin/ssh -p x -k susp_activity
--w /usr/bin/scp -p x -k susp_activity
--w /usr/bin/sftp -p x -k susp_activity
--w /usr/bin/ftp -p x -k susp_activity
--w /usr/bin/socat -p x -k susp_activity
--w /usr/bin/wireshark -p x -k susp_activity
--w /usr/bin/tshark -p x -k susp_activity
--w /usr/bin/rawshark -p x -k susp_activity
--w /usr/bin/rdesktop -p x -k susp_activity
--w /usr/bin/nmap -p x -k susp_activity
+audit_rules[rules.suspicious_activities,0]=33
+audit_rules[rules.suspicious_activities,1]="-w /usr/bin/curl -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,2]="-w /usr/bin/base64 -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,3]="-w /bin/nc -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,4]="-w /bin/netcat -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,5]="-w /usr/bin/ncat -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,6]="-w /usr/bin/ssh -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,7]="-w /usr/bin/scp -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,8]="-w /usr/bin/sftp -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,9]="-w /usr/bin/ftp -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,10]="-w /usr/bin/socat -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,11]="-w /usr/bin/wireshark -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,12]="-w /usr/bin/tshark -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,13]="-w /usr/bin/rawshark -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,14]="-w /usr/bin/rdesktop -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,15]="-w /usr/bin/nmap -p x -k susp_activity"
 
-## Added to catch netcat on Ubuntu
--w /bin/nc.openbsd -p x -k susp_activity
--w /bin/nc.traditional -p x -k susp_activity
+audit_rules[rules.suspicious_activities,16]="-w /sbin/iptables -p x -k sbin_susp"       ## Sbin suspicious activity
+audit_rules[rules.suspicious_activities,17]="-w /sbin/ip6tables -p x -k sbin_susp"
+audit_rules[rules.suspicious_activities,18]="-w /sbin/ifconfig -p x -k sbin_susp"
+audit_rules[rules.suspicious_activities,19]="-w /usr/sbin/arptables -p x -k sbin_susp"
+audit_rules[rules.suspicious_activities,20]="-w /usr/sbin/ebtables -p x -k sbin_susp"
+audit_rules[rules.suspicious_activities,21]="-w /sbin/xtables-nft-multi -p x -k sbin_susp"
+audit_rules[rules.suspicious_activities,22]="-w /usr/sbin/nft -p x -k sbin_susp"
+audit_rules[rules.suspicious_activities,23]="-w /usr/sbin/tcpdump -p x -k sbin_susp"
+audit_rules[rules.suspicious_activities,24]="-w /usr/sbin/traceroute -p x -k sbin_susp"
+audit_rules[rules.suspicious_activities,25]="-w /usr/sbin/ufw -p x -k sbin_susp"
 
-## Sbin suspicious activity
--w /sbin/iptables -p x -k sbin_susp
--w /sbin/ip6tables -p x -k sbin_susp
--w /sbin/ifconfig -p x -k sbin_susp
--w /usr/sbin/arptables -p x -k sbin_susp
--w /usr/sbin/ebtables -p x -k sbin_susp
--w /sbin/xtables-nft-multi -p x -k sbin_susp
--w /usr/sbin/nft -p x -k sbin_susp
--w /usr/sbin/tcpdump -p x -k sbin_susp
--w /usr/sbin/traceroute -p x -k sbin_susp
--w /usr/sbin/ufw -p x -k sbin_susp
+audit_rules[rules.suspicious_activities,26]="-w /usr/bin/dbus-send -p x -k dbus_send"   ## dbus-send invocation, may indicate privilege escalation CVE-2021-3560
+audit_rules[rules.suspicious_activities,27]="-w /usr/bin/pkexec -p x -k pkexec"     ## pkexec invocation, may indicate privilege escalation CVE-2021-4034
 
-## dbus-send invocation
-### may indicate privilege escalation CVE-2021-3560
--w /usr/bin/dbus-send -p x -k dbus_send
+audit_rules[rules.suspicious_activities,28]="-w /root/.ssh -p wa -k rootkey" ## root ssh key tampering
 
-## pkexec invocation
-### may indicate privilege escalation CVE-2021-4034
--w /usr/bin/pkexec -p x -k pkexec
 
-## Suspicious shells
-#-w /bin/ash -p x -k susp_shell
-#-w /bin/bash -p x -k susp_shell
-#-w /bin/csh -p x -k susp_shell
-#-w /bin/dash -p x -k susp_shell
-#-w /bin/busybox -p x -k susp_shell
-#-w /bin/ksh -p x -k susp_shell
-#-w /bin/fish -p x -k susp_shell
-#-w /bin/tcsh -p x -k susp_shell
-#-w /bin/tclsh -p x -k susp_shell
-#-w /bin/zsh -p x -k susp_shell
+audit_rules[rules.suspicious_activities,29]="-w /var/run/utmp -p wa -k session" ## Session initiation information
+audit_rules[rules.suspicious_activities,30]="-w /var/log/btmp -p wa -k session"
+audit_rules[rules.suspicious_activities,31]="-w /var/log/wtmp -p wa -k session"
+audit_rules[rules.suspicious_activities,32]="-w /usr/bin/wget -p x -k susp_activity"
+audit_rules[rules.suspicious_activities,33]="-a always,exit -F dir=/home -F uid=0 -F auid>=1000 -F auid!=-1 -C auid!=obj_uid -k power_abuse"      ### Privilege Abuse, The purpose of this rule is to detect when an admin may be abusing power by looking in user's home dir.
 
-## Shell/profile configurations
--w /etc/profile.d/ -p wa -k shell_profiles
--w /etc/profile -p wa -k shell_profiles
--w /etc/shells -p wa -k shell_profiles
--w /etc/bashrc -p wa -k shell_profiles
--w /etc/csh.cshrc -p wa -k shell_profiles
--w /etc/csh.login -p wa -k shell_profiles
--w /etc/fish/ -p wa -k shell_profiles
--w /etc/zsh/ -p wa -k shell_profiles
+
+audit_rules[rules.suspicious_activities,d]="These rules are used for auditing suspicious_activities by monitoring a set of critical common commands that may be used for doing suspicious actions"
+
+
 
 ## Injection
 ### These rules watch for code injection by the ptrace facility.
 ### This could indicate someone trying to do something bad or just debugging
--a always,exit -F arch=b32 -S ptrace -F a0=0x4 -k code_injection
--a always,exit -F arch=b64 -S ptrace -F a0=0x4 -k code_injection
--a always,exit -F arch=b32 -S ptrace -F a0=0x5 -k data_injection
--a always,exit -F arch=b64 -S ptrace -F a0=0x5 -k data_injection
--a always,exit -F arch=b32 -S ptrace -F a0=0x6 -k register_injection
--a always,exit -F arch=b64 -S ptrace -F a0=0x6 -k register_injection
--a always,exit -F arch=b32 -S ptrace -k tracing
--a always,exit -F arch=b64 -S ptrace -k tracing
 
-## Privilege Abuse
-### The purpose of this rule is to detect when an admin may be abusing power by looking in user's home dir.
--a always,exit -F dir=/home -F uid=0 -F auid>=1000 -F auid!=-1 -C auid!=obj_uid -k power_abuse
+audit_rules[rules.code_injection,0]=8
+audit_rules[rules.code_injection,1]="-a always,exit -F arch=b32 -S ptrace -F a0=0x4 -k code_injection"
+audit_rules[rules.code_injection,2]="-a always,exit -F arch=b64 -S ptrace -F a0=0x4 -k code_injection"
+audit_rules[rules.code_injection,3]="-a always,exit -F arch=b32 -S ptrace -F a0=0x5 -k data_injection"
+audit_rules[rules.code_injection,4]="-a always,exit -F arch=b64 -S ptrace -F a0=0x5 -k data_injection"
+audit_rules[rules.code_injection,5]="-a always,exit -F arch=b32 -S ptrace -F a0=0x6 -k register_injection"
+audit_rules[rules.code_injection,6]="-a always,exit -F arch=b64 -S ptrace -F a0=0x6 -k register_injection"
+audit_rules[rules.code_injection,7]="-a always,exit -F arch=b32 -S ptrace -k tracing"
+audit_rules[rules.code_injection,8]="-a always,exit -F arch=b64 -S ptrace -k tracing"
+audit_rules[rules.code_injection,d]="These rules are used to catch indications for code injection by the ptrace facility, one matching rule log could indicate someone trying to do something bad or just debugging"
+
+
+
 
 # Software Management ---------------------------------------------------------
+audit_rules[rules.software_managmenet_auditing,0]=5
 
-# RPM (Redhat/CentOS)
--w /usr/bin/rpm -p x -k software_mgmt
--w /usr/bin/yum -p x -k software_mgmt
+audit_rules[rules.software_managmenet_auditing,1]="-w /usr/bin/rpm -p x -k software_mgmt"   # RPM (Redhat/CentOS)
+audit_rules[rules.software_managmenet_auditing,2]="-w /usr/bin/yum -p x -k software_mgmt"
 
-# DNF (Fedora/RedHat 8/CentOS 8)
--w /usr/bin/dnf -p x -k software_mgmt
+audit_rules[rules.software_managmenet_auditing,3]="-w /usr/bin/dnf -p x -k software_mgmt"   # DNF (Fedora/RedHat 8/CentOS 8)
 
-# YAST/Zypper/RPM (SuSE)
--w /sbin/yast -p x -k software_mgmt
--w /sbin/yast2 -p x -k software_mgmt
--w /bin/rpm -p x -k software_mgmt
--w /usr/bin/zypper -k software_mgmt
+audit_rules[rules.software_managmenet_auditing,4]="-w /usr/bin/pip -p x -k software_mgmt"   # PIP (Python installs)
+audit_rules[rules.software_managmenet_auditing,5]="-w /usr/bin/pip3 -p x -k software_mgmt"
+audit_rules[rules.software_managmenet_auditing,d]="These rules are used for auditing Software Management related commands and actions, by monitoring the execution of rpm, yum, dnf, pipm pip3 modules"
 
-# DPKG / APT-GET (Debian/Ubuntu)
--w /usr/bin/dpkg -p x -k software_mgmt
--w /usr/bin/apt -p x -k software_mgmt
--w /usr/bin/apt-add-repository -p x -k software_mgmt
--w /usr/bin/apt-get -p x -k software_mgmt
--w /usr/bin/aptitude -p x -k software_mgmt
--w /usr/bin/wajig -p x -k software_mgmt
--w /usr/bin/snap -p x -k software_mgmt
 
-# PIP (Python installs)
--w /usr/bin/pip -p x -k software_mgmt
--w /usr/bin/pip3 -p x -k software_mgmt
 
-# Special Software ------------------------------------------------------------
 
-## GDS specific secrets
--w /etc/puppet/ssl -p wa -k puppet_ssl
 
-## IBM Bigfix BESClient
--a always,exit -F arch=b64 -S open -F dir=/opt/BESClient -F success=0 -k soft_besclient
--w /var/opt/BESClient/ -p wa -k soft_besclient
-
-## CHEF https://www.chef.io/chef/
--w /etc/chef -p wa -k soft_chef
 
 ## Docker
--w /usr/bin/dockerd -k docker
--w /usr/bin/docker -k docker
--w /usr/bin/docker-containerd -k docker
--w /usr/bin/docker-runc -k docker
--w /var/lib/docker -k docker
--w /etc/docker -k docker
--w /etc/sysconfig/docker -k docker
--w /etc/sysconfig/docker-storage -k docker
--w /usr/lib/systemd/system/docker.service -k docker
+audit_rules[rules.docekr,0]=9
+audit_rules[rules.docekr,1]="-w /usr/bin/docker -k docker"
+audit_rules[rules.docekr,2]="-w /usr/bin/docker-containerd -k docker"
+audit_rules[rules.docekr,3]="-w /usr/bin/docker-runc -k docker"
+audit_rules[rules.docekr,4]="-w /var/lib/docker -k docker"
+audit_rules[rules.docekr,5]="-w /etc/docker -k docker"
+audit_rules[rules.docekr,6]="-w /etc/sysconfig/docker -k docker"
+audit_rules[rules.docekr,7]="-w /etc/sysconfig/docker-storage -k docker"
+audit_rules[rules.docekr,8]="-w /usr/lib/systemd/system/docker.service -k docker"
+audit_rules[rules.docekr,9]="-w /usr/bin/dockerd -k docker"
+audit_rules[rules.docekr,d]="These rules are used for auditing docker binaries and configuration files"
 
-## Kubelet
--w /usr/bin/kubelet -k kubelet
 
 # High Volume Events ----------------------------------------------------------
-
 ## Remove them if they cause to much volume in your environment
 
 ## Root command executions
--a always,exit -F arch=b64 -F euid=0 -S execve -k rootcmd
--a always,exit -F arch=b32 -F euid=0 -S execve -k rootcmd
+audit_rules[rules.root_command_execution,0]=2
+audit_rules[rules.root_command_execution,1]="-a always,exit -F arch=b64 -F euid=0 -S execve -k rootcmd"
+audit_rules[rules.root_command_execution,2]="-a always,exit -F arch=b32 -F euid=0 -S execve -k rootcmd"
+audit_rules[rules.root_command_execution,d]="This rule is used to log any command executed with root privileges, This rule considered as High Volume Event and it may overwhelm the log file. just skipp it if causes too much volume in your environment"
 
 ## File Deletion Events by User
--a always,exit -F arch=b32 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=-1 -k delete
--a always,exit -F arch=b64 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=-1 -k delete
+audit_rules[rules.file_deletion,0]=2
+audit_rules[rules.file_deletion,1]="-a always,exit -F arch=b32 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=-1 -k delete"
+audit_rules[rules.file_deletion,2]="-a always,exit -F arch=b64 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=-1 -k delete"
+audit_rules[rules.file_deletion,d]="This rule is set to detect any file deletion action, It considered as High Volume Event and it may overwhelm the log file. just skipp it if causes too much volume in your environment "
 
-## File Access
-### Unauthorized Access (unsuccessful)
--a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k file_access
--a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k file_access
--a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k file_access
--a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k file_access
+
+
+
+### Unauthorized events (unsuccessful)
+audit_rules[rules.unauthorized_file_system_actions,0]=12
+
+### Unseccessful Access
+audit_rules[rules.unauthorized_file_system_actions,1]="-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k file_access"
+audit_rules[rules.unauthorized_file_system_actions,2]="-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k file_access"
+audit_rules[rules.unauthorized_file_system_actions,3]="-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k file_access"
+audit_rules[rules.unauthorized_file_system_actions,4]="-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k file_access"
 
 ### Unsuccessful Creation
--a always,exit -F arch=b32 -S creat,link,mknod,mkdir,symlink,mknodat,linkat,symlinkat -F exit=-EACCES -k file_creation
--a always,exit -F arch=b64 -S mkdir,creat,link,symlink,mknod,mknodat,linkat,symlinkat -F exit=-EACCES -k file_creation
--a always,exit -F arch=b32 -S link,mkdir,symlink,mkdirat -F exit=-EPERM -k file_creation
--a always,exit -F arch=b64 -S mkdir,link,symlink,mkdirat -F exit=-EPERM -k file_creation
+audit_rules[rules.unauthorized_file_system_actions,5]="-a always,exit -F arch=b32 -S creat,link,mknod,mkdir,symlink,mknodat,linkat,symlinkat -F exit=-EACCES -k file_creation"
+audit_rules[rules.unauthorized_file_system_actions,6]="-a always,exit -F arch=b64 -S mkdir,creat,link,symlink,mknod,mknodat,linkat,symlinkat -F exit=-EACCES -k file_creation"
+audit_rules[rules.unauthorized_file_system_actions,7]="-a always,exit -F arch=b32 -S link,mkdir,symlink,mkdirat -F exit=-EPERM -k file_creation"
+audit_rules[rules.unauthorized_file_system_actions,8]="-a always,exit -F arch=b64 -S mkdir,link,symlink,mkdirat -F exit=-EPERM -k file_creation"
 
 ### Unsuccessful Modification
--a always,exit -F arch=b32 -S rename -S renameat -S truncate -S chmod -S setxattr -S lsetxattr -S removexattr -S lremovexattr -F exit=-EACCES -k file_modification
--a always,exit -F arch=b64 -S rename -S renameat -S truncate -S chmod -S setxattr -S lsetxattr -S removexattr -S lremovexattr -F exit=-EACCES -k file_modification
--a always,exit -F arch=b32 -S rename -S renameat -S truncate -S chmod -S setxattr -S lsetxattr -S removexattr -S lremovexattr -F exit=-EPERM -k file_modification
--a always,exit -F arch=b64 -S rename -S renameat -S truncate -S chmod -S setxattr -S lsetxattr -S removexattr -S lremovexattr -F exit=-EPERM -k file_modification
+audit_rules[rules.unauthorized_file_system_actions,9]="-a always,exit -F arch=b32 -S rename -S renameat -S truncate -S chmod -S setxattr -S lsetxattr -S removexattr -S lremovexattr -F exit=-EACCES -k file_modification"
+audit_rules[rules.unauthorized_file_system_actions,10]="-a always,exit -F arch=b64 -S rename -S renameat -S truncate -S chmod -S setxattr -S lsetxattr -S removexattr -S lremovexattr -F exit=-EACCES -k file_modification"
+audit_rules[rules.unauthorized_file_system_actions,11]="-a always,exit -F arch=b32 -S rename -S renameat -S truncate -S chmod -S setxattr -S lsetxattr -S removexattr -S lremovexattr -F exit=-EPERM -k file_modification"
+audit_rules[rules.unauthorized_file_system_actions,12]="-a always,exit -F arch=b64 -S rename -S renameat -S truncate -S chmod -S setxattr -S lsetxattr -S removexattr -S lremovexattr -F exit=-EPERM -k file_modification"
+
+audit_rules[rules.unauthorized_file_system_actions,d]="These rules are used to detect Unauthorized file-system related events (unsuccessful Files Access, Modification, Creation)"
+
+
+
 
 ## 32bit API Exploitation
 ### If you are on a 64 bit platform, everything _should_ be running
 ### in 64 bit mode. This rule will detect any use of the 32 bit syscalls
 ### because this might be a sign of someone exploiting a hole in the 32
 ### bit API.
--a always,exit -F arch=b32 -S all -k 32bit_api
+audit_rules[rules.detect_32,0]=1
+audit_rules[rules.detect_32,1]="-a always,exit -F arch=b32 -S all -k 32bit_api"
+audit_rules[rules.detect_32,d]="This rule detects any use of 32 bit syscalls because this might be a sign of someone exploiting a hole in 32 bit mode"
 
-# Make The Configuration Immutable --------------------------------------------
-
-##-e 2
