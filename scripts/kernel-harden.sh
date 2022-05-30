@@ -5,23 +5,24 @@
 # recommended solutions and tips
 
 _USAGE_FUNCTION() {
-	echo "Usage: $0 -md [main directory] -pf [profile file (JSON format)] -st [status file] -mf [messages file] -af [actions file]";
+	echo >&2 "Usage: $0 -md [main directory] -pf [profile file (JSON format)] -st [status file] -mf [messages file] -af [actions file]";
 }
 
 [[ $(id -u) != 0 ]] && {
-	echo "$0: Must run as a root, either by 'systemctl start harden.service' or by 'sudo $0' ."
+	echo >&2 "$0: Must run as a root, either by 'systemctl start harden.service' or by 'sudo $0' ."
 	_USAGE_FUNCTION
 	exit 0
 }
 
-RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
+RUNTIME_DATE=$(date '+%s_%F')	# Runtime date and time
 
 # Loop through all command line arguments, and but them in
 # the case switch statement to test them
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		-pf|--profile-file)
-			if [[ ! -e $2 ]]; then echo "$0: Invalid input for profile file (-pf) $PROFILE_FILE, file doesn't exist. Going to use the default ones (/etc/harden/profile-file.json or /usr/share/harden/config/profile-file.json)"
+			if [[ ! -e $2 ]]; then 
+				echo >&2 "$0: Invalid input for profile file (-pf) $PROFILE_FILE, file doesn't exist. Going to use the default ones (/etc/harden/profile-file.json or /usr/share/harden/config/profile-file.json)"
 			else PROFILE_FILE=$2
 			fi
 			shift 2
@@ -39,9 +40,9 @@ while [[ $# -gt 0 ]]; do
 			shift 2
 			;;
 		-*|--*)
-			echo "$0: Invalid argument $1"
+			echo >&2 "$0: Invalid argument $1"
 			_USAGE_FUNCTION
-			exit 1
+			exit 0
 			;;
 		*)
 			POSITIONAL_ARGS+=("$1")	# save positional arguments
@@ -62,20 +63,18 @@ if [[ ! -e $PROFILE_FILE ]]; then
 	elif [[ -h $MAIN_DIR/config/profile-file.json ]]; then
 		PROFILE_FILE="$MAIN_DIR/config/profile-file.json"	# if not set by a positional parameter (command line argument)
 	else
-		echo "$0: Critical Error: JSON file \"profile-file.json\" which is the main congifuration file for the Linux Hardening Project, is missing."
-		echo "Couldn't find it in: $PROFILE_FILE, or /etc/harden/profile-file.json, or /usr/share/harden/config/profile-file.json"
+		echo >&2 "$0: Critical Error: JSON file \"profile-file.json\" which is the main congifuration file for the Linux Hardening Project, is missing. \
+Couldn't find it in: $PROFILE_FILE, or /etc/harden/profile-file.json, or /usr/share/harden/config/profile-file.json"
 		exit 1
 	fi
 
-	echo "$0: Using $PROFILE_FILE for the current run as profile-file."
+	echo >&2 "$0: Using $PROFILE_FILE for the current run as profile-file."
 fi
 
-MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/kernel-harden-$RUNTIME_DATE.message"}	# Currently used messages file
-ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/kernel.status"}	# Currently used status file
+MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/kernel-harden_$RUNTIME_DATE"}	# Currently used messages file
+ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/kernel-harden_$RUNTIME_DATE.sh"}	# Currently used Actions file
+STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/kernel-harden.status"}	# Currently used status file
 
-PARAMETERS_FILE="$MAIN_DIR/resources/kernel-parameters.rc"
-MODULES_FILE="$MAIN_DIR/resources/kernel-blocked-modules.rc"
 KERNEL_ACTIONS_FILE="$MAIN_DIR/actions/kernel-actions.sh"
 
 echo ""
@@ -90,6 +89,8 @@ _CHECK_PROFILE_FILE_FUNCTION()  {
 }
 
 _CHECK_PARAM_FUNCTION()	{
+	local PARAMETERS_FILE
+	PARAMETERS_FILE="$MAIN_DIR/resources/kernel-parameters.rc"
 	source "$PARAMETERS_FILE"
 
 	VAL_INDEX=0
@@ -112,8 +113,8 @@ _CHECK_PARAM_FUNCTION()	{
 
 		# Compare current value with recommended one
 		[[ "$CURRENT_VAL" == "$RECOMMENDED_VAL" ]] && continue
-		echo "Kernel-Parameter-Hardening[$PARAM]: Kernel Parameter $PARAM recommended value is \
-${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $MESSAGE" >> "$MESSAGES_FILE"	# Print Message
+		# Print Message
+		echo "Kernel-Parameter-Hardening[$PARAM]: (recommended value = ${RECOMMENDED_VAL//$'\t'/,} // current value = ${CURRENT_VAL//$'\t'/,}). $PARAM: $MESSAGE" >> "$MESSAGES_FILE"
 
 		echo "kernel_$PARAM=\"${RECOMMENDED_VAL//$'\t'/,}\"" >> "$STATUS_FILE"	# Save the current value
 
@@ -123,11 +124,15 @@ ${RECOMMENDED_VAL//$'\t'/,}, but the current value is ${CURRENT_VAL//$'\t'/,}. $
 
 _CHECK_MODULE_BLACKLISTING_FUNCTION()	{
 	local MODULE_BLACKLIST_FILE
+	local MODULES_FILE
+	MODULES_FILE="$MAIN_DIR/resources/kernel-blocked-modules.rc"
 	MODULE_BLACKLIST_FILE="/etc/modprobe.d/blacklist.conf"
 
 	source "$MODULES_FILE"
 
-	[[ $(_CHECK_PROFILE_FILE_FUNCTION module action) == 1 ]] && [[ ! -f $MODULE_BLACKLIST_FILE ]] && touch $MODULE_BLACKLIST_FILE
+	if [[ $(_CHECK_PROFILE_FILE_FUNCTION module action) == 1 ]]; then
+		[[ ! -f $MODULE_BLACKLIST_FILE ]] && touch $MODULE_BLACKLIST_FILE
+	fi
 
 	for TYPE in $MOD_TYPES; do
 		if [[ $(_CHECK_PROFILE_FILE_FUNCTION module "$TYPE" check) == 1 ]]

@@ -4,25 +4,26 @@
 # Different recommended file system hardening options and configuration
 
 _USAGE_FUNCTION() {
-	echo "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]";
+	echo >&2 "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]";
 }
 
 CURRENT_USER_NAME=$(id -un)
 CURRENT_USER_ID=$(id -u)
 [[ $CURRENT_USER_ID != 0 ]] && {
-	echo "$0: Must run as a root (uid=0, gid=0) (currently running as $CURRENT_USER_NAME), either by 'systemctl start harden.service' (which is defaulted to be) or by using 'sudo $0' ."
+	echo >&2 "$0: Must run as a root (uid=0, gid=0) (currently running as $CURRENT_USER_NAME), either by 'systemctl start harden.service' (which is defaulted to be) or by using 'sudo $0' ."
 	_USAGE_FUNCTION
 	exit 0
 }
 
-RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
+RUNTIME_DATE=$(date '+%s_%F')	# Runtime date and time
 
 # Loop through all command line arguments, and but them in
 # the case switch statement to test them
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		-pf|--profile-file)
-			if [[ ! -e $2 ]]; then echo "$0: Invalid input for profile file (-pf) $PROFILE_FILE, file doesn't exist. Going to use the default ones (/etc/harden/profile-file.json or /usr/share/harden/config/profile-file.json)"
+			if [[ ! -e $2 ]]; then
+				echo >&2 "$0: Invalid input for profile file (-pf) $PROFILE_FILE, file doesn't exist. Going to use the default ones (/etc/harden/profile-file.json or /usr/share/harden/config/profile-file.json)"
 			else PROFILE_FILE=$2
 			fi
 			shift 2
@@ -40,9 +41,9 @@ while [[ $# -gt 0 ]]; do
 			shift 2
 			;;
 		-*|--*)
-			echo "$0: Invalid argument $1"
+			echo >&2 "$0: Invalid argument $1"
 			_USAGE_FUNCTION
-			exit 1
+			exit 0
 			;;
 		*)
 			POSITIONAL_ARGS+=("$1")	# save positional arguments
@@ -63,22 +64,27 @@ if [[ ! -e $PROFILE_FILE ]]; then
 	elif [[ -h $MAIN_DIR/config/profile-file.json ]]; then
 		PROFILE_FILE="$MAIN_DIR/config/profile-file.json"	# if not set by a positional parameter (command line argument)
 	else
-		echo "$0: Critical Error: JSON file \"profile-file.json\" which is the main congifuration file for the Linux Hardening Project, is missing."
-		echo "Couldn't find it in: $PROFILE_FILE, or /etc/harden/profile-file.json, or /usr/share/harden/config/profile-file.json"
+		echo >&2 "$0: Critical Error: JSON file \"profile-file.json\" which is the main congifuration file for the Linux Hardening Project, is missing. \
+Couldn't find it in: $PROFILE_FILE, or /etc/harden/profile-file.json, or /usr/share/harden/config/profile-file.json"
 		exit 1
 	fi
 
-	echo "$0: Using $PROFILE_FILE for the current run as profile-file."
+	echo >&2 "$0: Using $PROFILE_FILE for the current run as profile-file."
 fi
 
-MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/fs-harden-$RUNTIME_DATE.message"}	# Currently used messages file
-ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/fs.status"}	# Currently used status file
+MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/fs-harden_$RUNTIME_DATE"}	# Currently used messages file
+ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/fs-harden_$RUNTIME_DATE.sh"}	# Currently used Actions file
+STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/fs-harden.status"}	# Currently used status file
 
 FS_ACTIONS_FILE="$MAIN_DIR/scripts/fs-actions.sh"
 
+[[ ! -e "$MAIN_DIR/resources/fs-options.rc" ]] && {
+	echo >&2 "$0: File System hardening resources file doesn't exist '$MAIN_DIR/resources/fs-options.rc'."
+	exit 1
+}
 source "$MAIN_DIR/resources/fs-options.rc"
-[[ -f "$STATUS_FILE" ]] && source "$STATUS_FILE"
+
+[[ -e "$STATUS_FILE" ]] && source "$STATUS_FILE"
 
 # Queue the requested value from the JSON profile file by jq
 _CHECK_PROFILE_FILE_FUNCTION()  {
@@ -116,6 +122,7 @@ _CHECK_MOUNT_OPTIONS_FUNCTION()	{
 
 		echo "mounts${L_MOUNT_POINT//\//_}_$opt=0" >> "$STATUS_FILE"
 		echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: Mount option $opt is not currently set for $L_MOUNT_POINT mount point, it's recommended to be used." >> "$MESSAGES_FILE"
+
 		opt=${opt%=*}
 		[[ -n ${!opt} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $opt: ${!opt}" >> "$MESSAGES_FILE"
 	done
@@ -146,15 +153,19 @@ _CMP_FSTAB_FUNCTION()	{
 	# Compare file system type used for moint point
 	if [[ "$FSTAB_FS_TYPE" != "$L_FS_TYPE" ]]; then
 		echo "fstab${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> "$STATUS_FILE"
-		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currenlty applied file system type $L_FS_TYPE is different from the one in /etc/fstab which is $FSTAB_FS_TYPE." >> "$MESSAGES_FILE"
-		[[ -n ${FS_TYPES[$FSTAB_FS_TYPE]} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $FSTAB_FS_TYPE: ${FS_TYPES[$FSTAB_FS_TYPE]}" >> "$MESSAGES_FILE"
+
+		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currenlty applied file system type $L_FS_TYPE is different from the one in /etc/fstab which is $FSTAB_FS_TYPE.
+$FSTAB_FS_TYPE: ${FS_TYPES[$FSTAB_FS_TYPE]}" >> "$MESSAGES_FILE"
+
 		[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
 	fi
 
 	for opt in $FSTAB_MOUNT_OPTIONS; do
 		[[ $L_MOUNT_OPTIONS =~ (^|[[:space:]])"$opt"($|[[:space:]]) ]] && continue
+
 		echo "fstab${L_MOUNT_POINT//\//_}-$opt=0" >> "$STATUS_FILE"
 		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currently running (applied) mount options is missing $opt option which is specified in /etc/fstab, if it wasn't from you and feels suspeciuos, remount it by (mount -a)." >> "$MESSAGES_FILE"
+
 		opt=${opt%=*}
 		[[ -n ${!opt} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $opt: ${!opt}" >> "$MESSAGES_FILE"
 	done
@@ -175,6 +186,7 @@ _CHECK_MOUNT_POINT_FUNCTION()	{
 		if [[ ! "$L_FS_TYPE" =~ $REC_FS_TYPE ]]; then
 			echo "mounts${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> "$STATUS_FILE"
 			echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: the currently used file system type $L_FS_TYPE is different from the expected one ${REC_FS_TYPE//\// or }." >> "$MESSAGES_FILE"
+
 			[[ -n ${FS_TYPES[$REC_FS_TYPE]} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $REC_FS_TYPE: ${FS_TYPES[$REC_FS_TYPE]}" >> "$MESSAGES_FILE"
 			[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
 		fi

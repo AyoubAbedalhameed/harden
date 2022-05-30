@@ -1,11 +1,11 @@
 [Unit]
-Description=Hardening service
+Description=Linux Hardening service
 Documentation="file:/usr/share/harden/docs"
-StartLimitIntervalSec=60
+StartLimitIntervalSec=10
 StartLimitBurst=1
 
 [Service]
-Type=oneshot
+Type=simple
 User=root
 StandardOutput=journal
 StandardError=journal

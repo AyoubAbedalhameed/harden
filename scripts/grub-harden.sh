@@ -4,23 +4,23 @@
 # GRUB Boot Parameters hardening
 
 _USAGE_FUNCTION() {
-	echo "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]";
+	echo >&2 "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]";
 }
 
 [[ $(id -u) != 0 ]] && {
-	echo "$0: Must run as a root, either by 'systemctl start harden.service' or by 'sudo $0' ."
+	echo >&2 "$0: Must run as a root, either by 'systemctl start harden.service' or by 'sudo $0' ."
 	_USAGE_FUNCTION
 	exit 0
 }
 
-RUNTIME_DATE=$(date +%F_%H-%M-%S)	# Runtime date and time
+RUNTIME_DATE=$(date '+%s_%F')	# Runtime date and time
 
 # Loop through all command line arguments, and but them in
 # the case switch statement to test them
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		-pf|--profile-file)
-			if [[ ! -e $2 ]]; then echo "$0: Invalid input for profile file (-pf) $PROFILE_FILE, file doesn't exist. Going to use the default ones (/etc/harden/profile-file.json or /usr/share/harden/config/profile-file.json)"
+			if [[ ! -e $2 ]]; then echo >&2 "$0: Invalid input for profile file (-pf) $PROFILE_FILE, file doesn't exist. Going to use the default ones (/etc/harden/profile-file.json or /usr/share/harden/config/profile-file.json)"
 			else PROFILE_FILE=$2
 			fi
 			shift 2
@@ -38,7 +38,7 @@ while [[ $# -gt 0 ]]; do
 			shift 2
 			;;
 		-*|--*)
-			echo "$0: Invalid argument $1"
+			echo >&2 "$0: Invalid argument $1"
 			_USAGE_FUNCTION
 			exit 1
 			;;
@@ -56,32 +56,24 @@ MAIN_DIR=$(pwd)
 MAIN_DIR=${MAIN_DIR%/scripts}
 
 if [[ ! -e $PROFILE_FILE ]]; then
-	if [[ -h /etc/harden/profile-file.json ]]; then
+	if [[ -e /etc/harden/profile-file.json ]]; then
 		PROFILE_FILE="etc/harden/profile-file.json"	# Use Default User Choice Profile File,
-	elif [[ -h $MAIN_DIR/config/profile-file.json ]]; then
+	elif [[ -e $MAIN_DIR/config/profile-file.json ]]; then
 		PROFILE_FILE="$MAIN_DIR/config/profile-file.json"	# if not set by a positional parameter (command line argument)
 	else
-		echo "$0: Critical Error: JSON file \"profile-file.json\" which is the main congifuration file for the Linux Hardening Project, is missing."
-		echo "Couldn't find it in: $PROFILE_FILE, or /etc/harden/profile-file.json, or /usr/share/harden/config/profile-file.json"
+		echo >&2 "$0: Critical Error: JSON file \"profile-file.json\" which is the main congifuration file for the Linux Hardening Project, is missing. \
+Couldn't find it in: $PROFILE_FILE, or /etc/harden/profile-file.json, or /usr/share/harden/config/profile-file.json"
 		exit 1
 	fi
 
-	echo "$0: Using $PROFILE_FILE for the current run as profile-file."
+	echo >&2 "$0: Using $PROFILE_FILE for the current run as profile-file."
 fi
 
-MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/grub-harden-$RUNTIME_DATE.message"}	# Currently used messages file
-ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/$RUNTIME_DATE.sh"}	# Currently used Actions file
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub.status"}	# Currently used status file
+MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/grub-harden_$RUNTIME_DATE.message"}	# Currently used messages file
+ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/grub-harden_$RUNTIME_DATE.sh"}	# Currently used Actions file
+STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub-harden.status"}	# Currently used status file
 
 GRUB_ACTIONS_FILE="$MAIN_DIR/actions/grub-actions.sh"
-GRUB_FILE="/etc/default/grub"
-GRUB_ACTION=""
-
-echo ""
-echo "GRUB Hardening script has started..."
-echo ""
-
-source "$MAIN_DIR/resources/grub-parameters.rc"
 
 # Queue the requested value from the JSON profile file by jq
 _CHECK_PROFILE_FILE_FUNCTION()  {
@@ -89,11 +81,30 @@ _CHECK_PROFILE_FILE_FUNCTION()  {
 	jq '.[] | select(.name=="grub")' "$PROFILE_FILE" | jq ".grub.${PF_VALUE// /.}"
 }
 
+echo ""
+echo "GRUB Hardening script has started..."
+echo ""
+
+GRUB_ACTION=""
+
+GRUB_FILE="/etc/default/grub"
+[[ ! -e $GRUB_FILE ]] && {
+	echo >&2 "$0: GRUB default profile file $GRUB_FILE doean't exist."
+	exit 1
+}
+
+[[ ! -e "$MAIN_DIR/resources/grub-parameters.rc" ]] && {
+	echo >&2 "$0: Grub hardening resources file doesn't exist '$MAIN_DIR/resources/grub-parameters.rc', please run the script in it's original place, or check you installation."
+	exit 1
+}
+source "$MAIN_DIR/resources/grub-parameters.rc"
+
 _CHECK_PARAM()	{
 	local CURRENT
 	local CPU_MIT
 	local CPU_MIT_MISSED
 
+	# $1 would be either GRUB_CMDLINE_LINUX_DEFAULT or GRUB_CMDLINE_LINUX
 	CURRENT=$(grep "$1" "$GRUB_FILE")
 	CURRENT=${CURRENT##"$1"}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT//\"/}
@@ -170,8 +181,8 @@ write-to-actions-file()	{
 
 if [[ $(_CHECK_PROFILE_FILE_FUNCTION check) == 1 ]]
 then
-	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" && _CHECK_PARAM "GRUB_CMDLINE_LINUX="
-	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" && _CHECK_PARAM "GRUB_CMDLINE_LINUX_DEFAULT="
+	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" 2>/dev/null && _CHECK_PARAM "GRUB_CMDLINE_LINUX="
+	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" 2>/dev/null && _CHECK_PARAM "GRUB_CMDLINE_LINUX_DEFAULT="
 fi
 
 [[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 1 ]] && write-to-actions-file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
