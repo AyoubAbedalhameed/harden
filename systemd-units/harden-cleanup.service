@@ -1,5 +1,5 @@
 [Unit]
-Description=Cleanup service for the \'Linux Hardening Service\' (harden.service) old and unwanted/unuseful files of type (logs,messages,actions).
+Description=Cleanup service for the 'Linux Hardening Service' (harden.service) old and unwanted/unuseful files of type (logs,messages,actions).
 # Don't let it run more than once in an hour (60sec x 60min = 3600)
 StartLimitIntervalSec=3600
 StartLimitBurst=1
