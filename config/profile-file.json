@@ -30,30 +30,30 @@
         "script":"/usr/share/harden/scripts/auditd-harden.sh",
         "auditd":{
             "check":1,
-            "action":1,
+            "action":0,
             "rules":{
-                "auditd_auditing":{"check":1, "action":1, "question":""},
-                "filter":{"check":1, "action":1, "question":""},
-                "kernel":{"check":1, "action":1, "question":""},
-                "critical_sys_call":{"check":1, "action":1, "question":""},
-                "critical_etc_file":{"check":1, "action":1, "question":""},
-                "pam_config":{"check":1, "action":1, "question":""},          
-                "cron":{"check":1, "action":1, "question":""},
-                "critical_commands":{"check":1, "action":1, "question":""},
-                "login":{"check":1, "action":1, "question":""},
-                "network_environment":{"check":1, "action":1, "question":""},
-                "power_state":{"check":1, "action":1, "question":""},
-                "access_failures":{"check":1, "action":1, "question":""},
-                "sudo":{"check":1, "action":1, "question":""},
-                "dac":{"check":1, "action":1, "question":""},
-                "suspicious_activities":{"check":1, "action":1, "question":""},
-                "code_injection":{"check":1, "action":1, "question":""},
-                "software_managmenet_auditing":{"check":1, "action":1, "question":""},
-                "docker":{"check":1, "action":1, "question":""},
-                "root_command_execution":{"check":1, "action":1, "question":""},
-                "file_deletion":{"check":1, "action":1, "question":""},
-                "unauthorized_file_system_actions":{"check":1, "action":1, "question":""},
-                "detect_32":{"check":1, "action":1, "question":""}
+                "auditd_auditing":{"check":1, "action":0, "question":""},
+                "filter":{"check":1, "action":0, "question":""},
+                "kernel":{"check":1, "action":0, "question":""},
+                "critical_sys_call":{"check":1, "action":0, "question":""},
+                "critical_etc_file":{"check":1, "action":0, "question":""},
+                "pam_config":{"check":1, "action":0, "question":""},          
+                "cron":{"check":1, "action":0, "question":""},
+                "critical_commands":{"check":1, "action":0, "question":""},
+                "login":{"check":1, "action":0, "question":""},
+                "network_environment":{"check":1, "action":0, "question":""},
+                "power_state":{"check":1, "action":0, "question":""},
+                "access_failures":{"check":1, "action":0, "question":""},
+                "sudo":{"check":1, "action":0, "question":""},
+                "dac":{"check":1, "action":0, "question":""},
+                "suspicious_activities":{"check":1, "action":0, "question":""},
+                "code_injection":{"check":1, "action":0, "question":""},
+                "software_managmenet_auditing":{"check":1, "action":0, "question":""},
+                "docker":{"check":1, "action":0, "question":""},
+                "root_command_execution":{"check":1, "action":0, "question":""},
+                "file_deletion":{"check":1, "action":0, "question":""},
+                "unauthorized_file_system_actions":{"check":1, "action":0, "question":""},
+                "detect_32":{"check":1, "action":0, "question":""}
                 
                 
             }
@@ -81,11 +81,11 @@
         "firewall":{
 
             "check":1,
-            "action":1,
+            "action":0,
             "rules":{
                 "addressblock":{
                     "check":1,
-                    "action":1,
+                    "action":0,
                     "question":"",
                     "parameters_question":"Enter a comma-separetd list of ip address/network-addresses you want to block traffic from",
                     "Parameters_Example":"",
@@ -95,7 +95,7 @@
 
                 "ssh_in":{
                     "check":1,
-                    "action":1,
+                    "action":0,
                     "auestion":"",
                     "parameters_question":"Enter one <PORT> number and Comma-separetd <ADDRESSES> list for Allowing incomming ssh request to your choosed PORT from ADDRESSES. Default(22 All)",
                     "Parameters_Example":"",
@@ -105,7 +105,7 @@
 
                 "http":{
                     "check":1,
-                    "action":1,
+                    "action":0,
                     "question":"Do you want to allow incoming HTTP requests from specific/All networks on all interfaces ? Default (y)",
                     "parameters_question":"Enter one <PORT> number and Comma-separetd <ADDRESSES> list for Allowing incomming HTTP request to your choosed PORT from ADDRESSES. Default(80 All)",
                     "Parameters_Example":"",
