@@ -1,8 +1,17 @@
 
 #!/usr/bin/env bash
 
+
+
+
+
 #Prevent overwriting files
 set -C
+
+
+
+exit 0 
+
 
 #Fetching Script run time. 
 RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time

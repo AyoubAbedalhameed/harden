@@ -2,8 +2,15 @@
 #This script is a part of harden project, it will be used for hardening auditd with recommended rules.
 
 
+
+
+
 #Prevent overwriting files
 set -C
+
+
+#Temporary exit.
+exit 0
 
 
 #Fetching Script run time. 
