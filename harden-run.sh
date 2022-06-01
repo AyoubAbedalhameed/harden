@@ -46,7 +46,7 @@ shift
 __DEBUG_X=0
 __ON_SCREEN=0
 __ON_SCREEN_LOG=0
-__LOG_AS_IS=1
+__LOG_AS_IS=0
 
 # Loop through all command line arguments, and but them in
 # the case switch statement to test them
@@ -139,6 +139,14 @@ if [[ $__LAUNCHED_BY_SYSTEMD == 1 ]]; then	# Only add Syslog Identifier prefix <
 	# Default messages to be prefixed with syslog identifier <5> for NOTICE, redirect to file discreptor '6' (the saved STDOUT)
 	exec 5> >(while read -r __NOTICE; do echo >&6 "<5>$__NOTICE"; done)
 
+# Currently we are setting it to true, due to some issues (hopefully it will be fixed), so data streams with go through as is to the LOG_FILE (without formating)
+elif [[ $__LOG_AS_IS == 1 ]]; then
+	exec 1>>"$LOG_FILE"
+	exec 2>>"$LOG_FILE"
+	exec 5>&1
+	trap 'exec >&1-' EXIT
+	trap 'exec >&2-' EXIT
+
 # If main was not ran by systemd, and on screen log output variables is empty, we will need to write, redirect, format and save our logs manually in a log file
 elif [[ $__ON_SCREEN_LOG == 0 ]] && [[ $__DEBUG_X == 0 ]] ; then
 	# Write every thing to a log file, in a formatted way with full usefull info
@@ -150,28 +158,19 @@ elif [[ $__ON_SCREEN_LOG == 0 ]] && [[ $__DEBUG_X == 0 ]] ; then
 	touch "$LOG_FILE"
 	ln -fs "$LOG_FILE" $LOGS_DIR/harden-last-log
 
-    # Currently we are setting it to true, due to some issues (hopefully it will be fixed), so data streams with go through as is to the LOG_FILE (without formating)
-    if [[ ! $__LOG_AS_IS == 1 ]]; then
-        exec 1>>"$LOG_FILE"
-        exec 2>>"$LOG_FILE"
-        exec 5>&1
-        trap 'exec >&1-' EXIT
-        trap 'exec >&2-' EXIT
-    else
-        # Default STDOUT to be prefixed with syslog identifier <6> for INFO, with more logging information then redirect to log file
-        exec 1> >(while read -r __INFO; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <info> [$(date '+%s.%^4N')] $__INFO" >> "$LOG_FILE" ; done)
-        trap 'exec >&1-' EXIT
+	# Default STDOUT to be prefixed with syslog identifier <6> for INFO, with more logging information then redirect to log file
+	exec 1> >(while read -r __INFO; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <info> [$(date '+%s.%^4N')] $__INFO" >> "$LOG_FILE" ; done)
+	trap 'exec >&1-' EXIT
 
-        # Default STDERR to be prefixed with syslog identifier <7> for DEBUG, with more logging information then redirect to log file
-        exec 2> >(while read -r __DEBUG; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <debug> [$(date '+%s.%^4N')] $__DEBUG" >> "$LOG_FILE"; done)
-        trap 'exec >&2-' EXIT
+	# Default STDERR to be prefixed with syslog identifier <7> for DEBUG, with more logging information then redirect to log file
+	exec 2> >(while read -r __DEBUG; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <debug> [$(date '+%s.%^4N')] $__DEBUG" >> "$LOG_FILE"; done)
+	trap 'exec >&2-' EXIT
 
-        if [[ $__ON_SCREEN == 1 ]]; then
-            exec 5>&1	# in case of on screen mode, we are just creating a clone fd of STDOUT to ptint messages as is on screen
-        else	# Default messages to be prefixed with syslog identifier <5> for NOTICE, with more logging information then redirect to log file
-            exec 5> >(while read -r __NOTICE; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <notice> [$(date '+%s.%^4N')] $__NOTICE" >> "$LOG_FILE"; done)
-        fi
-    fi
+	if [[ $__ON_SCREEN == 1 ]]; then
+		exec 5>&1	# in case of on screen mode, we are just creating a clone fd of STDOUT to ptint messages as is on screen
+	else	# Default messages to be prefixed with syslog identifier <5> for NOTICE, with more logging information then redirect to log file
+		exec 5> >(while read -r __NOTICE; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <notice> [$(date '+%s.%^4N')] $__NOTICE" >> "$LOG_FILE"; done)
+	fi
 
 # in case of on screen mode, we are just creating a clone fd of STDOUT to shorten our code in the next lines of _HARDEN_RUN_FUNCTION()
 else
