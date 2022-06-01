@@ -130,17 +130,14 @@ set -- "${POSITIONAL_ARGS[@]}"
 if [[ $__LAUNCHED_BY_SYSTEMD == 1 ]]; then	# Only add Syslog Identifier prefix <x>
 	# Default STDOUT to be prefixed with syslog identifier <6> for INFO, and save old STDOUT value in fd '6'
 	exec 6>&1 1> >(while read -r __INFO; do echo >&6 "<6>$__INFO"; done)
-#	trap 'exec >&6-' EXIT
 	trap 'exec >&1-' EXIT
 
 	# Default STDERR to be prefixed with syslog identifier <7> for DEBUG
 	exec 7>&2 2> >(while read -r __DEBUG; do echo >&7 "<7>$__DEBUG"; done)
-#	trap 'exec >&7-' EXIT
 	trap 'exec >&2-' EXIT
 
 	# Default messages to be prefixed with syslog identifier <5> for NOTICE, redirect to file discreptor '6' (the saved STDOUT)
 	exec 5> >(while read -r __NOTICE; do echo >&6 "<5>$__NOTICE"; done)
-#	trap 'exec >&5-' EXIT
 
 # If main was not ran by systemd, and on screen log output variables is empty, we will need to write, redirect, format and save our logs manually in a log file
 elif [[ $__ON_SCREEN_LOG == 0 ]] && [[ $__DEBUG_X == 0 ]] ; then
@@ -171,17 +168,14 @@ elif [[ $__ON_SCREEN_LOG == 0 ]] && [[ $__DEBUG_X == 0 ]] ; then
 
         if [[ $__ON_SCREEN == 1 ]]; then
             exec 5>&1	# in case of on screen mode, we are just creating a clone fd of STDOUT to ptint messages as is on screen
-    #		trap "exec >&5-" EXIT
         else	# Default messages to be prefixed with syslog identifier <5> for NOTICE, with more logging information then redirect to log file
             exec 5> >(while read -r __NOTICE; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <notice> [$(date '+%s.%^4N')] $__NOTICE" >> "$LOG_FILE"; done)
-    #		trap 'exec >&5-' EXIT
         fi
     fi
 
 # in case of on screen mode, we are just creating a clone fd of STDOUT to shorten our code in the next lines of _HARDEN_RUN_FUNCTION()
 else
 	exec 5>&1
-#	trap "exec >&5-" EXIT
 fi
 
 ########################################################
@@ -201,7 +195,7 @@ if [[ $(pwd) != "$MAIN_DIR" ]];then
 	cd $MAIN_DIR || { echo >&2 "$0: Couldn't change running directory to $MAIN_DIR, where Linux Harden service files should be in."; exit 1; }
 fi
 
-export CONFIG_DIR CONFIG_FILE PROFILE_FILE
+export CONFIG_DIR CONFIG_FILE PROFILE_FILE DATE_TO_LIST
 # Checking profile file value and existance
 CONFIG_DIR="/etc/harden"	# Default Configuration Directory
 CONFIG_FILE=${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}	# Use Default Configuration File,
