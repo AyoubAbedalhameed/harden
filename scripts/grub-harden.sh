@@ -42,7 +42,7 @@ GRUB_FILE="/etc/default/grub"
 }
 source "$MAIN_DIR/resources/grub-parameters.rc"
 
-_CHECK_PARAM()	{
+_check_param()	{
 	local CURRENT
 	local CPU_MIT
 	local CPU_MIT_MISSED
@@ -52,7 +52,7 @@ _CHECK_PARAM()	{
 	CURRENT=${CURRENT##"$1"}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT//\"/}
 
-	if [[ $(_CHECK_PROFILE_FILE_FUNCTION grub general check) == 1 ]]
+	if [[ $(_check_profile_file_function grub general check) == 1 ]]
 	then
 		# Loop through all general recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_OPTIONS; do
@@ -68,7 +68,7 @@ _CHECK_PARAM()	{
 
 	CPU_MIT=1
 	CPU_MIT_MISSED=""
-	if [[ $(_CHECK_PROFILE_FILE_FUNCTION grub cpu_metigations check) == 1 ]]
+	if [[ $(_check_profile_file_function grub cpu_metigations check) == 1 ]]
 	then
 		# Loop through all cpu mitigations recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_CPU_MIT; do
@@ -92,7 +92,7 @@ _CHECK_PARAM()	{
 	fi
 }
 
-write-to-actions-file()	{
+_write_to_actions_file()	{
 	{
 		echo "#!/usr/bin/env bash"
 		echo ""
@@ -122,13 +122,13 @@ write-to-actions-file()	{
 	} > "$GRUB_ACTIONS_FILE"
 }
 
-if [[ $(_CHECK_PROFILE_FILE_FUNCTION grub check) == 1 ]]
+if [[ $(_check_profile_file_function grub check) == 1 ]]
 then
-	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" 2>/dev/null && _CHECK_PARAM "GRUB_CMDLINE_LINUX="
-	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" 2>/dev/null && _CHECK_PARAM "GRUB_CMDLINE_LINUX_DEFAULT="
+	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" 2>/dev/null && _check_param "GRUB_CMDLINE_LINUX="
+	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" 2>/dev/null && _check_param "GRUB_CMDLINE_LINUX_DEFAULT="
 fi
 
-[[ $(_CHECK_PROFILE_FILE_FUNCTION grub action) == 1 ]] && write-to-actions-file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
+[[ $(_check_profile_file_function grub action) == 1 ]] && _write_to_actions_file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
 
 echo ""
 echo "GRUB Hardening script has finished"

@@ -28,7 +28,7 @@ KERNEL_ACTIONS_FILE="$MAIN_DIR/actions/kernel-actions.sh"
 echo ""
 echo "Kernel Hardening script has started..."
 
-_CHECK_PARAM_FUNCTION()	{
+_check_param_function()	{
 	local PARAMETERS_FILE
 	PARAMETERS_FILE="$MAIN_DIR/resources/kernel-parameters.rc"
 	source "$PARAMETERS_FILE"
@@ -45,7 +45,7 @@ _CHECK_PARAM_FUNCTION()	{
 		RECOMMENDED_VAL="${kernel[$PARAM,$VAL_INDEX]}"
 		RECOMMENDED_VAL="${RECOMMENDED_VAL//,/$'\t'}"	# Replace commas (,) with tabs (\t), if exists
 
-		[[ $(_CHECK_PROFILE_FILE_FUNCTION kernel "$TYPE" check) != 1 ]]  && continue	# Skip checking this parameter if profile file says so
+		[[ $(_check_profile_file_function kernel "$TYPE" check) != 1 ]]  && continue	# Skip checking this parameter if profile file says so
 		CURRENT_VAL="$(sysctl -en "$PARAM")"
 		CURRENT_VAL="${CURRENT_VAL//$'\t'/,}"
 
@@ -58,11 +58,11 @@ _CHECK_PARAM_FUNCTION()	{
 
 		echo "kernel_$PARAM=\"${RECOMMENDED_VAL//$'\t'/,}\"" >> "$STATUS_FILE"	# Save the current value
 
-		[[ $(_CHECK_PROFILE_FILE_FUNCTION kernel "$TYPE" action) == 1 ]]  && echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> "$KERNEL_ACTIONS_FILE"	# Save action
+		[[ $(_check_profile_file_function kernel "$TYPE" action) == 1 ]]  && echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> "$KERNEL_ACTIONS_FILE"	# Save action
 	done
 }
 
-_CHECK_MODULE_BLACKLISTING_FUNCTION()	{
+_check_module_blacklisting_function()	{
 	local MODULE_BLACKLIST_FILE
 	local MODULES_FILE
 	local RUNNING_MODULES
@@ -72,26 +72,26 @@ _CHECK_MODULE_BLACKLISTING_FUNCTION()	{
 
 	source "$MODULES_FILE"
 
-	[[ $(_CHECK_PROFILE_FILE_FUNCTION kernel action) == 1 ]] && touch $MODULE_BLACKLIST_FILE
+	[[ $(_check_profile_file_function kernel action) == 1 ]] && touch $MODULE_BLACKLIST_FILE
 
 	if [[ ! -f $MODULE_BLACKLIST_FILE ]]; then
 		echo "Your system doesn't have any modules blocked in $MODULE_BLACKLIST_FILE (it doesn't even exist)" >> $MESSAGES_FILE
 		for TYPE in $MOD_TYPES; do
-			if [[ $(_CHECK_PROFILE_FILE_FUNCTION kernel module "$TYPE" check) == 1 ]]
+			if [[ $(_check_profile_file_function kernel module "$TYPE" check) == 1 ]]
 			then
 				for MODULE in ${!TYPE}; do
 					[[ ! $RUNNING_MODULES =~ $MODULE ]] && continue
 					echo "kernel_module_$MODULE=0" >> "$STATUS_FILE"
 					echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE currently loaded and running on your system, it is recommended to be blacklisted, because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
 
-					[[ $(_CHECK_PROFILE_FILE_FUNCTION kernel module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
+					[[ $(_check_profile_file_function kernel module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
 				done
 			fi
 		done
 
 	else 
 		for TYPE in $MOD_TYPES; do
-			if [[ $(_CHECK_PROFILE_FILE_FUNCTION kernel module "$TYPE" check) == 1 ]]
+			if [[ $(_check_profile_file_function kernel module "$TYPE" check) == 1 ]]
 			then
 				for MODULE in ${!TYPE}; do
 					grep -q "$MODULE" "$MODULE_BLACKLIST_FILE" && continue
@@ -99,17 +99,17 @@ _CHECK_MODULE_BLACKLISTING_FUNCTION()	{
 					echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
 
 					[[ $RUNNING_MODULES =~ $MODULE ]] && echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is loaded on you currently running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
-					[[ $(_CHECK_PROFILE_FILE_FUNCTION kernel module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
+					[[ $(_check_profile_file_function kernel module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
 				done
 			fi
 		done
 	fi
 }
 
-[[ $(_CHECK_PROFILE_FILE_FUNCTION kernel check) == 1 ]] && _CHECK_PARAM_FUNCTION
-[[ $(_CHECK_PROFILE_FILE_FUNCTION kernel module check) == 1 ]] && _CHECK_MODULE_BLACKLISTING_FUNCTION
+[[ $(_check_profile_file_function kernel check) == 1 ]] && _check_param_function
+[[ $(_check_profile_file_function kernel module check) == 1 ]] && _check_module_blacklisting_function
 
-[[ $(_CHECK_PROFILE_FILE_FUNCTION kernel action) == 1 ]] && echo "$KERNEL_ACTIONS_FILE" >> "$ACTIONS_FILE"	# Add approved actions to the actions file
+[[ $(_check_profile_file_function kernel action) == 1 ]] && echo "$KERNEL_ACTIONS_FILE" >> "$ACTIONS_FILE"	# Add approved actions to the actions file
 
 echo ""
 echo "Kernel Hardening script has finished"

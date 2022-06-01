@@ -18,7 +18,7 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-_HARDEN_RUN_FUNCTION()   {
+_harden_run_function()   {
 	# Create status and messages and actions file for the current run.
 	touch "$MESSAGES_FILE" "$ACTIONS_FILE"
 
@@ -49,12 +49,12 @@ _HARDEN_RUN_FUNCTION()   {
 	done
 }
 
-_TAKE_ACTION_FUNCTION()   {
+_take_action_functin()   {
 	echo "Taking Actions from file $ACTIONS_DIR/harden-last-actions (Not ready yet, and won't do anything -_-)."
 #	bash "$ACTIONS_DIR/harden-last-actions"
 }
 
-_SHOW_MESSAGES_FUNCTION() {
+_show_messages_function() {
 	# Check if any files apply to the requested date
 	if [[ $(find $MESSAGES_DIR/ -maxdepth 1 -type f) =~ ^$MESSAGES_DIR/harden-messages_"$DATE_TO_LIST"_[0-9]{2}-[0-9]{2}-[0-9]{2} ]]; then
 		echo >&2 "$0: No messages found for this date ($DATE_TO_LIST)"
@@ -65,29 +65,17 @@ _SHOW_MESSAGES_FUNCTION() {
 	fi
 }
 
-_SHOW_ACTIONS_FUNCTION()  {
-	if [[ $(find "$ACTIONS_DIR/" -maxdepth 1 -type f) =~  ^$MESSAGES_DIR/harden-action_"$DATE_TO_LIST"_[0-9]{2}-[0-9]{2}-[0-9]{2} ]]; then
-		echo >&2 "$0: No actions found for this date ($DATE_TO_LIST)"
-	else
-		for i in $ACTIONS_DIR/$DATE_TO_LIST*; do
-			cat "$i"
-		done
-	fi
-}
 
 # Check what mode we are running in
 case $OPERATE_MODE in
 	scan)
-		_HARDEN_RUN_FUNCTION
+		_harden_run_function
 		;;
 	take-action)
-		_TAKE_ACTION_FUNCTION
+		_take_action_functin
 		;;
 	list-messages)
-		_SHOW_MESSAGES_FUNCTION
-		;;
-	list-actions)
-		_SHOW_ACTIONS_FUNCTION
+		_show_messages_function
 		;;
 	clear-all)		# Clean all (non core) data files created by us in the past
 		unlink $ACTIONS_DIR/harden-last-action &> /dev/null

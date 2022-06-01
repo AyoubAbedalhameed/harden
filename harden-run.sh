@@ -4,7 +4,7 @@
 # Prevent overwriting files, if then the script will exit
 set -C
 
-_USAGE_FUNCTION() {
+_usage_function() {
 	echo >&2 "Usage: $0 COMMAND [-c|-p|-d]"
 	printf >&2 '\nCOMMAND:\nAvailable commands are:\n'
 	printf >&2 '\tscan\t\t\t\tscan, depending on the profile file that will be used.\n'
@@ -26,7 +26,7 @@ _USAGE_FUNCTION() {
 
 [[ $(id -u) != 0 ]] && {
 	echo >&2 "$0: Must run as a root (uid=0,gid=0), either by 'systemctl start harden.service' or by 'sudo $*' ."
-	_USAGE_FUNCTION
+	_usage_function
 	exit 0
 }
 
@@ -37,7 +37,7 @@ RUNTIME_DATE=$(date '+%s_%F')	# Runtime date and time
 # First argument should specify which mode we are running in
 OPERATE_MODE=$1
 [[ ! $OPERATE_MODE =~ ^(scan)|(list-actions)|(list-messages)|(take-action)|(rotate)|(clear-all)$ ]] && {
-	_USAGE_FUNCTION
+	_usage_function
 	echo >&2 "$0: Please specify one of the available modes (scan - take-action - list-messages - list-actions - clear-all - rotate)"
 	exit 0
 }
@@ -55,7 +55,7 @@ while [[ $# -gt 0 ]]; do
 		-c|--config-file)	# Use a configuration file from user choice
 			if [[ $OPERATE_MODE != "scan" ]]; then
 				echo >&2 "$0: invalid option, ($1) could be only used with (scan) command"
-				_USAGE_FUNCTION
+				_usage_function
 				exit 1
 			fi
 			CONFIG_FILE=$2
@@ -64,7 +64,7 @@ while [[ $# -gt 0 ]]; do
 		-p|--profile-file)	# Use a profile file from user choice
 			if [[ $OPERATE_MODE != "scan" ]]; then
 				echo >&2 "$0: invalid option, ($1) could be only used with (scan) command"
-				_USAGE_FUNCTION
+				_usage_function
 				exit 1
 			fi
 			PROFILE_FILE="$2"
@@ -73,11 +73,11 @@ while [[ $# -gt 0 ]]; do
 		-d|--date-to-list)	# This option is used in (list-messages, list-actions) operate modes
 			if [[ $OPERATE_MODE != "list-messages" ]]; then
 				echo >&2 "$0: invalid option, ($1) is only used with (list-messages) command"
-				_USAGE_FUNCTION
+				_usage_function
 				exit 1
 			elif [[ ! $1 =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
 				echo >&2 "$0: Invalid date format ($2), should be in the YYYY-MM-DD format."
-				_USAGE_FUNCTION
+				_usage_function
 				exit 0
 			fi
 			DATE_TO_LIST=$2
@@ -86,7 +86,7 @@ while [[ $# -gt 0 ]]; do
 		-o|--on-screen)
 			[[ $__LAUNCHED_BY_SYSTEMD == 1 ]] && {
 				echo >&2 "$0: Error, harden.service unit file shouldnot give the '-o' option for main in the 'ExecStart' variable, bye."
-				_USAGE_FUNCTION
+				_usage_function
 				exit 1
 			}
 			__ON_SCREEN=1
@@ -95,7 +95,7 @@ while [[ $# -gt 0 ]]; do
 		-v|--verbose)
 			[[ $__LAUNCHED_BY_SYSTEMD == 1 ]] && {
 				echo >&2 "$0: Error, harden.service unit file shouldnot give the '-v' option for main in the 'ExecStart' variable, bye."
-				_USAGE_FUNCTION
+				_usage_function
 				exit 1
 			}
 			__ON_SCREEN=1
@@ -105,7 +105,7 @@ while [[ $# -gt 0 ]]; do
 		--debug)
 			[[ $__LAUNCHED_BY_SYSTEMD == 1 ]] && {
 				echo >&2 "$0: Error, harden.service unit file shouldnot give the '-x' option for main in the 'ExecStart' variable, exit."
-				_USAGE_FUNCTION
+				_usage_function
 				exit 1
 			}
 			__DEBUG_X=1
@@ -114,7 +114,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-*|--*)
 			echo >&2 "$0: Unknown option $1"
-			_USAGE_FUNCTION
+			_usage_function
 			exit 0
 			;;
 		*)
@@ -202,7 +202,7 @@ CONFIG_FILE=${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}	# Use Default Configuratio
 									# if not set by a positional parameter (command line argument)
 if [[ -n $PROFILE_FILE ]] && [[ ! -e $PROFILE_FILE ]]; then
 	echo >&2 "$0: Invalid data for -p (profile file): $PROFILE_FILE no such file."
-	_USAGE_FUNCTION
+	_usage_function
 	exit 1
 
 elif [[ -z $PROFILE_FILE ]] && [[ -e $CONFIG_DIR/profile-file.json ]]; then
@@ -231,7 +231,7 @@ MESSAGES_FILE="$MESSAGES_DIR/harden-messages_$RUNTIME_DATE"	# Currently used mes
 ACTIONS_FILE="$ACTIONS_DIR/harden-recommended-action"	# Currently used Actions file
 
 # Queue the requested value from the JSON profile file by jq
-_CHECK_PROFILE_FILE_FUNCTION()  {
+_check_profile_file_function()  {
 	local OBJECT_NAME PF_VALUE
 	OBJECT_NAME=$1	# Represents which element in the JSON array you need (kernel, fs, auditd, grub, firewall)
 	PF_VALUE="$*"	# Represents the whole query needed to be done
@@ -242,7 +242,7 @@ _CHECK_PROFILE_FILE_FUNCTION()  {
 	jq ".[] | select(.name==\"$OBJECT_NAME\") | .${PF_VALUE// /.}" "$PROFILE_FILE"
 }
 
-export -f _CHECK_PROFILE_FILE_FUNCTION
+export -f _check_profile_file_function
 
 export __RAN_BY_HARDEN_RUN
 __RAN_BY_HARDEN_RUN=1
