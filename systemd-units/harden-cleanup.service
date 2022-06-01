@@ -15,7 +15,7 @@ LogLevelMax=info
 SyslogFacility=daemon
 SyslogLevel=info
 SyslogLevelPrefix=true
-ExecStart=/usr/bin/harden-main rotate
+ExecStart=/usr/bin/harden-run rotate
 #ExecStop=
 #SELinuxContext=
 

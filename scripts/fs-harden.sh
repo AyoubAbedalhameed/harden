@@ -3,77 +3,13 @@
 
 # Different recommended file system hardening options and configuration
 
-_USAGE_FUNCTION() {
-	echo >&2 "Usage: $0 -md [main directory] -pf [profile file] -st [status file] -mf [messages file] -af [actions file]";
+[[ $__RAN_BY_HARDEN_MAIN != 1 ]] && {
+	echo >&2 "$0 should be called by harden-main"
+	exit 1
 }
 
-CURRENT_USER_NAME=$(id -un)
-CURRENT_USER_ID=$(id -u)
-[[ $CURRENT_USER_ID != 0 ]] && {
-	echo >&2 "$0: Must run as a root (uid=0, gid=0) (currently running as $CURRENT_USER_NAME), either by 'systemctl start harden.service' (which is defaulted to be) or by using 'sudo $0' ."
-	_USAGE_FUNCTION
-	exit 0
-}
+[[ $__DEBUG_X == 1 ]] && set -x
 
-RUNTIME_DATE=$(date '+%s_%F')	# Runtime date and time
-
-# Loop through all command line arguments, and but them in
-# the case switch statement to test them
-while [[ $# -gt 0 ]]; do
-	case $1 in
-		-pf|--profile-file)
-			if [[ ! -e $2 ]]; then
-				echo >&2 "$0: Invalid input for profile file (-pf) $PROFILE_FILE, file doesn't exist. Going to use the default ones (/etc/harden/profile-file.json or /usr/share/harden/config/profile-file.json)"
-			else PROFILE_FILE=$2
-			fi
-			shift 2
-			;;
-		-sf|--status-file)
-			STATUS_FILE=$2
-			shift 2
-			;;
-		-mf|--messages-file)	# Use/Create a messages file from user choice
-			MESSAGES_FILE=$2
-			shift 2	# shift the arguments 2 times (we used two arguments)
-			;;
-		-af|--actions-file)	# Use/Create an actions file from user choice
-			ACTIONS_FILE=$2
-			shift 2
-			;;
-		-*|--*)
-			echo >&2 "$0: Invalid argument $1"
-			_USAGE_FUNCTION
-			exit 0
-			;;
-		*)
-			POSITIONAL_ARGS+=("$1")	# save positional arguments
-			shift
-			;;
-	esac
-done
-
-# Restore Positional Arguments (those which has not been used)
-set -- "${POSITIONAL_ARGS[@]}"
-
-MAIN_DIR=$(pwd)
-MAIN_DIR=${MAIN_DIR%/scripts}
-
-if [[ ! -e $PROFILE_FILE ]]; then
-	if [[ -h /etc/harden/profile-file.json ]]; then
-		PROFILE_FILE="etc/harden/profile-file.json"	# Use Default User Choice Profile File,
-	elif [[ -h $MAIN_DIR/config/profile-file.json ]]; then
-		PROFILE_FILE="$MAIN_DIR/config/profile-file.json"	# if not set by a positional parameter (command line argument)
-	else
-		echo >&2 "$0: Critical Error: JSON file \"profile-file.json\" which is the main congifuration file for the Linux Hardening Project, is missing. \
-Couldn't find it in: $PROFILE_FILE, or /etc/harden/profile-file.json, or /usr/share/harden/config/profile-file.json"
-		exit 1
-	fi
-
-	echo >&2 "$0: Using $PROFILE_FILE for the current run as profile-file."
-fi
-
-MESSAGES_FILE=${MESSAGES_FILE:="$MAIN_DIR/messages/fs-harden_$RUNTIME_DATE"}	# Currently used messages file
-ACTIONS_FILE=${ACTIONS_FILE:="$MAIN_DIR/actions/fs-harden_$RUNTIME_DATE.sh"}	# Currently used Actions file
 STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/fs-harden.status"}	# Currently used status file
 
 FS_ACTIONS_FILE="$MAIN_DIR/scripts/fs-actions.sh"

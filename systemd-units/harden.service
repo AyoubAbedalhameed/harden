@@ -16,7 +16,7 @@ SyslogFacility=daemon
 SyslogLevel=info
 SyslogLevelPrefix=true
 #LogExtraFields="__REALTIME_TIMESTAMP __MONOTONIC_TIMESTAMP _BOOT_ID _MACHINE_ID _HOSTNAME SYSLOG_FACILITY=daemon _UID _GID _TRANSPORT _SELINUX_CONTEXT _STREAM_ID PRIORITY=7 SYSLOG_IDENTIFIER=harden-service-debug _SYSTEMD_CGROUP _SYSTEMD_UNIT #_COMM #_EXE _PID _SYSTEMD_INVOCATION_ID _CMDLINE MESSAGE"
-ExecStart=/usr/bin/harden-main scan
+ExecStart=/usr/bin/harden-run scan
 #ExecStop=
 #SELinuxContext=
 
