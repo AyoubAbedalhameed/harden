@@ -43,9 +43,7 @@ GRUB_FILE="/etc/default/grub"
 source "$MAIN_DIR/resources/grub-parameters.rc"
 
 _check_param()	{
-	local CURRENT
-	local CPU_MIT
-	local CPU_MIT_MISSED
+	local CURRENT CPU_MIT CPU_MIT_MISSED
 
 	# $1 would be either GRUB_CMDLINE_LINUX_DEFAULT or GRUB_CMDLINE_LINUX
 	CURRENT=$(grep "$1" "$GRUB_FILE")
@@ -84,9 +82,9 @@ _check_param()	{
 		if [[ $CPU_MIT == 0 ]] 
 		then
 		{
-			echo "GRUB-Hardening[$PARAM]: These recommended CPU mitigations are not applied:"
-			echo "$CPU_MIT_MISSED"
-			echo "$GRUB_CPU_MIT_MESSAGE"
+			echo "GRUB-Hardening[CPU_Mitigations]: These recommended CPU mitigations are not applied:"
+			echo "GRUB-Hardening[CPU_Mitigations]: $CPU_MIT_MISSED."
+			echo "GRUB-Hardening[CPU_Mitigations]: $GRUB_CPU_MIT_MESSAGE"
 		} >> "$MESSAGES_FILE"
 		fi
 	fi

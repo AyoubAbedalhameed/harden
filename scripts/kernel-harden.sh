@@ -29,7 +29,7 @@ echo ""
 echo "Kernel Hardening script has started..."
 
 _check_param_function()	{
-	local PARAMETERS_FILE
+	local PARAMETERS_FILE VAL_INDEX MES_INDEX TYPE_INDEX
 	PARAMETERS_FILE="$MAIN_DIR/resources/kernel-parameters.rc"
 	source "$PARAMETERS_FILE"
 
@@ -63,9 +63,7 @@ _check_param_function()	{
 }
 
 _check_module_blacklisting_function()	{
-	local MODULE_BLACKLIST_FILE
-	local MODULES_FILE
-	local RUNNING_MODULES
+	local MODULE_BLACKLIST_FILE MODULES_FILE RUNNING_MODULES
 	MODULES_FILE="$MAIN_DIR/resources/kernel-blocked-modules.rc"
 	MODULE_BLACKLIST_FILE="/etc/modprobe.d/blacklist.conf"
 	RUNNING_MODULES=$(lsmod | awk '{print $1;}')
@@ -75,7 +73,7 @@ _check_module_blacklisting_function()	{
 	[[ $(_check_profile_file_function kernel action) == 1 ]] && touch $MODULE_BLACKLIST_FILE
 
 	if [[ ! -f $MODULE_BLACKLIST_FILE ]]; then
-		echo "Your system doesn't have any modules blocked in $MODULE_BLACKLIST_FILE (it doesn't even exist)" >> $MESSAGES_FILE
+		echo "Kernel-Module-Hardening: Your system doesn't have any modules blocked in $MODULE_BLACKLIST_FILE (it doesn't even exist)" >> $MESSAGES_FILE
 		for TYPE in $MOD_TYPES; do
 			if [[ $(_check_profile_file_function kernel module "$TYPE" check) == 1 ]]
 			then

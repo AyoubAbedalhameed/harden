@@ -141,10 +141,10 @@ _check_mount_point_function()	{
 }
 
 # Start by extracting information from /proc/mounts line by line, then check them
-while read line; do
-	L_DEVICE="$(echo $line | awk '{print $1;}')"
-	L_MOUNT_POINT="$(echo $line | awk '{print $2;}')"
-	L_FS_TYPE="$(echo $line | awk '{print $3;}')"
+while read -r line; do
+	L_DEVICE=$(echo $line | awk '{print $1;}')
+	L_MOUNT_POINT=$(echo $line | awk '{print $2;}')
+	L_FS_TYPE=$(echo $line | awk '{print $3;}')
 
 	L_MOUNT_OPTIONS="$(echo $line | awk '{print $4;}')"
 	L_MOUNT_OPTIONS="${L_MOUNT_OPTIONS//,/' '}"	# Replace ',' with ' ' to have them separated for comparison
