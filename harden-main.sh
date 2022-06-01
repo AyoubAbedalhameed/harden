@@ -10,7 +10,7 @@
 
 # Print startup message with run time settings
 echo >&2 "\
-Harden service is starting up ...
+Harden service is starting up at $(date '+%F %T %s.%^4N') ...
 CONFIG_FILE = $CONFIG_FILE
 MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
@@ -22,7 +22,7 @@ _HARDEN_RUN_FUNCTION()   {
 	# Create status and messages and actions file for the current run.
 	touch "$MESSAGES_FILE" "$ACTIONS_FILE"
 
-	cat >&5 <"$MESSAGES_FILE" &
+	tail -f "$MESSAGES_FILE" >&5 &
 	trap "pkill -P $$" EXIT
 
 	# Create/relink a symlink to the last (actions,messages) files, '-f' option will force even if dest. file exists
@@ -101,7 +101,3 @@ case $OPERATE_MODE in
 esac
 
 echo "Harden service has finished"
-
-wait
-
-exit

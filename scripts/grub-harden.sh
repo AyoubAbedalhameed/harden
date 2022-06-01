@@ -12,7 +12,7 @@
 
 # Print startup message with run time settings
 echo >&2 "\
-Harden service is starting up ...
+GRUB Hardening is starting at $(date '+%F %T %s.%^4N')...
 CONFIG_FILE = $CONFIG_FILE
 MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
@@ -20,15 +20,9 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub-harden.status"}	# Currently used status file
+STATUS_FILE="$MAIN_DIR/status/grub-harden.status"	# Currently used status file
 
 GRUB_ACTIONS_FILE="$MAIN_DIR/actions/grub-actions.sh"
-
-# Queue the requested value from the JSON profile file by jq
-_CHECK_PROFILE_FILE_FUNCTION()  {
-	PF_VALUE="$*"
-	jq '.[] | select(.name=="grub")' "$PROFILE_FILE" | jq ".grub.${PF_VALUE// /.}"
-}
 
 echo ""
 echo "GRUB Hardening script has started..."
@@ -58,7 +52,7 @@ _CHECK_PARAM()	{
 	CURRENT=${CURRENT##"$1"}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT//\"/}
 
-	if [[ $(_CHECK_PROFILE_FILE_FUNCTION general check) == 1 ]]
+	if [[ $(_CHECK_PROFILE_FILE_FUNCTION grub general check) == 1 ]]
 	then
 		# Loop through all general recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_OPTIONS; do
@@ -74,7 +68,7 @@ _CHECK_PARAM()	{
 
 	CPU_MIT=1
 	CPU_MIT_MISSED=""
-	if [[ $(_CHECK_PROFILE_FILE_FUNCTION cpu_metigations check) == 1 ]]
+	if [[ $(_CHECK_PROFILE_FILE_FUNCTION grub cpu_metigations check) == 1 ]]
 	then
 		# Loop through all cpu mitigations recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_CPU_MIT; do
@@ -128,13 +122,13 @@ write-to-actions-file()	{
 	} > "$GRUB_ACTIONS_FILE"
 }
 
-if [[ $(_CHECK_PROFILE_FILE_FUNCTION check) == 1 ]]
+if [[ $(_CHECK_PROFILE_FILE_FUNCTION grub check) == 1 ]]
 then
 	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" 2>/dev/null && _CHECK_PARAM "GRUB_CMDLINE_LINUX="
 	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" 2>/dev/null && _CHECK_PARAM "GRUB_CMDLINE_LINUX_DEFAULT="
 fi
 
-[[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 1 ]] && write-to-actions-file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
+[[ $(_CHECK_PROFILE_FILE_FUNCTION grub action) == 1 ]] && write-to-actions-file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
 
 echo ""
 echo "GRUB Hardening script has finished"

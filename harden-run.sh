@@ -30,7 +30,7 @@ _USAGE_FUNCTION() {
 	exit 0
 }
 
-export RUNTIME_DATE __DEBUG_X OPERATE_MODE
+export RUNTIME_DATE OPERATE_MODE __DEBUG_X
 
 RUNTIME_DATE=$(date '+%s_%F')	# Runtime date and time
 
@@ -153,8 +153,8 @@ elif [[ $__ON_SCREEN_LOG == 0 ]] && [[ $__DEBUG_X == 0 ]] ; then
 	touch "$LOG_FILE"
 	ln -fs "$LOG_FILE" $LOGS_DIR/harden-last-log
 
-    # Currently we are setting it true, due to some issues (hopefully it will be fixed)
-    if [[ $__LOG_AS_IS == 1 ]]; then
+    # Currently we are setting it to true, due to some issues (hopefully it will be fixed), so data streams with go through as is to the LOG_FILE (without formating)
+    if [[ ! $__LOG_AS_IS == 1 ]]; then
         exec 1>>"$LOG_FILE"
         exec 2>>"$LOG_FILE"
         exec 5>&1
@@ -236,9 +236,21 @@ mkdir -p $ACTIONS_DIR
 MESSAGES_FILE="$MESSAGES_DIR/harden-messages_$RUNTIME_DATE"	# Currently used messages file
 ACTIONS_FILE="$ACTIONS_DIR/harden-recommended-action"	# Currently used Actions file
 
+# Queue the requested value from the JSON profile file by jq
+_CHECK_PROFILE_FILE_FUNCTION()  {
+	local OBJECT_NAME PF_VALUE
+	OBJECT_NAME=$1	# Represents which element in the JSON array you need (kernel, fs, auditd, grub, firewall)
+	PF_VALUE="$*"	# Represents the whole query needed to be done
+	# jq query with 3 filters, which is respectively: 
+	#	.[]	=>	list array elements, which is actually an objects
+	#	select(.name=="$OBJECT_NAME")	=>	select the element with the key 'name' value equal to the requested OBJECT_NAME, (which is unique)
+	#	.${PF_VALUE// /.}	=>	query on the selected element of the array, with requested query
+	jq ".[] | select(.name==\"$OBJECT_NAME\") | .${PF_VALUE// /.}" "$PROFILE_FILE"
+}
+
+export -f _CHECK_PROFILE_FILE_FUNCTION
+
 export __RAN_BY_HARDEN_RUN
 __RAN_BY_HARDEN_RUN=1
 
 bash harden-main.sh
-
-wait

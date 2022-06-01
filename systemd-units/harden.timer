@@ -4,8 +4,8 @@ Description=Timer to run Linux Hardening Service (harden.service) periodically
 [Timer]
 Unit=harden.service
 # Elapse everyday at 01"00 AM
-OnCalendar=*-*-* *:00/30:30
-#OnCalendar=*-*-* 01:00
+#OnCalendar=*-*-* *:00/10:30
+OnCalendar=*-*-* 01:00
 Persistent=true
 
 [Install]
