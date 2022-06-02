@@ -2,30 +2,14 @@
 
 declare -A audit_rules 
 
-# Remove any existing rules
-#-D
-
-
-# Buffer Size
-## Feel free to increase this if the machine panic's
-#-b 8192
-
-# Failure Mode
-## Possible values: 0 (silent), 1 (printk, print a failure message), 2 (panic, halt the system)
-#-f 1
-
-# Ignore errors
-## e.g. caused by users or files not found in the local environment
-#-i
-
 # Self Auditing ---------------------------------------------------------------
 
 audit_rules[rules.auditd_auditing,0]=7
-audit_rules[rules.auditd_auditing,1]="-w /var/log/audit/ -k auditlog"   ## Audit the audit logs
+audit_rules[rules.auditd_auditing,1]="-w /var/log/audit -k auditlog"   ## Audit the audit logs
 
-audit_rules[rules.auditd_auditing,2]="-w /etc/audit/ -p wa -k auditconfig" ## Auditd configuration Auditing
+audit_rules[rules.auditd_auditing,2]="-w /etc/audit -p wa -k auditconfig" ## Auditd configuration Auditing
 audit_rules[rules.auditd_auditing,3]="-w /etc/libaudit.conf -p wa -k auditconfig"
-audit_rules[rules.auditd_auditing,4]="-w /etc/audisp/ -p wa -k audispconfig"
+audit_rules[rules.auditd_auditing,4]="-w /etc/audisp -p wa -k audispconfig"
 
 audit_rules[rules.auditd_auditing,5]="-w /sbin/auditctl -p x -k audittools" ## Monitor for use of audit management tools
 audit_rules[rules.auditd_auditing,6]="-w /sbin/auditd -p x -k audittools"
@@ -36,7 +20,7 @@ audit_rules[rules.auditd_auditing,d]="Auditing auditd related configuration, Log
 # Filters ---------------------------------------------------------------------
 
 
-audit_rules[rules.filters,0]=14
+audit_rules[rules.filters,0]=13
 audit_rules[rules.filters,1]="-a always,exclude -F msgtype=AVC"     ## Ignore SELinux AVC records
 
 audit_rules[rules.filters,2]="-a always,exclude -F msgtype=CWD"     ## Ignore current working directory records
@@ -44,19 +28,18 @@ audit_rules[rules.filters,2]="-a always,exclude -F msgtype=CWD"     ## Ignore cu
 audit_rules[rules.filters,3]="-a never,user -F subj_type=crond_t"   ## Cron jobs fill the logs with stuff we normally don't want (works with SELinux)
 audit_rules[rules.filters,4]="-a never,exit -F subj_type=crond_t"
 
-audit_rules[rules.filters,5]="-a never,exit -F arch=b64 -S adjtimex -F auid=unset -F uid=chrony -F subj_type=chronyd_t"     ## This prevents chrony from overwhelming the logs
-audit_rules[rules.filters,6]="-a always,exclude -F msgtype=CRYPTO_KEY_USER"       ## This is not very interesting and wastes a lot of space if the server is public facing
+audit_rules[rules.filters,5]="-a always,exclude -F msgtype=CRYPTO_KEY_USER"       ## This is not very interesting and wastes a lot of space if the server is public facing
 
-audit_rules[rules.filters,7]="-a never,exit -F arch=b32 -S fork -F success=0 -F path=/usr/lib/vmware-tools -F subj_type=initrc_t -F exit=-2"        ## VMWare tools
-audit_rules[rules.filters,8]="-a never,exit -F arch=b64 -S fork -F success=0 -F path=/usr/lib/vmware-tools -F subj_type=initrc_t -F exit=-2"
+audit_rules[rules.filters,6]="-a never,exit -F arch=b32 -S fork -F success=0 -F path=/usr/lib/vmware-tools -F subj_type=initrc_t -F exit=-2"        ## VMWare tools
+audit_rules[rules.filters,7]="-a never,exit -F arch=b64 -S fork -F success=0 -F path=/usr/lib/vmware-tools -F subj_type=initrc_t -F exit=-2"
 
-audit_rules[rules.filters,9]="-a never,exit -F arch=b32 -F dir=/dev/shm -k sharedmemaccess"     ## High Volume Event Filter (especially on Linux Workstations)
-audit_rules[rules.filters,10]="-a never,exit -F arch=b64 -F dir=/dev/shm -k sharedmemaccess"
-audit_rules[rules.filters,11]="-a never,exit -F arch=b32 -F dir=/var/lock/lvm -k locklvm"
-audit_rules[rules.filters,12]="-a never,exit -F arch=b64 -F dir=/var/lock/lvm -k locklvm"
+audit_rules[rules.filters,8]="-a never,exit -F arch=b32 -F dir=/dev/shm -k sharedmemaccess"     ## High Volume Event Filter (especially on Linux Workstations)
+audit_rules[rules.filters,9]="-a never,exit -F arch=b64 -F dir=/dev/shm -k sharedmemaccess"
+audit_rules[rules.filters,10]="-a never,exit -F arch=b32 -F dir=/var/lock/lvm -k locklvm"
+audit_rules[rules.filters,11]="-a never,exit -F arch=b64 -F dir=/var/lock/lvm -k locklvm"
 
-audit_rules[rules.filters,13]="-a never,exit -F arch=b32 -F path=/opt/filebeat -k filebeat"      ## FileBeat
-audit_rules[rules.filters,14]="-a never,exit -F arch=b64 -F path=/opt/filebeat -k filebeat"
+audit_rules[rules.filters,12]="-a never,exit -F arch=b32 -F path=/opt/filebeat -k filebeat"      ## FileBeat
+audit_rules[rules.filters,13]="-a never,exit -F arch=b64 -F path=/opt/filebeat -k filebeat"
 audit_rules[rules.filters,d]="These rules are for excluding some system calls and events from being monitored to avoid overwhelming the logs of redundant or dummy stuff"
 
 
@@ -83,7 +66,7 @@ audit_rules[rules.kernel,d]="These rules are used for auditing the modification 
 
 
 
-audit_rules[rules.critical_sys_call,0]=10
+audit_rules[rules.critical_sys_call,0]=8
 audit_rules[rules.critical_sys_call,1]="-a always,exit -F arch=b64 -S kexec_load -k KEXEC"  ## KExec usage (all actions)
 audit_rules[rules.critical_sys_call,2]="-a always,exit -F arch=b32 -S sys_kexec_load -k KEXEC"
 
@@ -96,10 +79,6 @@ audit_rules[rules.critical_sys_call,6]="-a always,exit -F arch=b32 -S mount -S u
 
 audit_rules[rules.critical_sys_call,7]="-a always,exit -F arch=b64 -S swapon -S swapoff -F auid!=-1 -k swap"    ## Change swap (only attributable)
 audit_rules[rules.critical_sys_call,8]="-a always,exit -F arch=b32 -S swapon -S swapoff -F auid!=-1 -k swap"
-
-
-audit_rules[rules.critical_sys_call,9]="-a always,exit -F arch=b32 -F uid!=ntp -S adjtimex -S settimeofday -S clock_settime -k time"    ## Time
-audit_rules[rules.critical_sys_call,10]="-a always,exit -F arch=b64 -F uid!=ntp -S adjtimex -S settimeofday -S clock_settime -k time"
 
 audit_rules[rules.critical_sys_call,d]="These rules are used for monitoring critical system calls on the system" 
 
@@ -117,11 +96,11 @@ audit_rules[rules.critical_etc_file,5]="-w /etc/shadow -k etcpasswd"
 audit_rules[rules.critical_etc_file,6]="-w /etc/security/opasswd -k opasswd"
 
 audit_rules[rules.critical_etc_file,7]="-w /etc/sudoers -p wa -k actions"       ## Sudoers file changes
-audit_rules[rules.critical_etc_file,8]="-w /etc/sudoers.d/ -p wa -k actions"
+audit_rules[rules.critical_etc_file,8]="-w /etc/sudoers.d -p wa -k actions"
 
 audit_rules[rules.critical_etc_file,9]="-w /etc/inittab -p wa -k init"          ## System startup scripts
-audit_rules[rules.critical_etc_file,10]="-w /etc/init.d/ -p wa -k init"
-audit_rules[rules.critical_etc_file,11]="-w /etc/init/ -p wa -k init"
+audit_rules[rules.critical_etc_file,10]="-w /etc/init.d -p wa -k init"
+audit_rules[rules.critical_etc_file,11]="-w /etc/init -p wa -k init"
 
 audit_rules[rules.critical_etc_file,12]="-w /etc/ld.so.conf -p wa -k libpath"    ## Library search paths
 audit_rules[rules.critical_etc_file,13]="-w /etc/ld.so.conf.d -p wa -k libpath"
@@ -133,28 +112,28 @@ audit_rules[rules.critical_etc_file,16]="-w /etc/issue.net -p wa -k etcissue"
 audit_rules[rules.critical_etc_file,17]="-w /etc/ssh/sshd_config -k sshd"       ## SSH configuration
 audit_rules[rules.critical_etc_file,18]="-w /etc/ssh/sshd_config.d -k sshd"
 
-audit_rules[rules.critical_etc_file,19]="-w /etc/systemd/ -p wa -k systemd"     ## systemd configuration.
+audit_rules[rules.critical_etc_file,19]="-w /etc/systemd -p wa -k systemd"     ## systemd configuration.
 
-audit_rules[rules.critical_etc_file,20]="-w /etc/selinux/ -p wa -k mac_policy"      ## SELinux events that modify the system's Mandatory Access Controls (MAC)
+audit_rules[rules.critical_etc_file,20]="-w /etc/selinux -p wa -k mac_policy"      ## SELinux events that modify the system's Mandatory Access Controls (MAC)
 
 audit_rules[rules.critical_etc_file,21]="-w /etc/issue -p r -k recon"               ##re
 audit_rules[rules.critical_etc_file,22]="-w /etc/hostname -p r -k recon"
 
-audit_rules[rules.critical_etc_file,23]="-w /etc/profile.d/ -p wa -k shell_profiles"    ## Shell/profile configurations
+audit_rules[rules.critical_etc_file,23]="-w /etc/profile.d -p wa -k shell_profiles"    ## Shell/profile configurations
 audit_rules[rules.critical_etc_file,24]="-w /etc/profile -p wa -k shell_profiles"
 audit_rules[rules.critical_etc_file,25]="-w /etc/shells -p wa -k shell_profiles"
 audit_rules[rules.critical_etc_file,26]="-w /etc/bashrc -p wa -k shell_profiles"
 audit_rules[rules.critical_etc_file,27]="-w /etc/csh.cshrc -p wa -k shell_profiles"
 audit_rules[rules.critical_etc_file,28]="-w /etc/csh.login -p wa -k shell_profiles"
-audit_rules[rules.critical_etc_file,29]="-w /etc/fish/ -p wa -k shell_profiles"
-audit_rules[rules.critical_etc_file,30]="-w /etc/zsh/ -p wa -k shell_profiles"
+audit_rules[rules.critical_etc_file,29]="-w /etc/fish -p wa -k shell_profiles"
+audit_rules[rules.critical_etc_file,30]="-w /etc/zsh -p wa -k shell_profiles"
 
 audit_rules[rules.critical_etc_file,d]="These rules are used for auditing the access/modifications of some critical configuration under /etc/ Directory"
 
 
 ## PAM configuration
 audit_rules[rules.pam_config,0]=7
-audit_rules[rules.pam_config,1]="-w /etc/pam.d/ -p wa -k pam"
+audit_rules[rules.pam_config,1]="-w /etc/pam.d -p wa -k pam"
 audit_rules[rules.pam_config,2]="-w /etc/security/limits.conf -p wa  -k pam"
 audit_rules[rules.pam_config,3]="-w /etc/security/limits.d -p wa  -k pam"
 audit_rules[rules.pam_config,4]="-w /etc/security/pam_env.conf -p wa -k pam"
@@ -169,13 +148,13 @@ audit_rules[rules.pam_config,d]="These rules are used for auditing yout system's
 audit_rules[rules.cron,0]=9 
 audit_rules[rules.cron,1]="-w /etc/cron.allow -p wa -k cron"   ## Cron configuration & scheduled jobs
 audit_rules[rules.cron,2]="-w /etc/cron.deny -p wa -k cron"
-audit_rules[rules.cron,3]="-w /etc/cron.d/ -p wa -k cron"
-audit_rules[rules.cron,4]="-w /etc/cron.daily/ -p wa -k cron"
-audit_rules[rules.cron,5]="-w /etc/cron.hourly/ -p wa -k cron"
-audit_rules[rules.cron,6]="-w /etc/cron.monthly/ -p wa -k cron"
-audit_rules[rules.cron,7]="-w /etc/cron.weekly/ -p wa -k cron"
+audit_rules[rules.cron,3]="-w /etc/cron.d -p wa -k cron"
+audit_rules[rules.cron,4]="-w /etc/cron.daily -p wa -k cron"
+audit_rules[rules.cron,5]="-w /etc/cron.hourly -p wa -k cron"
+audit_rules[rules.cron,6]="-w /etc/cron.monthly -p wa -k cron"
+audit_rules[rules.cron,7]="-w /etc/cron.weekly -p wa -k cron"
 audit_rules[rules.cron,8]="-w /etc/crontab -p wa -k cron"
-audit_rules[rules.cron,9]="-w /var/spool/cron/ -k cron"         ## cron logs
+audit_rules[rules.cron,9]="-w /var/spool/cron -k cron"         ## cron logs
 audit_rules[rules.cron,d]="These rules are used to audit and monitor the modifications of Cron_related configuration files, cron tabs & cron logs"
 
 
@@ -229,9 +208,9 @@ audit_rules[rules.network_environment,6]="-a always,exit -F arch=b32 -S connect 
 audit_rules[rules.network_environment,7]="-w /etc/hosts -p wa -k network_modifications"     ### Changes to network-related config files
 audit_rules[rules.network_environment,8]="-w /etc/sysconfig/network -p wa -k network_modifications"
 audit_rules[rules.network_environment,9]="-w /etc/sysconfig/network-scripts -p w -k network_modifications"
-audit_rules[rules.network_environment,10]="-w /etc/network/ -p wa -k network"
+audit_rules[rules.network_environment,10]="-w /etc/network -p wa -k network"
 
-audit_rules[rules.network_environment,11]="-a always,exit -F dir=/etc/NetworkManager/ -F perm=wa -k network_modifications"
+audit_rules[rules.network_environment,11]="-a always,exit -F dir=/etc/NetworkManager -F perm=wa -k network_modifications"
 
 audit_rules[rules.network_environment,d]="These rules are used to audit the Network Environment in your system, in terms of configuration files modificatoins & Networking system calls"
 
@@ -304,7 +283,7 @@ audit_rules[rules.dac,23]="-a always,exit -F arch=b64 -S lremovexattr -F auid>=1
 audit_rules[rules.dac,24]="-a always,exit -F arch=b64 -S lsetxattr -F auid>=1000 -F auid!=-1 -k perm_mod"
 audit_rules[rules.dac,25]="-a always,exit -F arch=b64 -S removexattr -F auid>=1000 -F auid!=-1 -k perm_mod"
 audit_rules[rules.dac,26]="-a always,exit -F arch=b64 -S setxattr -F auid>=1000 -F auid!=-1 -k perm_mod"
-audit_rules[rules.dac,d]="There rules are used to audit Discretionary Access Control (DAC) modifications"
+audit_rules[rules.dac,d]="these rules are used to audit Discretionary Access Control (DAC) modifications"
 
 
 # Special Rules ---------------------------------------------------------------

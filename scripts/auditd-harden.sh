@@ -1,16 +1,10 @@
 #!/bin/bash
 #This script is a part of harden project, it will be used for hardening auditd with recommended rules.
 
-
-
-
-
 #Prevent overwriting files
 set -C
 
 
-#Temporary exit.
-exit 0
 
 
 #Fetching Script run time. 
@@ -96,26 +90,28 @@ source "$MAIN_DIR/resources/audit-rules.rc"
 
 
 #Extracting script profile from the systemm profile file. 
-PROFILE=$(jq '.[] | select(.name=="firewall")' $PROFILE_FILE)	# Save our object from the array
+PROFILE=$(jq '.[] | select(.name=="auditd")' $PROFILE_FILE)	# Save our object from the array
 
 
 
 #Cheking the Acceptance of auditd-hardening Checks: 
-#if [[ `echo $PROFILE | jq '.auditd.check' ` -ne 1 ]] ; then 
-#echo "$RUNTIME_DATE:$SCRIPT_NAME:Terminates, Checking is now allowed"
-#exit
-#fi
+if [[ `echo $PROFILE | jq '.auditd.check' ` -ne 1 ]] ; then 
+	echo "$RUNTIME_DATE:$SCRIPT_NAME:Terminates, Checking is not allowed"
+	exit
+fi
 
 
 #Fetching the Actions User's Acceptance.
-#GENERAL_ACTIONS_ACCEPTENCE=$( echo $PROFILE | jq '.auditd.action' )
-GENERAL_ACTIONS_ACCEPTENCE=1
-
-#Cheking the Acceptance of firewall-hardening Actions: 
-[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo -e "#!/usr/bin/env bash" >> $AUDITD_ACTIONS_FILE
+GENERAL_ACTIONS_ACCEPTENCE=$( echo $PROFILE | jq '.auditd.action' )
 
 
+#Adding -c option at the beggining of the harden-custom-audit.rules to Continue loading rules in spite of an error when (augenrules) runs.
+#Do not stop on error 
+[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]]	&& echo "-c" >> $ADDED_AUDIT_RULES_FILE
 
+
+
+ 
 #Functions Definitions: 
 
 ## To query a value from JSON profile file
@@ -123,13 +119,17 @@ check-pf()  { return $(echo $PROFILE | jq ".auditd.$1.$2");  }
 
 
 
-CreateActionFile() {
-    echo "custom_rules_file=$ADDED_AUDIT_RULES_FILE" >>$AUDITD_ACTIONS_FILE
-    echo 'HARDEN_AUDIT_RULES_F="/etc/audit/rules.d/harden-audit.rules"' >>$AUDITD_ACTIONS_FILE
-    echo '[[ ! -f $custom_rules_file ]] &&  echo "$0: $custom_rules_file is not exist." && exit 1' >> $AUDITD_ACTIONS_FILE
-    echo 'while read RULE ; do  grep -Fxe "$RULE" $ >> /dev/null ||  echo "$RULE" >> $HARDEN_AUDIT_RULES_F ; done <Lines.txt' >> $AUDITD_ACTIONS_FILE
-    echo "rm $ADDED_AUDIT_RULES_FILE" >> $AUDITD_ACTIONS_FILE
-}
+#CreateActionFile() {
+#   echo "custom_rules_file=$ADDED_AUDIT_RULES_FILE" >>$AUDITD_ACTIONS_FILE
+#  echo 'HARDEN_AUDIT_RULES_F="/etc/audit/rules.d/harden-audit.rules"' >>$AUDITD_ACTIONS_FILE
+#   echo '[[ ! -f $custom_rules_file ]] &&  echo "$0: $custom_rules_file is not exist." && exit 1' >> $AUDITD_ACTIONS_FILE
+#  echo 'while read RULE ; do  grep -Fxe "$RULE" $ >> /dev/null ||  echo "$RULE" >> $HARDEN_AUDIT_RULES_F ; done <Lines.txt' >> $AUDITD_ACTIONS_FILE
+#    echo "rm $ADDED_AUDIT_RULES_FILE" >> $AUDITD_ACTIONS_FILE
+#}
+
+
+
+
 
 ## ReplaceParameters() function, used to add the user parameters to the iptables rule.
  ReplaceParameters () 
@@ -160,16 +160,23 @@ check_rule()
 
 	local RULES=$(</dev/stdin)
 	local RULE_STATUS=1
-    CALL_CREATE_ACTION_FILE=$2
+    
                                         [[ $DEBUG -eq 1 ]] && echo -e "check_rule is running, Local Rules are \n ($RULES)"
 
 	while read RULE ; do
-    	                                [[ $DEBUG -eq 1 ]] && echo "check_rule: current rule is $RULE"
-    	#[[ $AUDITD_NEW_INSTALLATION -ne 1 ]] && echo $1 | grep -e "$RULE" && RULE_STATUS=$?
+    	                                [[ $DEBUG -eq 1 ]] && echo "check_rule: current rule is ($RULE)"
+
+    	if [[ $AUDITD_NEW_INSTALLATION -ne 1 ]] ; then 
+		 	echo "######Checking Current Rule" 
+			echo "$RULE" | awk '{print $1;}'
+			echo ${RULE%-k*}
+			echo "$CURRENT_AUDIT_RULES" | grep -Fxe "$RULE"
+		    RULE_STATUS=$?
+			echo "RULE_STATUS FROM GREP IS $RULE_STATUS"
+		fi
     
         if [[ $RULE_STATUS -eq 1 ]] ; then 
             echo "$SCRIPT_NAME: ($RULE) : RULE NOT MATCHED : $DESCRIPTION" >> $MESSAGES_FILE
-            [[ ($CALL_CREATE_ACTION_FILE -eq 1) && ($USER_ACTION_ACCEPTENCE -eq 1) && ($GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] && CALL_CREATE_ACTION_FILE=0 && CreateActionFile 
             [[ ($USER_ACTION_ACCEPTENCE -eq 1) && ($GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] && echo "$RULE" >> $ADDED_AUDIT_RULES_FILE
         fi
     	                                [[ $DEBUG -eq 1 ]] && echo "check_rule: Rule status $RULE_STATUS"
@@ -182,26 +189,11 @@ check_rule()
 
 
 
-#write_action Function, used to echo the required commands to apply rules. 
-write_action(){
-
-	local RULES=$(</dev/stdin)
-	                    				[[ $DEBUG -eq 1 ]] && echo -e "Local Rules are ($RULES)"
-										[[ $DEBUG -eq 1 ]] && echo "write_action is running"
-	
-	while read RULE ; do
-    	               					 [[ $DEBUG -eq 1 ]] && echo "The rule is $RULE"
-    	echo -e "$RULE" >> $ADDED_AUDIT_RULES_FILE
-    done <<< "$RULES"
-    
-	}
-
-
-
-
 #Checking the existence and status of auditd. 
-
 #Cheking auditd Service:  
+
+
+
                                 [[ $DEBUG -eq 1 ]] && echo "$SCRIPT_NAME: Checking firewalld service status" 
 systemctl status auditd 
 AUDITD_STATUS=$? 
@@ -214,9 +206,7 @@ if [[ ! $AUDITD_STATUS -eq  4 ]] ; then
 fi 
 
 
-#echo "$SCRIPT_NAME.auditd.installed $AUDITD_INSTALLED" >> $STATUS_FILE
-#echo "$SCRIPT_NAME.auditd.enabled $AUDITD_ENABLED" >> $STATUS_FILE
-#echo "$SCRIPT_NAME.auditd.active $AUDITD_ACTIVE" >> $STATUS_FILE
+
 
 #Intsalling auditd if it is not installed: 
 if [[ (AUDITD_INSTALLED -ne 1) && (GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] ; then 
@@ -226,8 +216,7 @@ if [[ (AUDITD_INSTALLED -ne 1) && (GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] ; then
 	
 fi
 
-#For testing:
-#AUDITD_INSTALLED=1
+
 
 if [[ AUDITD_INSTALLED -ne 1 ]] ; then 
 
@@ -236,19 +225,13 @@ if [[ AUDITD_INSTALLED -ne 1 ]] ; then
 fi
 
 
+
 #Fetching current auditd rules: 
 service auditd restart 
-CURRENT_AUDIT_RULES=`auditctl -l`
+CURRENT_AUDIT_RULES=`cat /etc/audit/audit.rules`
 
 
 
-
-
-
-echo "The list of keys are:"
-echo "${!audit_rules[@]}" | sed 's/[a-z\0-9\.\_\-]*,[d\1-9]//g' | sed 's/ [0-9]//g'
-#| sed 's/[a-z\0-9\.\_\-]*,[d\1-90]//g' 
-#Iterating over the keys of the iptables-rules (Rules Names): 
 for PARAM in $( echo "${!audit_rules[@]}" | sed 's/[a-z\0-9\.\_\-]*,[d\1-9]//g' | sed 's/ [0-9]//g'); do
                 
                             [[ $DEBUG -eq 1 ]] && echo "----------------------NEW_RULE_CHAIN---------------------------"
@@ -295,15 +278,9 @@ for PARAM in $( echo "${!audit_rules[@]}" | sed 's/[a-z\0-9\.\_\-]*,[d\1-9]//g' 
 
 
     #Pipping the rules to the check_rule function to be checked
-    if [[ ACTION_FILE_FIRST_ACCESS -eq 1 ]] ; then
-        echo "RULE_CHAIN: First Action File Access"
-        echo -e $FINAL_RULE | check_rule "$CURRENT_AUDIT_RULES" 1 
-        ACTION_FILE_FIRST_ACCESS=0 
-    else   
-        echo -e $FINAL_RULE | check_rule "$CURRENT_AUDIT_RULES" 0  
-    fi
-    
- 	
+	
+	echo -e $FINAL_RULE | check_rule
+      
 	                            
 done
 
