@@ -10,9 +10,19 @@
 
 [[ $__DEBUG_X == 1 ]] && set -x
 
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/fs-harden.status"}	# Currently used status file
+# Print startup message with run time settings
+echo >&2 "\
+FileSystem Hardening is starting at $(date '+%F %T %s.%^4N')...
+CONFIG_FILE = $CONFIG_FILE
+MAIN_DIR = $MAIN_DIR
+PROFILE_FILE = $PROFILE_FILE
+MESSAGES_FILE = $MESSAGES_FILE
+ACTIONS_FILE = $ACTIONS_FILE
+LOG_FILE=$LOG_FILE"
 
-FS_ACTIONS_FILE="$MAIN_DIR/scripts/fs-actions.sh"
+STATUS_FILE="$MAIN_DIR/status/fs-harden.status"	# Currently used status file
+
+#FS_ACTIONS_FILE="$MAIN_DIR/scripts/fs-actions.sh"
 
 [[ ! -e "$MAIN_DIR/resources/fs-options.rc" ]] && {
 	echo >&2 "$0: File System hardening resources file doesn't exist '$MAIN_DIR/resources/fs-options.rc'."
@@ -20,26 +30,21 @@ FS_ACTIONS_FILE="$MAIN_DIR/scripts/fs-actions.sh"
 }
 source "$MAIN_DIR/resources/fs-options.rc"
 
-[[ -e "$STATUS_FILE" ]] && source "$STATUS_FILE"
+#[[ -e "$STATUS_FILE" ]] && source "$STATUS_FILE"
 
-# Queue the requested value from the JSON profile file by jq
-_CHECK_PROFILE_FILE_FUNCTION()  {
-	PF_VALUE="$*"
-	jq '.[] | select(.name=="fs")' "$PROFILE_FILE" | jq ".fs.${PF_VALUE// /.}"
-}
+[[ $(_check_profile_file_function fs check) == 0 ]] && exit
 
-[[ $(_CHECK_PROFILE_FILE_FUNCTION check) == 0 ]] && exit
-
-_WRITE_HIDEPID_FUNCTION()	{
-	[[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 0 ]] && return
+_write_hidepid_function()	{
+	[[ $(_check_profile_file_function fs action) == 0 ]] && return
 
 	SYSTEMD_LOGIND_HIDEPID_FILE="/etc/systemd/system/systemd-logind.service.d/hidepid.conf"
 	[[ ! -f $SYSTEMD_LOGIND_HIDEPID_FILE ]] && touch $SYSTEMD_LOGIND_HIDEPID_FILE
 	echo "[Service]" >> $SYSTEMD_LOGIND_HIDEPID_FILE
 	echo "SupplementaryGroups=proc" >> $SYSTEMD_LOGIND_HIDEPID_FILE
+	systemctl daemon-reload
 }
 
-_CHECK_MOUNT_OPTIONS_FUNCTION()	{
+_check_mount_options_function()	{
 	local L_MOUNT_POINT=$1
 	local L_MOUNT_OPTIONS=$2
 	local L_FS_TYPE=$3
@@ -50,8 +55,8 @@ _CHECK_MOUNT_OPTIONS_FUNCTION()	{
 
 	# Loop through the mount options of the mount point and check if they are the suitable recommended ones
 	for opt in $REC_MOUNT_OPTIONS; do
-		if [[ $opt == "hidepid" ]]; then
-			[[ ! -f  "/etc/systemd/system/systemd-logind.service.d/hidepid.conf" ]] && _WRITE_HIDEPID_FUNCTION
+		if [[ $opt == "hidepid" ]] && [[ $L_FS_TYPE == "proc" ]] ; then
+			[[ ! -e  "/etc/systemd/system/systemd-logind.service.d/hidepid.conf" ]] && _write_hidepid_function
 		fi
 
 		[[ $L_MOUNT_OPTIONS =~ (^|[[:space:]])"$opt"($|[[:space:]]) ]]  && continue
@@ -64,21 +69,24 @@ _CHECK_MOUNT_OPTIONS_FUNCTION()	{
 	done
 }
 
-_CMP_FSTAB_FUNCTION()	{
+_cmp_fstab_function()	{
 	local L_MOUNT_POINT=$1
 	local L_MOUNT_OPTIONS=$2
-	local L_FS_TYPE=$2
+	local L_FS_TYPE=$3
 	local L_DEVICE=$4
 
 	# Compare the current mount point information with the same mount point entry in /etc/fstab
-	local FSTAB_LINE
-	local FSTAB_FS_TYPE
-	local FSTAB_DEVICE
-	local FSTAB_MOUNT_OPTIONS
-	FSTAB_LINE="$(grep "$L_MOUNT_POINT" /etc/fstab)"
+	local FSTAB_LINE FSTAB_FS_TYPE FSTAB_DEVICE FSTAB_MOUNT_OPTIONS
+
+	grep -qE "^[^#]{1}[A-Z,a-z,0-9,=,/,\-]+ $L_MOUNT_POINT " /etc/fstab || {
+		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point doesn't have any entry in in /etc/fstab" >> "$MESSAGES_FILE"
+		return
+	}
+
+	FSTAB_LINE="$(grep -qE \'^[^\#]{1}[A-Z,a-z,0-9,=,/,\-]+ $L_MOUNT_POINT \' /etc/fstab)"
 	FSTAB_DEVICE="$(echo "$FSTAB_LINE" | awk '{print $1;}')"
-	FSTAB_MOUNT_OPTIONS="$(echo "$FSTAB_LINE" | awk '{print $4;}')"
 	FSTAB_FS_TYPE="$(echo "$FSTAB_LINE" | awk '{print $3;}')"
+	FSTAB_MOUNT_OPTIONS="$(echo "$FSTAB_LINE" | awk '{print $4;}')"
 
 	# Compare Device name used for mount point
 	if [[ "$FSTAB_DEVICE" == "$L_DEVICE" ]]; then
@@ -90,8 +98,7 @@ _CMP_FSTAB_FUNCTION()	{
 	if [[ "$FSTAB_FS_TYPE" != "$L_FS_TYPE" ]]; then
 		echo "fstab${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> "$STATUS_FILE"
 
-		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currenlty applied file system type $L_FS_TYPE is different from the one in /etc/fstab which is $FSTAB_FS_TYPE.
-$FSTAB_FS_TYPE: ${FS_TYPES[$FSTAB_FS_TYPE]}" >> "$MESSAGES_FILE"
+		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currenlty applied file system type $L_FS_TYPE is different from the one in /etc/fstab which is $FSTAB_FS_TYPE."$'\n'"$FSTAB_FS_TYPE: $([[ -n ${!FSTAB_FS_TYPE} ]] && echo ${!FSTAB_FS_TYPE})" >> "$MESSAGES_FILE"
 
 		[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
 	fi
@@ -107,10 +114,10 @@ $FSTAB_FS_TYPE: ${FS_TYPES[$FSTAB_FS_TYPE]}" >> "$MESSAGES_FILE"
 	done
 }
 
-_CHECK_MOUNT_POINT_FUNCTION()	{
+_check_mount_point_function()	{
 	local L_MOUNT_POINT=$1
 	local L_MOUNT_OPTIONS=$2
-	local L_FS_TYPE=$2
+	local L_FS_TYPE=$3
 	local L_DEVICE=$4
 
 	# Check if the mount point in /proc/mounts exists in our list of covered mount points
@@ -123,26 +130,26 @@ _CHECK_MOUNT_POINT_FUNCTION()	{
 			echo "mounts${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> "$STATUS_FILE"
 			echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: the currently used file system type $L_FS_TYPE is different from the expected one ${REC_FS_TYPE//\// or }." >> "$MESSAGES_FILE"
 
-			[[ -n ${FS_TYPES[$REC_FS_TYPE]} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $REC_FS_TYPE: ${FS_TYPES[$REC_FS_TYPE]}" >> "$MESSAGES_FILE"
-			[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: $L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
+			[[ -n ${!REC_FS_TYPE} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: recommended file systemd type is $REC_FS_TYPE: ${!REC_FS_TYPE}" >> "$MESSAGES_FILE"
+#			[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: current$L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
 		fi
 
-		_CHECK_MOUNT_OPTIONS_FUNCTION "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS"
+		_check_mount_options_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS"
 	fi
 
-	_CMP_FSTAB_FUNCTION "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
+	_cmp_fstab_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
 }
 
 # Start by extracting information from /proc/mounts line by line, then check them
-cat /proc/mounts | while read line; do
-	L_DEVICE="$(echo $line | awk '{print $1;}')"
-	L_MOUNT_POINT="$(echo $line | awk '{print $2;}')"
-	L_FS_TYPE="$(echo $line | awk '{print $3;}')"
+while read -r line; do
+	L_DEVICE=$(echo $line | awk '{print $1;}')
+	L_MOUNT_POINT=$(echo $line | awk '{print $2;}')
+	L_FS_TYPE=$(echo $line | awk '{print $3;}')
 
 	L_MOUNT_OPTIONS="$(echo $line | awk '{print $4;}')"
-	L_MOUNT_OPTIONS="${L_MOUNT_OPTIONS/,/ /}"	# Replace ',' with ' ' to have them separated for comparison
+	L_MOUNT_OPTIONS="${L_MOUNT_OPTIONS//,/' '}"	# Replace ',' with ' ' to have them separated for comparison
 
-	_CHECK_MOUNT_POINT_FUNCTION "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
-done
+	_check_mount_point_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
+done	< /proc/mounts
 
-[[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 0 ]] && echo "$FS_ACTIONS_FILE" >> "$ACTIONS_FILE"
+#[[ $(_check_profile_file_function fs action) == 0 ]] && echo "$FS_ACTIONS_FILE" >> "$ACTIONS_FILE"

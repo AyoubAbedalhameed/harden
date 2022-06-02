@@ -12,7 +12,7 @@
 
 # Print startup message with run time settings
 echo >&2 "\
-Harden service is starting up ...
+GRUB Hardening is starting at $(date '+%F %T %s.%^4N')...
 CONFIG_FILE = $CONFIG_FILE
 MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
@@ -20,15 +20,9 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-STATUS_FILE=${STATUS_FILE:="$MAIN_DIR/status/grub-harden.status"}	# Currently used status file
+STATUS_FILE="$MAIN_DIR/status/grub-harden.status"	# Currently used status file
 
 GRUB_ACTIONS_FILE="$MAIN_DIR/actions/grub-actions.sh"
-
-# Queue the requested value from the JSON profile file by jq
-_CHECK_PROFILE_FILE_FUNCTION()  {
-	PF_VALUE="$*"
-	jq '.[] | select(.name=="grub")' "$PROFILE_FILE" | jq ".grub.${PF_VALUE// /.}"
-}
 
 echo ""
 echo "GRUB Hardening script has started..."
@@ -48,17 +42,15 @@ GRUB_FILE="/etc/default/grub"
 }
 source "$MAIN_DIR/resources/grub-parameters.rc"
 
-_CHECK_PARAM()	{
-	local CURRENT
-	local CPU_MIT
-	local CPU_MIT_MISSED
+_check_param()	{
+	local CURRENT CPU_MIT CPU_MIT_MISSED
 
 	# $1 would be either GRUB_CMDLINE_LINUX_DEFAULT or GRUB_CMDLINE_LINUX
 	CURRENT=$(grep "$1" "$GRUB_FILE")
 	CURRENT=${CURRENT##"$1"}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT//\"/}
 
-	if [[ $(_CHECK_PROFILE_FILE_FUNCTION general check) == 1 ]]
+	if [[ $(_check_profile_file_function grub general check) == 1 ]]
 	then
 		# Loop through all general recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_OPTIONS; do
@@ -74,7 +66,7 @@ _CHECK_PARAM()	{
 
 	CPU_MIT=1
 	CPU_MIT_MISSED=""
-	if [[ $(_CHECK_PROFILE_FILE_FUNCTION cpu_metigations check) == 1 ]]
+	if [[ $(_check_profile_file_function grub cpu_metigations check) == 1 ]]
 	then
 		# Loop through all cpu mitigations recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_CPU_MIT; do
@@ -90,15 +82,15 @@ _CHECK_PARAM()	{
 		if [[ $CPU_MIT == 0 ]] 
 		then
 		{
-			echo "GRUB-Hardening[$PARAM]: These recommended CPU mitigations are not applied:"
-			echo "$CPU_MIT_MISSED"
-			echo "$GRUB_CPU_MIT_MESSAGE"
+			echo "GRUB-Hardening[CPU_Mitigations]: These recommended CPU mitigations are not applied:"
+			echo "GRUB-Hardening[CPU_Mitigations]: $CPU_MIT_MISSED."
+			echo "GRUB-Hardening[CPU_Mitigations]: $GRUB_CPU_MIT_MESSAGE"
 		} >> "$MESSAGES_FILE"
 		fi
 	fi
 }
 
-write-to-actions-file()	{
+_write_to_actions_file()	{
 	{
 		echo "#!/usr/bin/env bash"
 		echo ""
@@ -128,13 +120,13 @@ write-to-actions-file()	{
 	} > "$GRUB_ACTIONS_FILE"
 }
 
-if [[ $(_CHECK_PROFILE_FILE_FUNCTION check) == 1 ]]
+if [[ $(_check_profile_file_function grub check) == 1 ]]
 then
-	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" 2>/dev/null && _CHECK_PARAM "GRUB_CMDLINE_LINUX="
-	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" 2>/dev/null && _CHECK_PARAM "GRUB_CMDLINE_LINUX_DEFAULT="
+	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" 2>/dev/null && _check_param "GRUB_CMDLINE_LINUX="
+	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" 2>/dev/null && _check_param "GRUB_CMDLINE_LINUX_DEFAULT="
 fi
 
-[[ $(_CHECK_PROFILE_FILE_FUNCTION action) == 1 ]] && write-to-actions-file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
+[[ $(_check_profile_file_function grub action) == 1 ]] && _write_to_actions_file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
 
 echo ""
 echo "GRUB Hardening script has finished"
