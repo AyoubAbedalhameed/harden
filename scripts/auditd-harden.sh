@@ -36,8 +36,7 @@ LOG_FILE=$LOG_FILE"
 
 
 
-
-echo -e "\nAuditd Hardening script has started...\n"
+echo -e "\nAuditd Hardening Script is running .. "
 
 
 #Fetching Script run time. 
@@ -48,7 +47,7 @@ AUDITD_ACTIONS_FILE="/usr/share/harden/actions/auditd-actions.sh"
 SCRIPT_NAME=`basename $0`
 ADDED_AUDIT_RULES_FILE="$MAIN_DIR/resources/harden-custom-audit.rules"
 
-DEBUG=${DEBUG:=0} 	#Used for debugging, (only for this script)
+DEBUG=0	#Used for debugging, (only for this script)
 
 
 #Importing auditd rules: 
@@ -118,16 +117,12 @@ check_rule()
     	                                [[ $DEBUG -eq 1 ]] && echo "check_rule: current rule is ($RULE)"
 
     	if [[ $AUDITD_NEW_INSTALLATION -ne 1 ]] ; then 
-		 	echo "######Checking Current Rule" 
-			echo "$RULE" | awk '{print $1;}'
-			echo ${RULE%-k*}
 			echo "$CURRENT_AUDIT_RULES" | grep -Fxe "$RULE"
 		    RULE_STATUS=$?
-			echo "RULE_STATUS FROM GREP IS $RULE_STATUS"
 		fi
     
         if [[ $RULE_STATUS -eq 1 ]] ; then 
-            echo "$SCRIPT_NAME: [$RULE]  RULE NOT MATCHED. $DESCRIPTION" >> $MESSAGES_FILE
+            echo "$SCRIPT_NAME: [$PARAM]  ($RULE)  RULE NOT MATCHED. $DESCRIPTION" >> $MESSAGES_FILE
             [[ ($USER_ACTION_ACCEPTENCE -eq 1) && ($GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] && echo "$RULE" >> $ADDED_AUDIT_RULES_FILE 
         fi
     	                                [[ $DEBUG -eq 1 ]] && echo "check_rule: Rule status $RULE_STATUS"
@@ -141,7 +136,7 @@ check_rule()
 #Cheking auditd Service:  
 
                                 [[ $DEBUG -eq 1 ]] && echo "$SCRIPT_NAME: Checking firewalld service status" 
-systemctl status auditd > &2
+systemctl status auditd >&2
 AUDITD_STATUS=$? 
 
 if [[ ! $AUDITD_STATUS -eq  4 ]] ; then 
@@ -156,7 +151,7 @@ fi
 #Intsalling auditd if it is not installed: 
 if [[ (AUDITD_INSTALLED -ne 1) && (GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] ; then 
 									[[ $DEBUG -eq 1 ]] && echo "$SCRIPT_NAME : Auditd is not installed"
-	yum -y install audit && AUDITD_NEW_INSTALLATION=1
+	yum -y install audit>&2 && AUDITD_NEW_INSTALLATION=1
 	yum list installed  | grep "audit." && AUDITD_INSTALLED=1 && echo >&2 "$SCRIPT_NAME[service-status]: auditd has not been installed succesfully"
 	
 fi
@@ -171,7 +166,7 @@ fi
 
 
 #Fetching current auditd rules: 
-service auditd restart > /dev/null
+augenrules --load >&2
 CURRENT_AUDIT_RULES=`cat /etc/audit/audit.rules`
 
 

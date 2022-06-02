@@ -33,7 +33,7 @@
             "action":0,
             "rules":{
                 "auditd_auditing":{"check":1, "action":0, "question":""},
-                "filter":{"check":1, "action":0, "question":""},
+                "filters":{"check":1, "action":0, "question":""},
                 "kernel":{"check":1, "action":0, "question":""},
                 "critical_sys_call":{"check":1, "action":0, "question":""},
                 "critical_etc_file":{"check":1, "action":0, "question":""},
