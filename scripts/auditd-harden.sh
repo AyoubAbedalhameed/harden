@@ -1,11 +1,7 @@
 #!/bin/bash
 #This script is a part of harden project, it will be used for hardening auditd with recommended rules.
-#Written By: Ayoub Abedalhameed (aasedqiabedalhameed173@cit.just.edu.jo)
-
-
-
 #Auditd hardening by checking the status of audit package and checking the deployment of predefined auditd rules.
-
+#Written By: Ayoub Abedalhameed (aasedqiabedalhameed173@cit.just.edu.jo)
 
 
 #Prevent overwriting files
