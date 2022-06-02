@@ -370,17 +370,17 @@ audit_rules[rules.software_managmenet_auditing,d]="These rules are used for audi
 
 
 ## Docker
-audit_rules[rules.docekr,0]=9
-audit_rules[rules.docekr,1]="-w /usr/bin/docker -k docker"
-audit_rules[rules.docekr,2]="-w /usr/bin/docker-containerd -k docker"
-audit_rules[rules.docekr,3]="-w /usr/bin/docker-runc -k docker"
-audit_rules[rules.docekr,4]="-w /var/lib/docker -k docker"
-audit_rules[rules.docekr,5]="-w /etc/docker -k docker"
-audit_rules[rules.docekr,6]="-w /etc/sysconfig/docker -k docker"
-audit_rules[rules.docekr,7]="-w /etc/sysconfig/docker-storage -k docker"
-audit_rules[rules.docekr,8]="-w /usr/lib/systemd/system/docker.service -k docker"
-audit_rules[rules.docekr,9]="-w /usr/bin/dockerd -k docker"
-audit_rules[rules.docekr,d]="These rules are used for auditing docker binaries and configuration files"
+audit_rules[rules.docker,0]=9
+audit_rules[rules.docker,1]="-w /usr/bin/docker -k docker"
+audit_rules[rules.docker,2]="-w /usr/bin/docker-containerd -k docker"
+audit_rules[rules.docker,3]="-w /usr/bin/docker-runc -k docker"
+audit_rules[rules.docker,4]="-w /var/lib/docker -k docker"
+audit_rules[rules.docker,5]="-w /etc/docker -k docker"
+audit_rules[rules.docker,6]="-w /etc/sysconfig/docker -k docker"
+audit_rules[rules.docker,7]="-w /etc/sysconfig/docker-storage -k docker"
+audit_rules[rules.docker,8]="-w /usr/lib/systemd/system/docker.service -k docker"
+audit_rules[rules.docker,9]="-w /usr/bin/dockerd -k docker"
+audit_rules[rules.docker,d]="These rules are used for auditing docker binaries and configuration files"
 
 
 # High Volume Events ----------------------------------------------------------
