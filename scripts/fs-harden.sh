@@ -78,15 +78,12 @@ _cmp_fstab_function()	{
 	# Compare the current mount point information with the same mount point entry in /etc/fstab
 	local FSTAB_LINE FSTAB_FS_TYPE FSTAB_DEVICE FSTAB_MOUNT_OPTIONS
 
-	grep -qE "^[^#]{1}[A-Z,a-z,0-9,=,/,\-]+ $L_MOUNT_POINT " /etc/fstab || {
-		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point doesn't have any entry in in /etc/fstab" >> "$MESSAGES_FILE"
-		return
-	}
-
-	FSTAB_LINE="$(grep -qE \'^[^\#]{1}[A-Z,a-z,0-9,=,/,\-]+ $L_MOUNT_POINT \' /etc/fstab)"
-	FSTAB_DEVICE="$(echo "$FSTAB_LINE" | awk '{print $1;}')"
-	FSTAB_FS_TYPE="$(echo "$FSTAB_LINE" | awk '{print $3;}')"
-	FSTAB_MOUNT_OPTIONS="$(echo "$FSTAB_LINE" | awk '{print $4;}')"
+	FSTAB_LINE=$(grep -E "^[^#]{1}[A-Z,a-z,0-9,=,\/, ,\-]+$L_MOUNT_POINT " /etc/fstab);
+	FSTAB_LINE=${FSTAB_LINE::-4}; FSTAB_LINE="${FSTAB_LINE//  /}"
+	FSTAB_DEVICE=${FSTAB_LINE%% /*}; FSTAB_LINE="${FSTAB_LINE#*$FSTAB_DEVICE $L_MOUNT_POINT }"
+	FSTAB_FS_TYPE=${FSTAB_LINE%% *}; FSTAB_LINE=${FSTAB_LINE#*$FSTAB_FS_TYPE }
+	FSTAB_MOUNT_OPTIONS=${FSTAB_LINE//,/' '}
+	echo "FSTAB_DEVICE=$FSTAB_DEVICE"$'\n'"L_MOUNT_POINT=$L_MOUNT_POINT"$'\n'"FSTAB_FS_TYPE=$FSTAB_FS_TYPE"$'\n'"FSTAB_MOUNT_OPTIONS=$FSTAB_MOUNT_OPTIONS"
 
 	# Compare Device name used for mount point
 	if [[ "$FSTAB_DEVICE" == "$L_DEVICE" ]]; then
@@ -103,15 +100,17 @@ _cmp_fstab_function()	{
 		[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
 	fi
 
-	for opt in $FSTAB_MOUNT_OPTIONS; do
-		[[ $L_MOUNT_OPTIONS =~ (^|[[:space:]])"$opt"($|[[:space:]]) ]] && continue
+	if [[ $FSTAB_MOUNT_OPTIONS != "defaults" ]]; then
+		for opt in $FSTAB_MOUNT_OPTIONS; do
+			[[ $L_MOUNT_OPTIONS =~ (^|[[:space:]])"$opt"($|[[:space:]]) ]] && continue
 
-		echo "fstab${L_MOUNT_POINT//\//_}-$opt=0" >> "$STATUS_FILE"
-		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currently running (applied) mount options is missing $opt option which is specified in /etc/fstab, if it wasn't from you and feels suspeciuos, remount it by (mount -a)." >> "$MESSAGES_FILE"
+			echo "fstab${L_MOUNT_POINT//\//_}-$opt=0" >> "$STATUS_FILE"
+			echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point currently running (applied) mount options is missing $opt option which is specified in /etc/fstab, if it wasn't from you and feels suspeciuos, remount it by (mount -a)." >> "$MESSAGES_FILE"
 
-		opt=${opt%=*}
-		[[ -n ${!opt} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $opt: ${!opt}" >> "$MESSAGES_FILE"
-	done
+			opt=${opt%=*}
+			[[ -n ${!opt} ]] && echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: $opt: ${!opt}" >> "$MESSAGES_FILE"
+		done
+	fi
 }
 
 _check_mount_point_function()	{
@@ -124,7 +123,7 @@ _check_mount_point_function()	{
 	if [[ -n "${MOUNT_POINTS[$L_MOUNT_POINT]}" ]]; then
 		# Check if file system type is the one recommended
 		local REC_FS_TYPE
-		REC_FS_TYPE="$(echo "${MOUNT_POINTS[$L_MOUNT_POINT]}" | awk '{print $1;}')"
+		REC_FS_TYPE=${MOUNT_POINTS[$L_MOUNT_POINT]%% o*}
 
 		if [[ ! "$L_FS_TYPE" =~ $REC_FS_TYPE ]]; then
 			echo "mounts${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> "$STATUS_FILE"
@@ -137,17 +136,17 @@ _check_mount_point_function()	{
 		_check_mount_options_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS"
 	fi
 
-	_cmp_fstab_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
+	grep -qE "^[^#]{1}[A-Z,a-z,0-9,=,\/, ,\-]+$L_MOUNT_POINT " /etc/fstab && _cmp_fstab_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
 }
+
 
 # Start by extracting information from /proc/mounts line by line, then check them
 while read -r line; do
-	L_DEVICE=$(echo $line | awk '{print $1;}')
-	L_MOUNT_POINT=$(echo $line | awk '{print $2;}')
-	L_FS_TYPE=$(echo $line | awk '{print $3;}')
-
-	L_MOUNT_OPTIONS="$(echo $line | awk '{print $4;}')"
-	L_MOUNT_OPTIONS="${L_MOUNT_OPTIONS//,/' '}"	# Replace ',' with ' ' to have them separated for comparison
+	line=${line::-4}
+	L_DEVICE=${line%%' '*}; line=${line#$L_DEVICE }
+	L_MOUNT_POINT=${line%%' '*}; line=${line#$L_MOUNT_POINT }
+	L_FS_TYPE=${line%%' '*}; line=${line#$L_FS_TYPE }
+	L_MOUNT_OPTIONS=${line//,/' '}	# Replace ',' with ' ' to have them separated for comparison
 
 	_check_mount_point_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
 done	< /proc/mounts

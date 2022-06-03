@@ -75,16 +75,16 @@ export fusectl="FUSE is a userspace filesystem framework. It consists of a kerne
 
 declare -A MOUNT_POINTS
 
-MOUNT_POINTS[/]="ext4/xfs options= rw relatime nosuid seclabel"
+MOUNT_POINTS[/]="(ext4)|(xfs) options= rw relatime nosuid seclabel"
 
-MOUNT_POINTS[/var]="ext4/xfs options= rw relatime nodev nosuid seclabel"
+MOUNT_POINTS[/var]="(ext4)|(xfs) options= rw relatime nodev nosuid seclabel"
 
 MOUNT_POINTS[/proc]="proc options= rw nosuid nodev noexec hidepid=2 gid=proc"
 MOUNT_POINTS[/proc/sys/fs/binfmt_misc]="autofs options= rw relatime nosuid direct"
 
-MOUNT_POINTS[/usr]="ext4/xfs options= rw relatime nodev nosuid seclabel"
+MOUNT_POINTS[/usr]="(ext4)|(xfs) options= rw relatime nodev nosuid seclabel"
 
-MOUNT_POINTS[/tmp]="tmpfs options= rw nosuid nodev seclabel"
+MOUNT_POINTS[/tmp]="(tmpfs)|(ext4)|(xfs) options= rw nosuid nodev seclabel"
 
 MOUNT_POINTS[/sys]="sysfs options= rw nosuid nodev noexec relatime seclabel"
 MOUNT_POINTS[/sys/fs/selinux]="selinuxfs options= rw nosuid noexec relatime"
@@ -107,7 +107,7 @@ MOUNT_POINTS[/dev/hugepages]="hugetlbfs options= rw relatime nosuid seclabel"
 
 MOUNT_POINTS[/run]="tmpfs options= rw nosuid nodev seclabel"
 
-MOUNT_POINTS[/home]="ext4/xfs options= rw nodev nosuid selabel"
+MOUNT_POINTS[/home]="(ext4)|(xfs) options= rw nodev nosuid selabel"
 
-MOUNT_POINTS[/boot]="ext4/xfs options= rw relatime nodev seclabel"
+MOUNT_POINTS[/boot]="(ext4)|(xfs) options= rw relatime nodev seclabel"
 MOUNT_POINTS[/boot/efi]="vfat options= rw relatime fmask=0077 dmask=0077 errors=remount-ro"
