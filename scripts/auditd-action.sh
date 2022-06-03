@@ -1,21 +1,13 @@
 #!/usr/bin/bash
-#Message=""
 
-echo "$(date) auditd-action is running"
-Mode=$1 
-auditdPackage="audit.x86_64"
+UNMATCHED_RULES_FILE="/usr/share/harden/resources/harden-custom-audit.rules"
+HARDEN_CUSTOM_RULES_FILE="/etc/audit/rules.d/harden-custom-audit.rules"
 
-if [ $Mode -eq 1 ] ; then
-echo "$0: Installing auditd package" && yum install $auditdPackag && echo "$0: $auditdPackage Instaled Succefully" \
-|| echo "$0: $auditdPackage Installation Failed." && exit 1 
-fi
+[[ ! -f $UNMATCHED_RULES_FILE ]] && echo "unmatched_rules file does not exist, Skipping action." && exit 1
 
 
-[ -f /usr/share/harden/resources/audit.rules ] && mv -f /usr/share/harden/resources/auditd.rules /etc/audit/rules.d \
-|| echo "$0: /usr/share/harden/resources/audit.rules NOT EXIST" && exit 1 
+while read RULE ; do 
+    grep -e "$RULE" $HARDEN_CUSTOM_RULES_FILE >> /dev/null ||  echo "$RULE" >> $HARDEN_CUSTOM_RULES_FILE ; done <"$UNMATCHED_RULES_FILE"
 
-echo "$0: Recommended auditd rules have been employed succsufully."
-echo "$0: Restarting auditd .."
-service auditd restart 
-exit 0
 
+augenrules --load > /dev/null
