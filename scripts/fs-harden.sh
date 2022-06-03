@@ -79,14 +79,17 @@ _cmp_fstab_function()	{
 	local FSTAB_LINE FSTAB_FS_TYPE FSTAB_DEVICE FSTAB_MOUNT_OPTIONS
 
 	FSTAB_LINE=$(grep -E "^[^#]{1}[A-Z,a-z,0-9,=,\/, ,\-]+$L_MOUNT_POINT " /etc/fstab);
-	FSTAB_LINE=${FSTAB_LINE::-4}; FSTAB_LINE="${FSTAB_LINE//  /}"
-	FSTAB_DEVICE=${FSTAB_LINE%% /*}; FSTAB_LINE="${FSTAB_LINE#*$FSTAB_DEVICE $L_MOUNT_POINT }"
-	FSTAB_FS_TYPE=${FSTAB_LINE%% *}; FSTAB_LINE=${FSTAB_LINE#*$FSTAB_FS_TYPE }
-	FSTAB_MOUNT_OPTIONS=${FSTAB_LINE//,/' '}
-	echo "FSTAB_DEVICE=$FSTAB_DEVICE"$'\n'"L_MOUNT_POINT=$L_MOUNT_POINT"$'\n'"FSTAB_FS_TYPE=$FSTAB_FS_TYPE"$'\n'"FSTAB_MOUNT_OPTIONS=$FSTAB_MOUNT_OPTIONS"
+	FSTAB_DEVICE=$(echo $FSTAB_LINE | awk '{print $1;}')
+	FSTAB_FS_TYPE=$(echo $FSTAB_LINE | awk '{print $3;}')
+	FSTAB_MOUNT_OPTIONS=$(echo $FSTAB_LINE | awk '{print $4;}')
+#	FSTAB_LINE=${FSTAB_LINE::-4}; FSTAB_LINE="${FSTAB_LINE//  / }"
+#	FSTAB_DEVICE=${FSTAB_LINE%% /*}; FSTAB_LINE="${FSTAB_LINE#*$FSTAB_DEVICE $L_MOUNT_POINT }"
+#	FSTAB_FS_TYPE=${FSTAB_LINE%% *}; FSTAB_LINE=${FSTAB_LINE#*$FSTAB_FS_TYPE }
+#	FSTAB_MOUNT_OPTIONS=${FSTAB_LINE//,/' '}
+#	echo "FSTAB_DEVICE=$FSTAB_DEVICE"$'\n'"L_MOUNT_POINT=$L_MOUNT_POINT"$'\n'"FSTAB_FS_TYPE=$FSTAB_FS_TYPE"$'\n'"FSTAB_MOUNT_OPTIONS=$FSTAB_MOUNT_OPTIONS"
 
 	# Compare Device name used for mount point
-	if [[ "$FSTAB_DEVICE" == "$L_DEVICE" ]]; then
+	if [[ "$FSTAB_DEVICE" != "$L_DEVICE" ]]; then
 		echo "fstab${L_MOUNT_POINT//\//_}-$L_DEVICE=0" >> "$STATUS_FILE"
 		echo "FileSystem-Hardening[fstab][$L_MOUNT_POINT]: Mount point device $L_DEVICE is different from the one in /etc/fstab which is $FSTAB_DEVICE." >> "$MESSAGES_FILE"
 	fi
