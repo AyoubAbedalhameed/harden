@@ -55,7 +55,7 @@ _check_mount_options_function()	{
 
 	# Loop through the mount options of the mount point and check if they are the suitable recommended ones
 	for opt in $REC_MOUNT_OPTIONS; do
-		if [[ $opt == "hidepid" ]] && [[ $L_FS_TYPE == "proc" ]] ; then
+		if [[ $opt == "hidepid" ]] && [[ $L_MOUNT_POINT == "/proc" ]] ; then
 			[[ ! -e  "/etc/systemd/system/systemd-logind.service.d/hidepid.conf" ]] && _write_hidepid_function
 		fi
 
@@ -130,16 +130,19 @@ _check_mount_point_function()	{
 
 		if [[ ! "$L_FS_TYPE" =~ $REC_FS_TYPE ]]; then
 			echo "mounts${L_MOUNT_POINT//\//_}-$L_FS_TYPE=0" >> "$STATUS_FILE"
-			echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: the currently used file system type $L_FS_TYPE is different from the expected one ${REC_FS_TYPE//\// or }." >> "$MESSAGES_FILE"
+			echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: the currently used file system type $L_FS_TYPE \
+is different from the expected one ${REC_FS_TYPE//\// or }." >> "$MESSAGES_FILE"
 
-			[[ -n ${!REC_FS_TYPE} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: recommended file systemd type is $REC_FS_TYPE: ${!REC_FS_TYPE}" >> "$MESSAGES_FILE"
-#			[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: current$L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
+			[[ -n ${!REC_FS_TYPE} ]] && echo "FileSystem-Hardening[mounts][$L_MOUNT_POINT]: recommended file \
+system type is $REC_FS_TYPE: ${!REC_FS_TYPE}" >> "$MESSAGES_FILE"
 		fi
 
 		_check_mount_options_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS"
 	fi
 
-	grep -qE "^[^#]{1}[A-Z,a-z,0-9,=,\/, ,\-]+$L_MOUNT_POINT " /etc/fstab && _cmp_fstab_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
+	grep -qE "^[^#]{1}[A-Z,a-z,0-9,=,\/, ,\-]+$L_MOUNT_POINT " /etc/fstab && {
+		_cmp_fstab_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
+	}
 }
 
 
