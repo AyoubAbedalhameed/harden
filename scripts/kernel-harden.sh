@@ -70,17 +70,18 @@ _check_module_blacklisting_function()	{
 
 	source "$MODULES_FILE"
 
-	[[ $(_check_profile_file_function kernel action) == 1 ]] && touch $MODULE_BLACKLIST_FILE
-
 	if [[ ! -f $MODULE_BLACKLIST_FILE ]]; then
+		[[ $(_check_profile_file_function kernel action) == 1 ]] && echo "touch $MODULE_BLACKLIST_FILE" >> "$KERNEL_ACTIONS_FILE"
 		echo "Kernel-Module-Hardening: Your system doesn't have any modules blocked in $MODULE_BLACKLIST_FILE (it doesn't even exist)" >> $MESSAGES_FILE
+
 		for TYPE in $MOD_TYPES; do
 			if [[ $(_check_profile_file_function kernel module "$TYPE" check) == 1 ]]
 			then
 				for MODULE in ${!TYPE}; do
-					[[ ! $RUNNING_MODULES =~ $MODULE ]] && continue
+					[[ ! $RUNNING_MODULES =~ (^|[[:space:]])"$MODULE"($|[[:space:]]) ]] && continue
 					echo "kernel_module_$MODULE=0" >> "$STATUS_FILE"
-					echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE currently loaded and running on your system, it is recommended to be blacklisted, because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
+					echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE currently loaded and running on your system, it is recommended to be blacklisted, \
+because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
 
 					[[ $(_check_profile_file_function kernel module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
 				done
@@ -92,11 +93,14 @@ _check_module_blacklisting_function()	{
 			if [[ $(_check_profile_file_function kernel module "$TYPE" check) == 1 ]]
 			then
 				for MODULE in ${!TYPE}; do
-					[[ $RUNNING_MODULES =~ $MODULE ]] && echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is loaded on you currently running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
+					[[ $RUNNING_MODULES =~ (^|[[:space:]])"$MODULE"($|[[:space:]]) ]] && echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is loaded on you currently \
+running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
+
 					grep -q "$MODULE" "$MODULE_BLACKLIST_FILE" && continue
 
 					echo "kernel_module_$MODULE=0" >> "$STATUS_FILE"
-					echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
+					echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, \
+or it's weak." >> "$MESSAGES_FILE"
 
 					[[ $(_check_profile_file_function kernel module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$ACTIONS_FILE"
 				done
