@@ -42,7 +42,7 @@ GRUB_FILE="/etc/default/grub"
 }
 source "$MAIN_DIR/resources/grub-parameters.rc"
 
-_check_param()	{
+_check_param_function()	{
 	local CURRENT CPU_MIT CPU_MIT_MISSED
 
 	# $1 would be either GRUB_CMDLINE_LINUX_DEFAULT or GRUB_CMDLINE_LINUX
@@ -50,8 +50,7 @@ _check_param()	{
 	CURRENT=${CURRENT##"$1"}	# Substitute string to get only the CMDLINE parameters
 	CURRENT=${CURRENT//\"/}
 
-	if [[ $(_check_profile_file_function grub general check) == 1 ]]
-	then
+	if [[ $(_check_profile_file_function grub general check) == 1 ]]; then
 		# Loop through all general recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_OPTIONS; do
 			[[ $CURRENT =~ $PARAM ]] && continue	# Check if recommended parameter is in the current values array
@@ -66,8 +65,7 @@ _check_param()	{
 
 	CPU_MIT=1
 	CPU_MIT_MISSED=""
-	if [[ $(_check_profile_file_function grub cpu_metigations check) == 1 ]]
-	then
+	if [[ $(_check_profile_file_function grub cpu_metigations check) == 1 ]]; then
 		# Loop through all cpu mitigations recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_CPU_MIT; do
 			[[ $CURRENT =~ $PARAM ]] && continue	# Check if recommended parameter is in the current values array
@@ -79,8 +77,7 @@ _check_param()	{
 			GRUB_ACTION="$GRUB_ACTION $PARAM"
 		done
 
-		if [[ $CPU_MIT == 0 ]] 
-		then
+		if [[ $CPU_MIT == 0 ]]; then
 		{
 			echo "GRUB-Hardening[CPU_Mitigations]: These recommended CPU mitigations are not applied:"
 			echo "GRUB-Hardening[CPU_Mitigations]: $CPU_MIT_MISSED."
@@ -117,13 +114,14 @@ _write_to_actions_file()	{
 		echo "	fi"
 		echo "done"
 		echo ""
+		echo "sudo grub2-mkconfig -o /boot/grub2/grub.cfg"
 	} > "$GRUB_ACTIONS_FILE"
 }
 
 if [[ $(_check_profile_file_function grub check) == 1 ]]
 then
-	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" 2>/dev/null && _check_param "GRUB_CMDLINE_LINUX="
-	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" 2>/dev/null && _check_param "GRUB_CMDLINE_LINUX_DEFAULT="
+	grep -q "GRUB_CMDLINE_LINUX=" "$GRUB_FILE" 2>/dev/null && _check_param_function "GRUB_CMDLINE_LINUX="
+	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" 2>/dev/null && _check_param_function "GRUB_CMDLINE_LINUX_DEFAULT="
 fi
 
 [[ $(_check_profile_file_function grub action) == 1 ]] && _write_to_actions_file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
