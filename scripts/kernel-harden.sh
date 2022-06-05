@@ -21,7 +21,7 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-STATUS_FILE="$MAIN_DIR/status/kernel-harden.status"	# Currently used status file
+STATUS_FILE="$STATUS_DIR/kernel-harden.status"	# Currently used status file
 
 KERNEL_ACTIONS_FILE="$MAIN_DIR/actions/kernel-actions.sh"
 

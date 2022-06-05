@@ -20,7 +20,7 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-STATUS_FILE="$MAIN_DIR/status/fs-harden.status"	# Currently used status file
+STATUS_FILE="$STATUS_DIR/fs-harden.status"	# Currently used status file
 
 #FS_ACTIONS_FILE="$MAIN_DIR/scripts/fs-actions.sh"
 

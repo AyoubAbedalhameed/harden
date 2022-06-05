@@ -20,7 +20,7 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-STATUS_FILE="$MAIN_DIR/status/grub-harden.status"	# Currently used status file
+STATUS_FILE="$STATUS_DIR/grub-harden.status"	# Currently used status file
 
 GRUB_ACTIONS_FILE="$MAIN_DIR/actions/grub-actions.sh"
 
