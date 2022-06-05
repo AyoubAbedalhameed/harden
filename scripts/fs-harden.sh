@@ -3,6 +3,7 @@
 
 # Different recommended file system hardening options and configuration
 
+
 [[ $__RAN_BY_HARDEN_MAIN != 1 ]] && {
 	echo >&2 "$0 should be called by harden-main"
 	exit 1
