@@ -10,7 +10,7 @@
 
 # Print startup message with run time settings
 echo >&2 "\
-Harden service is starting up at $(date '+%F %T %s.%^4N') ...
+Harden service is starting up as pid =$$ at $(date '+%F %T %s.%^4N') ...
 CONFIG_FILE = $CONFIG_FILE
 MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
@@ -20,7 +20,7 @@ LOG_FILE=$LOG_FILE"
 
 _harden_run_function()   {
 	# Create status and messages and actions file for the current run.
-	touch "$MESSAGES_FILE" "$ACTIONS_FILE"
+	touch "$MESSAGES_FILE"
 
 	tail -f "$MESSAGES_FILE" >&5 &
 	trap "pkill -P $$" EXIT
