@@ -21,15 +21,18 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-STATUS_FILE="$STATUS_DIR/fs-harden.status"	# Currently used status file
+declare -r STATUS_FILE="$STATUS_DIR/fs-harden.status"	# Currently used status file
 
-#FS_ACTIONS_FILE="$MAIN_DIR/scripts/fs-actions.sh"
+#FS_ACTIONS_FILE="$ACTIONS_DIR/fs-actions.sh"
 
-[[ ! -e "$MAIN_DIR/resources/fs-options.rc" ]] && {
-	echo >&2 "$0: File System hardening resources file doesn't exist '$MAIN_DIR/resources/fs-options.rc'."
+[[ ! -e "$RESOURCES_DIR/fs-options.rc" ]] && {
+	echo >&2 "$0: Alert!! File System hardening resources file doesn't exist '$RESOURCES_DIR/fs-options.rc'"
+	echo >&2 "Can not continue executing without it."
+	echo >&2 "if you don't know what caused this, reinstall the service package and everything will be fine."
+	echo >&2 "Quiting..."
 	exit 1
 }
-source "$MAIN_DIR/resources/fs-options.rc"
+source "$RESOURCES_DIR/fs-options.rc"
 
 #[[ -e "$STATUS_FILE" ]] && source "$STATUS_FILE"
 
@@ -37,18 +40,16 @@ source "$MAIN_DIR/resources/fs-options.rc"
 
 _write_hidepid_function()	{
 	[[ $(_check_profile_file_function fs action) == 0 ]] && return
-
-	SYSTEMD_LOGIND_HIDEPID_FILE="/etc/systemd/system/systemd-logind.service.d/hidepid.conf"
+	declare -r SYSTEMD_LOGIND_HIDEPID_FILE="/etc/systemd/system/systemd-logind.service.d/hidepid.conf"
 	[[ ! -f $SYSTEMD_LOGIND_HIDEPID_FILE ]] && touch $SYSTEMD_LOGIND_HIDEPID_FILE
 	echo "[Service]" >> $SYSTEMD_LOGIND_HIDEPID_FILE
 	echo "SupplementaryGroups=proc" >> $SYSTEMD_LOGIND_HIDEPID_FILE
+
 	systemctl daemon-reload
 }
 
 _check_mount_options_function()	{
-	local L_MOUNT_POINT=$1
-	local L_MOUNT_OPTIONS=$2
-	local L_FS_TYPE=$3
+	declare -r L_MOUNT_POINT=$1 L_MOUNT_OPTIONS=$2 L_FS_TYPE=$3
 
 	# Subititue the options from the MOUNT_OPTIONS dictionary that is after the 'options=' string, then save them as array
 	local REC_MOUNT_OPTIONS
@@ -73,18 +74,15 @@ _check_mount_options_function()	{
 }
 
 _cmp_fstab_function()	{
-	local L_MOUNT_POINT=$1
-	local L_MOUNT_OPTIONS=$2
-	local L_FS_TYPE=$3
-	local L_DEVICE=$4
+	declare -r L_MOUNT_POINT=$1 L_MOUNT_OPTIONS=$2 L_FS_TYPE=$3 L_DEVICE=$4
 
 	# Compare the current mount point information with the same mount point entry in /etc/fstab
-	local FSTAB_LINE FSTAB_FS_TYPE FSTAB_DEVICE FSTAB_MOUNT_OPTIONS
+#	local FSTAB_LINE FSTAB_FS_TYPE FSTAB_DEVICE FSTAB_MOUNT_OPTIONS
 
-	FSTAB_LINE=$(grep -E "^[^#]{1}[A-Z,a-z,0-9,=,\/, ,\-]+$L_MOUNT_POINT " /etc/fstab);
-	FSTAB_DEVICE=$(echo $FSTAB_LINE | awk '{print $1;}')
-	FSTAB_FS_TYPE=$(echo $FSTAB_LINE | awk '{print $3;}')
-	FSTAB_MOUNT_OPTIONS=$(echo $FSTAB_LINE | awk '{print $4;}')
+	declare -r FSTAB_LINE=$(grep -E "^[^#]{1}[A-Z,a-z,0-9,=,\/, ,\-]+$L_MOUNT_POINT " /etc/fstab);
+	declare -r FSTAB_DEVICE=$(echo $FSTAB_LINE | awk '{print $1;}')
+	declare -r FSTAB_FS_TYPE=$(echo $FSTAB_LINE | awk '{print $3;}')
+	declare -r FSTAB_MOUNT_OPTIONS=$(echo $FSTAB_LINE | awk '{print $4;}')
 #	FSTAB_LINE=${FSTAB_LINE::-4}; FSTAB_LINE="${FSTAB_LINE//  / }"
 #	FSTAB_DEVICE=${FSTAB_LINE%% /*}; FSTAB_LINE="${FSTAB_LINE#*$FSTAB_DEVICE $L_MOUNT_POINT }"
 #	FSTAB_FS_TYPE=${FSTAB_LINE%% *}; FSTAB_LINE=${FSTAB_LINE#*$FSTAB_FS_TYPE }
@@ -158,16 +156,22 @@ system type is $REC_FS_TYPE: ${!REC_FS_TYPE}" >> "$MESSAGES_FILE"
 	}
 }
 
+_fs_main()	{
+	local L_DEVICE L_MOUNT_POINT L_FS_TYPE L_MOUNT_OPTIONS
 
-# Start by extracting information from /proc/mounts line by line, then check them
-while read -r line; do
-	line=${line::-4}
-	L_DEVICE=${line%%' '*}; line=${line#$L_DEVICE }
-	L_MOUNT_POINT=${line%%' '*}; line=${line#$L_MOUNT_POINT }
-	L_FS_TYPE=${line%%' '*}; line=${line#$L_FS_TYPE }
-	L_MOUNT_OPTIONS=${line//,/' '}	# Replace ',' with ' ' to have them separated for comparison
+	# Start by extracting information from the '/proc/mounts' file line by line, then check them
+	while read -r line; do
+		line=${line::-4}
+		L_DEVICE=${line%%' '*}; line=${line#$L_DEVICE }
+		L_MOUNT_POINT=${line%%' '*}; line=${line#$L_MOUNT_POINT }
+		L_FS_TYPE=${line%%' '*}; line=${line#$L_FS_TYPE }
+		L_MOUNT_OPTIONS=${line//,/' '}	# Replace ',' with ' ' to have them separated for comparison
 
-	_check_mount_point_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
-done	< /proc/mounts
+		_check_mount_point_function "$L_MOUNT_POINT" "$L_MOUNT_OPTIONS" "$L_FS_TYPE" "$L_DEVICE"
+	done	< /proc/mounts
+}
+
+# If the profile file says we are allowed to operate, start the main funtion
+[[ $(_check_profile_file_function fs check) == 1 ]] && _fs_main
 
 #[[ $(_check_profile_file_function fs action) == 0 ]] && echo "$FS_ACTIONS_FILE" >> "$ACTIONS_FILE"

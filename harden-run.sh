@@ -30,8 +30,6 @@ _usage_function() {
 	exit 0
 }
 
-export RUNTIME_DATE OPERATE_MODE __DEBUG_X
-
 RUNTIME_DATE=$(date '+%s_%F')	# Runtime date and time
 
 # First argument should specify which mode we are running in
@@ -54,7 +52,7 @@ while [[ $# -gt 0 ]]; do
 	case $1 in
 		-c|--config-file)	# Use a configuration file from user choice
 			if [[ $OPERATE_MODE != "scan" ]]; then
-				echo >&2 "$0: invalid option, ($1) could be only used with (scan) command"
+				echo >&2 "$0: invalid option, ($1) could be only used with (scan) command/operate-mode"
 				_usage_function
 				exit 1
 			fi
@@ -63,7 +61,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-p|--profile-file)	# Use a profile file from user choice
 			if [[ $OPERATE_MODE != "scan" ]]; then
-				echo >&2 "$0: invalid option, ($1) could be only used with (scan) command"
+				echo >&2 "$0: invalid option, ($1) could be only used with (scan) command/operate-mode"
 				_usage_function
 				exit 1
 			fi
@@ -72,7 +70,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-d|--date-to-list)	# This option is used in (list-messages, list-actions) operate modes
 			if [[ $OPERATE_MODE != "list-messages" ]]; then
-				echo >&2 "$0: invalid option, ($1) is only used with (list-messages) command"
+				echo >&2 "$0: invalid option, ($1) is only used with (list-messages) command/operate-mode"
 				_usage_function
 				exit 1
 			elif [[ ! $1 =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
@@ -188,13 +186,11 @@ fi
 # <6> <info>	informational
 # <7> <debug>	debug-level messages
 
-export MAIN_DIR
 MAIN_DIR="/usr/share/harden"	# Default Main Directory
 if [[ $(pwd) != "$MAIN_DIR" ]];then
 	cd $MAIN_DIR || { echo >&2 "$0: Couldn't change running directory to $MAIN_DIR, where Linux Harden service files should be in."; exit 1; }
 fi
 
-export CONFIG_FILE PROFILE_FILE DATE_TO_LIST
 # Checking profile file value and existance
 CONFIG_DIR="/etc/harden"	# Default Configuration Directory
 CONFIG_FILE=${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}	# Use Default Configuration File,
@@ -216,8 +212,8 @@ Couldn't find it in: $CONFIG_DIR, or $MAIN_DIR/config"
 	exit 1
 fi
 
-export SCRIPTS_DIR STATUS_DIR MESSAGES_DIR MESSAGES_FILE ACTIONS_DIR ACTIONS_FILE
 SCRIPTS_DIR="$MAIN_DIR/scripts"	# Default Scripts Directory
+RESOURCES_DIR="$MAIN_DIR/resources" # Default Scripts Resources Directory
 
 STATUS_DIR="$MAIN_DIR/status"	# Default Status Directory
 MESSAGES_DIR="$MAIN_DIR/messages"	# Default Messages Directory
@@ -241,15 +237,29 @@ _check_profile_file_function()  {
 	jq ".[] | select(.name==\"$OBJECT_NAME\") | .${PF_VALUE// /.}" "$PROFILE_FILE"
 }
 
-export -f _check_profile_file_function
-
-export __RAN_BY_HARDEN_RUN
 __RAN_BY_HARDEN_RUN=1
 
-[[ ! -e $MAIN_DIR/harden-main.sh ]] && {
+[[ ! -e "$MAIN_DIR/harden-main.sh" ]] && {
 	echo >&2 "Alert!! the $MAIN_DIR/harden-main.sh does not exist, can't complete operating. This is a serious issue, the file is the main module, \
 and it is responsible for all the oprations offered in this service."
 	exit 1
 }
+
+# These variables are part of the enviroment prepared for the harde-main.sh and it's subshells
+# 'declare' is used here for these variables to add to them the readonly and export attributes,
+# note that the subshells that these variables are exported to will not inherit to it the
+# readonly attribute, but no matter how many, or what changes happens to the varibale,
+# it's value in the parent shell (this shell) will still the same.
+declare -rx MAIN_DIR SCRIPTS_DIR RESOURCES_DIR STATUS_DIR MESSAGES_DIR ACTIONS_DIR
+declare -rx CONFIG_FILE PROFILE_FILE MESSAGES_FILE ACTIONS_FILE
+declare -rx OPERATE_MODE DATE_TO_LIST RUNTIME_DATE __DEBUG_X __RAN_BY_HARDEN_RUN 
+
+# Export only variables that is needed by the child subprocesses/scripts
+#export MAIN_DIR SCRIPTS_DIR RESOURCES_DIR STATUS_DIR MESSAGES_DIR ACTIONS_DIR 
+#export CONFIG_FILE PROFILE_FILE MESSAGES_FILE ACTIONS_FILE
+#export OPERATE_MODE DATE_TO_LIST RUNTIME_DATE __DEBUG_X __RAN_BY_HARDEN_RUN
+
+export -f _check_profile_file_function
+
 
 bash harden-main.sh

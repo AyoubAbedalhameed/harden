@@ -5,7 +5,7 @@
 # recommended solutions and tips
 
 [[ $__RAN_BY_HARDEN_MAIN != 1 ]] && {
-	echo >&2 "$0 should be called by harden-main"
+	echo >&2 "$0 should be called only by harden-main"
 	exit 1
 }
 
@@ -21,21 +21,29 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-STATUS_FILE="$STATUS_DIR/kernel-harden.status"	# Currently used status file
-
-KERNEL_ACTIONS_FILE="$MAIN_DIR/actions/kernel-actions.sh"
+declare -r STATUS_FILE="$STATUS_DIR/kernel-harden.status"	# Currently used status file
+declare -r KERNEL_ACTIONS_FILE="$ACTIONS_DIR/kernel-actions.sh"
 
 echo ""
 echo "Kernel Hardening script has started..."
 
+# Check for the existence of the resources file, if not then print an error message and exit
+declare -r PARAMETERS_FILE="$RESOURCES_DIR/kernel-parameters.rc" MODULES_FILE="$RESOURCES_DIR/kernel-blocked-modules.rc"
+
+if [[ ! -e "$PARAMETERS_FILE" ]] || [[ ! -e "$MODULES_FILE" ]]; then
+	echo >&2 "$0: Alert!! Kernel hardening resources files doesn't exist '$PARAMETERS_FILE' '$MODULES_FILE'"
+	echo >&2 "Can not continue executing without it."
+	echo >&2 "if you don't know what caused this, reinstall the service package and everything will be fine."
+	echo >&2 "Quiting..."
+	exit 1
+fi
+
+
 _check_param_function()	{
-	local PARAMETERS_FILE VAL_INDEX MES_INDEX TYPE_INDEX
-	PARAMETERS_FILE="$MAIN_DIR/resources/kernel-parameters.rc"
 	source "$PARAMETERS_FILE"
 
-	VAL_INDEX=0
-	MES_INDEX=1
-	TYPE_INDEX=2
+	# Declare these variables with integer and readonly attributes to prevent mistakes
+	declare -ri VAL_INDEX=0 MES_INDEX=1 TYPE_INDEX=2
 
 	# 'sed' here is used to extract only the dictionary keys that ends with ',0', so we loop only once on each parameter once
 	for PARAM in $(echo "${!kernel[@]}" | sed 's/[a-z\0-9\.\_\-]*,[1-2]//g'); do
@@ -65,9 +73,7 @@ _check_param_function()	{
 }
 
 _check_module_blacklisting_function()	{
-	local MODULE_BLACKLIST_FILE MODULES_FILE RUNNING_MODULES
-	MODULES_FILE="$MAIN_DIR/resources/kernel-blocked-modules.rc"
-	MODULE_BLACKLIST_FILE="/etc/modprobe.d/blacklist.conf"
+	declare -r MODULE_BLACKLIST_FILE="/etc/modprobe.d/blacklist.conf"
 	RUNNING_MODULES=$(lsmod | awk '{print $1;}')
 
 	source "$MODULES_FILE"

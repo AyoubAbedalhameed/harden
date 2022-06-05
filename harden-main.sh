@@ -19,6 +19,7 @@ ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
 _harden_run_function()   {
+	local SCRIPTS_NAMES
 	# Create status and messages and actions file for the current run.
 	touch "$MESSAGES_FILE"
 
@@ -32,8 +33,13 @@ _harden_run_function()   {
 	SCRIPTS_NAMES=$(jq '.[].script' "$PROFILE_FILE")
 	SCRIPTS_NAMES=${SCRIPTS_NAMES//\"/}
 
-	export __RAN_BY_HARDEN_MAIN
-	__RAN_BY_HARDEN_MAIN=1
+	# Remove the export attribute from the PROFILE_FILE varibale, because the subshills/child scripts doesn't need it
+	declare +x PROFILE_FILE
+
+	# This varibale is declared with readonly and export attributes, when the subshells/child-scripts ran, from it's
+	# existence and value they will know there parent who called them is the harden-main.sh script, and the enviroment
+	# is ready for them to run as they are supposed to be
+	declare -xr __RAN_BY_HARDEN_MAIN=1
 
 	for script in $SCRIPTS_NAMES; do
 		if [[ -e $script ]]; then

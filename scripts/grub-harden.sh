@@ -21,30 +21,30 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-STATUS_FILE="$STATUS_DIR/grub-harden.status"	# Currently used status file
+declare -r STATUS_FILE="$STATUS_DIR/grub-harden.status"	GRUB_ACTIONS_FILE="$ACTIONS_DIR/grub-actions.sh"
 
-GRUB_ACTIONS_FILE="$MAIN_DIR/actions/grub-actions.sh"
-
-echo ""
 echo "GRUB Hardening script has started..."
-echo ""
 
 GRUB_ACTION=""
 
 GRUB_FILE="/etc/default/grub"
 [[ ! -e $GRUB_FILE ]] && {
-	echo >&2 "$0: GRUB default profile file $GRUB_FILE doean't exist."
+	echo >&2 "$0: Alert!! The GRUB2 default profile file $GRUB_FILE couldn't be found."
+	echo >&2 "Can not continue, quitting..."
 	exit 1
 }
 
-[[ ! -e "$MAIN_DIR/resources/grub-parameters.rc" ]] && {
-	echo >&2 "$0: Grub hardening resources file doesn't exist '$MAIN_DIR/resources/grub-parameters.rc', please run the script in it's original place, or check you installation."
+[[ ! -e "$RESOURCES_DIR/grub-parameters.rc" ]] && {
+	echo >&2 "$0: Alert!! Kernel hardening resources file doesn't exist '$RESOURCES_DIR/grub-parameters.rc'"
+	echo >&2 "Can not continue executing without it."
+	echo >&2 "if you don't know what caused this, reinstall the service package and everything will be fine."
+	echo >&2 "Quiting..."
 	exit 1
 }
-source "$MAIN_DIR/resources/grub-parameters.rc"
+source "$RESOURCES_DIR/grub-parameters.rc"
 
 _check_param_function()	{
-	local CURRENT CPU_MIT CPU_MIT_MISSED
+	local CURRENT CPU_MIT_MISSED
 
 	# $1 would be either GRUB_CMDLINE_LINUX_DEFAULT or GRUB_CMDLINE_LINUX
 	CURRENT=$(grep "$1" "$GRUB_FILE")
@@ -64,7 +64,7 @@ _check_param_function()	{
 		done
 	fi
 
-	CPU_MIT=1
+	declare -i CPU_MIT=1
 	CPU_MIT_MISSED=""
 	if [[ $(_check_profile_file_function grub cpu_metigations check) == 1 ]]; then
 		# Loop through all cpu mitigations recommended values and check if they are applied, then save recommeneded action if required
