@@ -12,7 +12,6 @@
 echo >&2 "\
 Harden service is starting up as pid =$$ at $(date '+%F %T %s.%^4N') ...
 CONFIG_FILE = $CONFIG_FILE
-MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
 MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
@@ -33,9 +32,6 @@ _harden_run_function()   {
 	SCRIPTS_NAMES=$(jq '.[].script' "$PROFILE_FILE")
 	SCRIPTS_NAMES=${SCRIPTS_NAMES//\"/}
 
-	# Remove the export attribute from the PROFILE_FILE varibale, because the subshills/child scripts doesn't need it
-	declare +x PROFILE_FILE
-
 	# This varibale is declared with readonly and export attributes, when the subshells/child-scripts ran, from it's
 	# existence and value they will know there parent who called them is the harden-main.sh script, and the enviroment
 	# is ready for them to run as they are supposed to be
@@ -43,21 +39,46 @@ _harden_run_function()   {
 
 	for script in $SCRIPTS_NAMES; do
 		if [[ -e $script ]]; then
-			if [[ ${script%"$(basename $script)"} != "$SCRIPTS_DIR/" ]]; then
+#			if [[ ${script%"$(basename $script)"} != "$SCRIPTS_DIR/" ]]; then
+			# check if the file exactly resides in the scripts directory, not even in a subdirectory inside
+			if [[ ! $script =~ ^$SCRIPTS_DIR/[a-z,A-Z,0-9,=,_,.,:,\,,\-]+$ ]]; then
 				echo >&2 "$0: Script $script does not exist in the scripts directory $SCRIPTS_DIR. Skipping $script, due to it's suspecious location."
 				continue
 			fi
 			echo "Attemting to run $script" >&2
-			bash $script  #-m "$MESSAGES_FILE" -a "$ACTIONS_FILE" -p "$PROFILE_FILE"
+			bash $script
 		else
 			echo >&2 "$0: Script $script does not exist. Please, check what is wrong either in the profile-file.json, or if there's any missing package files."
 		fi
 	done
 }
 
-_take_action_functin()   {
-	echo "Taking Actions from file $ACTIONS_DIR/harden-last-actions (Not ready yet, and won't do anything -_-)."
-#	bash "$ACTIONS_DIR/harden-last-actions"
+_take_action_function()   {
+	local SCRIPT_NAME ARGS TYPE
+	echo "Taking Actions from the file that is pointed to by this sumlink $ACTIONS_DIR/harden-last-actions."
+
+	while read -r line; do
+		SCRIPT_NAME="$(echo $line | awk '{print $1;}')"		# Get the script name
+		ARGS="${line##"$SCRIPT_NAME "}"			# Get the arguments that are supposed to be passed to the script
+		TYPE="$(basename $SCRIPT_NAME)"
+		TYPE=${TYPE%-*}					# Actions file has their type as the prefix of the file name, with '-' after it
+
+		# For caution, we will accept any script file outside of the default scripts or actions directories
+		[[ ! $SCRIPT_NAME =~ ^$MAIN_DIR/(action|scripts)/[a-z,A-Z,0-9,=,_,.,\-]+$ ]] && {
+			echo >&2 "$0: from _take_action_function(): action file '$SCRIPT_NAME' of module '$TYPE' is not in the '$ACTIONS_DIR' or the '$SCRIPTS_DIR' directories,"
+			echo >&2 " so it will not be allowed to execute. Skipping..."
+			continue
+		}
+
+		# After getting the module type of the script, check the profile file if this module is allowed to take action.
+		[[ $(_check_profile_file_function $TYPE action) != 1 ]] &&	{
+			echo >&2 "$0: from _take_action_function(): action file $SCRIPT_NAME is considered as of type/module: $TYPE, this module is not allowed to take actions."
+		}
+
+		# if the module allowed to take actions, then run it with it's specified arguments
+		# For testng we will just print not execute
+		echo "bash $SCRIPT_NAME $ARGS"
+	done  < "$ACTIONS_DIR/harden-last-actions"
 }
 
 _show_messages_function() {
@@ -78,7 +99,7 @@ case $OPERATE_MODE in
 		_harden_run_function
 		;;
 	take-action)
-		_take_action_functin
+		_take_action_function
 		;;
 	list-messages)
 		_show_messages_function
@@ -90,7 +111,7 @@ case $OPERATE_MODE in
 #		rm -f $MESSAGES_DIR/* $ACTIONS_DIR/* $STATUS_DIR/* $LOGS_DIR/*		# Dangerous and still needs more testing
 		;;
 	rotate)	# Remove old/unuseful (actions, messsages, logs) files that are more than a month old (30 days)
-		find $MESSAGES_DIR/ $ACTIONS_DIR/ $LOGS_DIR/ -maxdepth 1 -atime +30 -type f
+		find $MESSAGES_DIR/ $ACTIONS_DIR/ $LOGS_DIR/ -maxdepth 1 -atime +30 -type f -delete
 		;;
 esac
 
