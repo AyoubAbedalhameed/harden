@@ -38,8 +38,8 @@ FW_Rules[rules.http,d]="This rule controls the allowance/acceptence of incomming
 
 # 5. Allow incoming HTTPS requests from specific/All networks on all interfaces:
 FW_Rules[rules.https_in,0]=2
-FW_Rules[rules.https_in,1]="INPUT  -p tcp --dport @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
-FW_Rules[rules.https_in,2]="OUTPUT -p tcp --sport @0 -m state --state ESTABLISHED -j ACCEPT"
+FW_Rules[rules.https_in,1]="INPUT  -p tcp -s @0 -m state --state NEW,ESTABLISHED -j ACCEPT"
+FW_Rules[rules.https_in,2]="OUTPUT -p tcp -d @0 -m state --state ESTABLISHED -j ACCEPT"
 FW_Rules[rules.https_in,d]="This rule controls the allowance/acceptence of incomming HTTPS connections from different sources/networks predefined in the profile file."
 
 
