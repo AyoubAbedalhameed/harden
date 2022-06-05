@@ -246,4 +246,10 @@ export -f _check_profile_file_function
 export __RAN_BY_HARDEN_RUN
 __RAN_BY_HARDEN_RUN=1
 
+[[ ! -e $MAIN_DIR/harden-main.sh ]] && {
+	echo >&2 "Alert!! the $MAIN_DIR/harden-main.sh does not exist, can't complete operating. This is a serious issue, the file is the main module, \
+and it is responsible for all the oprations offered in this service."
+	exit 1
+}
+
 bash harden-main.sh
