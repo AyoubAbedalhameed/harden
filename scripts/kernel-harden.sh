@@ -56,7 +56,9 @@ _check_param_function()	{
 		# Print Message
 		echo "Kernel-Parameter-Hardening[$PARAM]: (recommended value = ${RECOMMENDED_VAL//$'\t'/,} // current value = ${CURRENT_VAL//$'\t'/,}). $MESSAGE" >> "$MESSAGES_FILE"
 
-		echo "kernel_$PARAM=\"${RECOMMENDED_VAL//$'\t'/,}\"" >> "$STATUS_FILE"	# Save the current value
+		P=${PARAM//./_}
+		P=${P//-/_}
+		echo "kernel_parameter_$P=\"$CURRENT_VAL\"" >> "$STATUS_FILE"	# Save the current value
 
 		[[ $(_check_profile_file_function kernel "$TYPE" action) == 1 ]]  && echo "sysctl -w $PARAM $RECOMMENDED_VAL" >> "$KERNEL_ACTIONS_FILE"	# Save action
 	done
@@ -79,7 +81,7 @@ _check_module_blacklisting_function()	{
 			then
 				for MODULE in ${!TYPE}; do
 					[[ ! $RUNNING_MODULES =~ (^|[[:space:]])"$MODULE"($|[[:space:]]) ]] && continue
-					echo "kernel_module_$MODULE=0" >> "$STATUS_FILE"
+					echo "kernel_module_$MODULE=1" >> "$STATUS_FILE"
 					echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE currently loaded and running on your system, it is recommended to be blacklisted, \
 because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
 
@@ -93,12 +95,12 @@ because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES
 			if [[ $(_check_profile_file_function kernel module "$TYPE" check) == 1 ]]
 			then
 				for MODULE in ${!TYPE}; do
-					[[ $RUNNING_MODULES =~ (^|[[:space:]])"$MODULE"($|[[:space:]]) ]] && echo "Kernel-Hardening[$MODULE]: Kernel module $MODULE is loaded on you currently \
+					[[ $RUNNING_MODULES =~ (^|[[:space:]])"$MODULE"($|[[:space:]]) ]] && echo "Kernel-Hardening[$MODULE]: Warning!! Kernel module $MODULE is loaded on you currently \
 running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
 
 					grep -q "$MODULE" "$MODULE_BLACKLIST_FILE" && continue
 
-					echo "kernel_module_$MODULE=0" >> "$STATUS_FILE"
+					echo "kernel_module_$MODULE=1" >> "$STATUS_FILE"
 					echo "Kernel-Module-Hardening[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, \
 or it's weak." >> "$MESSAGES_FILE"
 

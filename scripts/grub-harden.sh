@@ -54,9 +54,9 @@ _check_param_function()	{
 		# Loop through all general recommended values and check if they are applied, then save recommeneded action if required
 		for PARAM in $GRUB_OPTIONS; do
 			[[ $CURRENT =~ $PARAM ]] && continue	# Check if recommended parameter is in the current values array
-			echo "GRUB_$PARAM=0" >> "$STATUS_FILE"
 			P=${PARAM//=/_}
 			P=${P//./_}
+			echo "GRUB_$P=1" >> "$STATUS_FILE"
 			echo "GRUB-Hardening[$PARAM]: $PARAM option is recommended for grub in GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub. $PARAM: ${!P}" >> "$MESSAGES_FILE"
 
 			GRUB_ACTION="$GRUB_ACTION $PARAM"
@@ -72,7 +72,10 @@ _check_param_function()	{
 
 			CPU_MIT=0
 			CPU_MIT_MISSED="$CPU_MIT_MISSED $PARAM"
-			echo "GRUB_$PARAM=0" >> "$STATUS_FILE"
+
+			P=${PARAM//=/_}
+			P=${P//./_}
+			echo "GRUB_$P=1" >> "$STATUS_FILE"
 
 			GRUB_ACTION="$GRUB_ACTION $PARAM"
 		done
