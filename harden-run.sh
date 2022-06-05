@@ -159,7 +159,7 @@ elif [[ $__ON_SCREEN_LOG == 0 ]] && [[ $__DEBUG_X == 0 ]] ; then
 	ln -fs "$LOG_FILE" $LOGS_DIR/harden-last-log
 
 	# Default STDOUT to be prefixed with syslog identifier <6> for INFO, with more logging information then redirect to log file
-	exec 1> >(while read -r __INFO; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <info> [$(date '+%s.%^4N')] $__INFO" >> "$LOG_FILE" ; done)
+	exec 6>&1 1> >(while read -r __INFO; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <info> [$(date '+%s.%^4N')] $__INFO" >> "$LOG_FILE" ; done)
 	trap 'exec >&1-' EXIT
 
 	# Default STDERR to be prefixed with syslog identifier <7> for DEBUG, with more logging information then redirect to log file
@@ -167,7 +167,7 @@ elif [[ $__ON_SCREEN_LOG == 0 ]] && [[ $__DEBUG_X == 0 ]] ; then
 	trap 'exec >&2-' EXIT
 
 	if [[ $__ON_SCREEN == 1 ]]; then
-		exec 5>&1	# in case of on screen mode, we are just creating a clone fd of STDOUT to ptint messages as is on screen
+		exec 5>&6	# in case of on screen mode, we are just redirecting messages to a clone fd of STDOUT to ptint messages as is on screen
 	else	# Default messages to be prefixed with syslog identifier <5> for NOTICE, with more logging information then redirect to log file
 		exec 5> >(while read -r __NOTICE; do echo "$(date '+%F %T') $HOSTNAME harden-service[$$]: <notice> [$(date '+%s.%^4N')] $__NOTICE" >> "$LOG_FILE"; done)
 	fi
@@ -194,7 +194,7 @@ if [[ $(pwd) != "$MAIN_DIR" ]];then
 	cd $MAIN_DIR || { echo >&2 "$0: Couldn't change running directory to $MAIN_DIR, where Linux Harden service files should be in."; exit 1; }
 fi
 
-export CONFIG_DIR CONFIG_FILE PROFILE_FILE DATE_TO_LIST
+export CONFIG_FILE PROFILE_FILE DATE_TO_LIST
 # Checking profile file value and existance
 CONFIG_DIR="/etc/harden"	# Default Configuration Directory
 CONFIG_FILE=${CONFIG_FILE:="$CONFIG_DIR/harden.conf"}	# Use Default Configuration File,
