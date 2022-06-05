@@ -24,7 +24,6 @@ set -C
 echo >&2 "\
 auditd Hardening is starting at $(date '+%F %T %s.%^4N')...
 CONFIG_FILE = $CONFIG_FILE
-MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
 MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
@@ -41,13 +40,13 @@ RUNTIME_DATE=$(date +%F_%H:%M:%S)	# Runtime date and time
 #Script special variables.
 AUDITD_ACTIONS_FILE="/usr/share/harden/actions/auditd-actions.sh"
 SCRIPT_NAME=`basename $0`
-ADDED_AUDIT_RULES_FILE="$MAIN_DIR/resources/harden-custom-audit.rules"
+ADDED_AUDIT_RULES_FILE="$RESOURCES_DIR/harden-custom-audit.rules"
 
 DEBUG=0	#Used for debugging, (only for this script)
 
 
 #Importing auditd rules: 
-source "$MAIN_DIR/resources/audit-rules.rc"
+source "$RESOURCES_DIR/audit-rules.rc"
 
 
 #Extracting script profile from the systemm profile file. 
