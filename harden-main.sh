@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Written By: Adnan Omar (aalkhaldi8@gmail.com)
 
-[[ $__DEBUG_X == 1 ]] && set -x
-
 [[ $__RAN_BY_HARDEN_RUN != 1 ]] && {
 	echo >&2 "$0 should be called by harden-run"
 	exit 1
 }
+
+[[ $__DEBUG_X == 1 ]] && set -x
 
 # Print startup message with run time settings
 echo >&2 "\
