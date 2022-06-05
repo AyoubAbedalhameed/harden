@@ -13,7 +13,7 @@
 
 # Print startup message with run time settings
 echo >&2 "\
-Kernel Hardening is starting at $(date '+%F %T %s.%^4N')...
+Kernel Hardening is starting up as pid=$$ at $(date '+%F %T %s.%^4N')...
 CONFIG_FILE = $CONFIG_FILE
 MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
