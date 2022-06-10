@@ -82,8 +82,7 @@ _check_param_function()	{
 
 		if [[ $CPU_MIT == 0 ]]; then
 		{
-			echo "GRUB-Hardening[CPU_Mitigations]: These recommended CPU mitigations are not applied:"
-			echo "GRUB-Hardening[CPU_Mitigations]: $CPU_MIT_MISSED."
+			echo "GRUB-Hardening[CPU_Mitigations]: These recommended CPU mitigations are not applied: $CPU_MIT_MISSED."
 			echo "GRUB-Hardening[CPU_Mitigations]: $GRUB_CPU_MIT_MESSAGE"
 		} >> "$MESSAGES_FILE"
 		fi
@@ -92,32 +91,35 @@ _check_param_function()	{
 
 _write_to_actions_file()	{
 	{
-		echo "#!/usr/bin/env bash"
+		echo '#!/usr/bin/env bash'
+		echo ''
+		echo 'RUNTIME_DATE=$(date "+%s_%F")	# Runtime date and time'
+		echo 'OLD_FILE="/etc/default/grub.old.$RUNTIME_DATE"'
+		echo ''
+		echo 'cp /etc/default/grub "$OLD_FILE"'
+		echo 'echo "" > /etc/default/grub'
+		echo ''
+		echo 'while read -r line; do'
+		echo '	if [[ $line =~ ^GRUB_CMDLINE_LINUX= ]]; then'
+		echo '		line="${line##GRUB_CMDLINE_LINUX=}"	# Substitute string to get only the CMDLINE parameters'
+		echo '		line="${line//\"/}"'
+#		echo "		line=\"\${line#\\\"}\""
+#		echo "		line=\"\${line%\\\"}\""
+		echo "		echo \"GRUB_CMDLINE_LINUX=\\\"\$line $GRUB_ACTION\\\"\" >> /etc/default/grub"
 		echo ""
-		echo "OLD_FILE='/etc/default/grub'"
+		echo '	elif [[ $line =~ ^GRUB_CMDLINE_LINUX_DEFAULT= ]]; then'
+		echo '		line="${line##GRUB_CMDLINE_LINUX_DEFAULT=}"	# Substitute string to get only the CMDLINE parameters'
+		echo '		line="${line//\"/}"'
+#		echo "		line=\${line#\\\"}"
+#		echo "		line=\${line%\\\"}"
+		echo "		echo \"GRUB_CMDLINE_LINUX_DEFAULT=\\\"\$line $GRUB_ACTION\\\"\" >> /etc/default/grub"
 		echo ""
-		echo "cp /etc/default/grub /etc/default/grub.old.$RUNTIME_DATE"
-		echo "echo \"\" > /etc/default/grub"
-		echo "cat /etc/default/grub.old | while read line; do"
-		echo "	if [[ \$line =~ \"GRUB_CMDLINE_LINUX=\" ]]"
-		echo "then"
-		echo "		line=\"\${line##\"GRUB_CMDLINE_LINUX=\"}\"	# Substitute string to get only the CMDLINE parameters"
-		echo "		line=\"\${line#\\\"}\""
-		echo "		line=\"\${line%\\\"}\""
-		echo "		echo \"GRUB_CMDLINE_LINUX=\"\$line $GRUB_ACTION\"\" >> /etc/default/grub"
+		echo '	else'
+		echo '		echo "$line" >> /etc/default/grub'
+		echo '	fi'
+		echo 'done < "$OLD_FILE"'
 		echo ""
-		echo "	elif [[ \$line =~ \"GRUB_CMDLINE_LINUX_DEFAULT=\" ]] then"
-		echo "		line=\${line##\"GRUB_CMDLINE_LINUX_DEFAULT=\"}	# Substitute string to get only the CMDLINE parameters"
-		echo "		line=\${line#\\\"}"
-		echo "		line=\${line%\\\"}"
-		echo "		echo \"GRUB_CMDLINE_LINUX_DEFAULT=\"\$line $GRUB_ACTION\"\" >> /etc/default/grub"
-		echo ""
-		echo "	else"
-		echo "		echo \$line >> /etc/default/grub"
-		echo "	fi"
-		echo "done"
-		echo ""
-		echo "sudo grub2-mkconfig -o /boot/grub2/grub.cfg"
+		echo 'grub2-mkconfig -o /boot/grub2/grub.cfg'
 	} > "$GRUB_ACTIONS_FILE"
 }
 
@@ -127,7 +129,9 @@ then
 	grep -q "GRUB_CMDLINE_LINUX_DEFAULT=" "$GRUB_FILE" 2>/dev/null && _check_param_function "GRUB_CMDLINE_LINUX_DEFAULT="
 fi
 
-[[ $(_check_profile_file_function grub action) == 1 ]] && _write_to_actions_file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
+if [[ $(_check_profile_file_function grub action) == 1 ]] && [[ -n $GRUB_ACTION ]];then
+	_write_to_actions_file && echo "bash $GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
+fi
 
 echo ""
 echo "GRUB Hardening script has finished"
