@@ -71,7 +71,7 @@ _check_param_function()	{
 
 		[[ $(_check_profile_file_function kernel "$TYPE" action) == 1 ]]  &&	{
 			{
-				echo "sysctl -w $PARAM $RECOMMENDED_VAL"
+				echo "sysctl -w $PARAM=$RECOMMENDED_VAL"
 				echo "{"
 				echo "echo \"# This was written when $PARAM current value was $CURRENT_VAL\""
 				echo "echo \"# $PARAM recommended value is $RECOMMENDED_VAL\""
