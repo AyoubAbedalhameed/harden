@@ -223,7 +223,7 @@ mkdir -p $MESSAGES_DIR
 mkdir -p $ACTIONS_DIR
 
 MESSAGES_FILE="$MESSAGES_DIR/harden-messages_$RUNTIME_DATE"	# Currently used messages file
-ACTIONS_FILE="$ACTIONS_DIR/harden-recommended-action"	# Currently used Actions file
+ACTIONS_FILE="$ACTIONS_DIR/harden-recommended-actions_$RUNTIME_DATE"	# Currently used Actions file
 
 # Queue the requested value from the JSON profile file by jq
 _check_profile_file_function()  {
