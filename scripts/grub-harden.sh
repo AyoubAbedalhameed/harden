@@ -130,7 +130,7 @@ then
 fi
 
 if [[ $(_check_profile_file_function grub action) == 1 ]] && [[ -n $GRUB_ACTION ]];then
-	_write_to_actions_file && echo "bash $GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
+	_write_to_actions_file && echo "$GRUB_ACTIONS_FILE" >> "$ACTIONS_FILE"
 fi
 
 echo ""

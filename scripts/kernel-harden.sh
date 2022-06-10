@@ -76,7 +76,7 @@ _check_param_function()	{
 				echo "echo \"# This was written when $PARAM current value was $CURRENT_VAL\""
 				echo "echo \"# $PARAM recommended value is $RECOMMENDED_VAL\""
 				echo "echo \"# $MESSAGE\""
-				echo "echo \"$PARAM = $RECOMMENDED_VAL\""
+				echo "echo \"$PARAM = ${RECOMMENDED_VAL//$'\t'/' '}\""
 				echo "} >> $SYSCTL_FILE"
 				echo ""
 			} >> "$KERNEL_ACTIONS_FILE"
@@ -151,7 +151,7 @@ or it's weak." >> "$MESSAGES_FILE"
 [[ $(_check_profile_file_function kernel check) == 1 ]] && _check_param_function
 [[ $(_check_profile_file_function kernel module check) == 1 ]] && _check_module_blacklisting_function
 
-[[ $(_check_profile_file_function kernel action) == 1 ]] && echo "bash $KERNEL_ACTIONS_FILE" >> "$ACTIONS_FILE"	# Add approved actions to the actions file
+[[ $(_check_profile_file_function kernel action) == 1 ]] && echo "$KERNEL_ACTIONS_FILE" >> "$ACTIONS_FILE"	# Add approved actions to the actions file
 
 echo ""
 echo "Kernel Hardening script has finished"
