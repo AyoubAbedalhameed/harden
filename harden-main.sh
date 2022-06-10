@@ -55,16 +55,17 @@ _harden_run_function()   {
 
 _take_action_function()   {
 	local SCRIPT_NAME ARGS TYPE
-	echo "Taking Actions from the file that is pointed to by this sumlink $ACTIONS_DIR/harden-last-actions."
+	echo "Taking Actions from the file that is pointed to by this symlink $ACTIONS_DIR/harden-last-action"
 
 	while read -r line; do
-		SCRIPT_NAME="$(echo $line | awk '{print $1;}')"		# Get the script name
-		ARGS="${line##"$SCRIPT_NAME "}"			# Get the arguments that are supposed to be passed to the script
-		TYPE="$(basename $SCRIPT_NAME)"
-		TYPE=${TYPE%-*}					# Actions file has their type as the prefix of the file name, with '-' after it
+#		SCRIPT_NAME=$(echo "$line" | awk '{print $1;}')		# Get the script name
+		SCRIPT_NAME=$line
+#		ARGS="${line##"$SCRIPT_NAME "}"			# Get the arguments that are supposed to be passed to the script
+		TYPE=$(basename "$SCRIPT_NAME")
+		TYPE=${TYPE%%-*}					# Actions file has their type as the prefix of the file name, with '-' after it
 
-		# For caution, we will accept any script file outside of the default scripts or actions directories
-		[[ ! $SCRIPT_NAME =~ ^$MAIN_DIR/(action|scripts)/[a-z,A-Z,0-9,=,_,.,\-]+$ ]] && {
+		# For caution, we will not accept any script file outside of the default scripts or actions directories
+		[[ ! $SCRIPT_NAME =~ ^$MAIN_DIR/(actions|scripts)/[a-z,A-Z,0-9,=,_,.,\-]+$ ]] && {
 			echo >&2 "$0: from _take_action_function(): action file '$SCRIPT_NAME' of module '$TYPE' is not in the '$ACTIONS_DIR' or the '$SCRIPTS_DIR' directories,"
 			echo >&2 " so it will not be allowed to execute. Skipping..."
 			continue
@@ -78,7 +79,8 @@ _take_action_function()   {
 		# if the module allowed to take actions, then run it with it's specified arguments
 		# For testng we will just print not execute
 		echo "bash $SCRIPT_NAME $ARGS"
-	done  < "$ACTIONS_DIR/harden-last-actions"
+		bash "$SCRIPT_NAME"
+	done  < "$ACTIONS_DIR/harden-last-action"
 }
 
 _show_messages_function() {
