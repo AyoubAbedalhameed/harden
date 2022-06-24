@@ -1,0 +1,17 @@
+user_password password notnull All accounts must have passwords or be locked to prevent the account from being used by an unauthorized user
+UID_harden super-privilege root Any account with UID 0 has super user privileges on the system so it's must be limited to only default root account.
+FTP_service netrc null  Netrc Files contains data for logging into a remote host for file transfer via FTP
+forward_file forward_email null File specifies an email address to forward the user's mail to
+rhost_file rhost null IT contains a list of host-user combinations,rather than hosts in general.
+duplicate_uid UID null Users must be assigned uniqe UID's for accountability and to ensure appropriate access protections
+duplicate_gid GID null Groups must be assigned uniqe GID's for accountability and to ensure appropriate access protections
+duplicated_username username null IS an identifier it tells the computer who are you
+duplicated_groupname groupname null EACH user must belong to exactly one primary group
+dir_file_unowned unowned null THERE should not be any file or directory unowned by any user
+legacy_passwd no_legacy null THE "+" character in various files used to br marker for system to insert data from NIS maps at a certain point in a system confegration file
+legacy_group no_legacy null THE "+" character in various files used to br marker for system to insert data from NIS maps at a certain point in a system confegration file
+legacy_shadow no_legacy null THE "+" character in various files used to br marker for system to insert data from NIS maps at a certain point in a system confegration file
+su_restricted restricted notnull The su command allow a user to run a command or a shell as another user
+group_passwd_file fileexist null ALL groups in /etc/group file should be exist in /etc/passwd
+
+
