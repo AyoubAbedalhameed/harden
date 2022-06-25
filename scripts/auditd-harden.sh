@@ -66,7 +66,7 @@ GENERAL_ACTIONS_ACCEPTENCE=$( echo $PROFILE | jq '.auditd.action' )
 
 #Adding -c option at the beggining of the harden-custom-audit.rules to Continue loading rules in spite of an error when (augenrules) runs.
 #Do not stop on error 
-[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]]	&& echo "-c" >> $ADDED_AUDIT_RULES_FILE
+[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]]	&& echo "-c" >> $ADDED_AUDIT_RULES_FILE && echo -e "#!/usr/bin/env bash" >> $AUDITD_ACTIONS_FILE
 
 
  
@@ -219,8 +219,22 @@ for PARAM in $( echo "${!audit_rules[@]}" | sed 's/[a-z\0-9\.\_\-]*,[d\1-9]//g' 
 	                            
 done
 
-[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo "$AUDITD_ACTIONS_FILE" >> $ACTIONS_FILE
+#[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo "$AUDITD_ACTIONS_FILE" >> $ACTIONS_FILE
 
+
+
+[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] &&	{
+	echo "$AUDITD_ACTIONS_FILE" >> $ACTIONS_FILE
+			{
+				echo 'UNMATCHED_RULES_FILE="/usr/share/harden/resources/harden-custom-audit.rules"'
+				echo 'HARDEN_CUSTOM_RULES_FILE="/etc/audit/rules.d/harden-custom-audit.rules"'
+				echo '[[ ! -f $UNMATCHED_RULES_FILE ]] && echo "unmatched_rules file does not exist, Skipping action." && exit 1'
+				echo "while read RULE ; do"
+				echo '    grep -e "$RULE" $HARDEN_CUSTOM_RULES_FILE >> /dev/null ||  echo "$RULE" >> $HARDEN_CUSTOM_RULES_FILE ; done <"$UNMATCHED_RULES_FILE"'
+				echo 'augenrules --load > /dev/null'
+				
+			} >> "$AUDITD_ACTIONS_FILE"
+		}
 
 echo -e "\nAuditd Hardening script has finished...\n"
 
