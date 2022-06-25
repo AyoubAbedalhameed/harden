@@ -201,14 +201,14 @@ fi
 #INPUT chain  
 iptables -S | grep "\-P INPUT DROP" ; POLICY_STATUS=$?
 if [[ $POLICY_STATUS -ne 0 ]]; then 
-	echo "$SCRIPT_NAME : $RUNTIME_DATE : POLICY NOT MATCHED : The current iptables policy for the INPUT chain is ACCEPT but the recommended policy is DROP" >> $MESSAGES_FILE
+	echo "$SCRIPT_NAME : POLICY CHECK : POLICY NOT MATCHED : The current iptables policy for the INPUT chain is ACCEPT but the recommended policy is DROP" >> $MESSAGES_FILE
 	echo "iptables -P INPUT DROP" >> $ACTIONS_FILE
 fi
 
 #OUTPUT chain: 
 iptables -S | grep "\-P OUTPUT DROP"  ; POLICY_STATUS=$? 
 if [[ $POLICY_STATUS -ne 0 ]]; then 
-	echo "$SCRIPT_NAME : $RUNTIME_DATE : POLICY NOT MATCHED : The current iptables policy for the OUTPUT chain is ACCEPT but the recommended policy is DROP"	>> $MESSAGES_FILE	 
+	echo "$SCRIPT_NAME : POLICY CHECK : POLICY NOT MATCHED : The current iptables policy for the OUTPUT chain is ACCEPT but the recommended policy is DROP"	>> $MESSAGES_FILE	 
 	echo "iptables -P OUTPUT DROP" >> $ACTIONS_FILE
 fi
  
@@ -216,7 +216,7 @@ fi
 #FORWARD chain: 
 iptables -S | grep "\-P FORWARD DROP"  ; POLICY_STATUS=$? 
 if [[ $POLICY_STATUS -ne 0 ]]; then 
-	echo "$SCRIPT_NAME : $RUNTIME_DATE : POLICY NOT MATCHED : The current iptables policy for the FORWARD chain is ACCEPT but the recommended policy is DROP" >>	$MESSAGES_FILE
+	echo "$SCRIPT_NAME : POLICY CHECK : POLICY NOT MATCHED : The current iptables policy for the FORWARD chain is ACCEPT but the recommended policy is DROP" >>	$MESSAGES_FILE
 	echo "iptables -P FORWARD DROP" >> $ACTIONS_FILE
 fi
  
