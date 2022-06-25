@@ -54,7 +54,7 @@ _check_param_function()	{
 		RECOMMENDED_VAL="${kernel[$PARAM,$VAL_INDEX]}"
 		RECOMMENDED_VAL="${RECOMMENDED_VAL//,/$'\t'}"	# Replace commas (,) with tabs (\t), if exists
 
-		[[ $(_check_profile_file_function kernel "$TYPE" check) != 1 ]]  && continue	# Skip checking this parameter if profile file says so
+		[[ $(_check_profile_file_function kernel parameters "$TYPE" check) != 1 ]]  && continue	# Skip checking this parameter if profile file says so
 		CURRENT_VAL="$(sysctl -en "$PARAM")"
 		CURRENT_VAL="${CURRENT_VAL//$'\t'/,}"
 
@@ -69,7 +69,7 @@ _check_param_function()	{
 		P=${P//-/_}
 		echo "kernel_parameter_$P=\"$CURRENT_VAL\"" >> "$STATUS_FILE"	# Save the current value
 
-		[[ $(_check_profile_file_function kernel "$TYPE" action) == 1 ]]  &&	{
+		[[ $(_check_profile_file_function kernel parameters "$TYPE" action) == 1 ]]  &&	{
 			{
 				echo "sysctl -w $PARAM=$RECOMMENDED_VAL"
 				echo "{"
@@ -91,11 +91,11 @@ _check_module_blacklisting_function()	{
 	source "$MODULES_FILE"
 
 	if [[ ! -f $MODULE_BLACKLIST_FILE ]]; then
-		[[ $(_check_profile_file_function kernel action) == 1 ]] && echo "touch $MODULE_BLACKLIST_FILE" >> "$KERNEL_ACTIONS_FILE"
-		echo "Kernel Modules : Your system doesn't have any modules blocked in $MODULE_BLACKLIST_FILE (it doesn't even exist)" >> "$MESSAGES_FILE"
+		[[ $(_check_profile_file_function kernel modules action) == 1 ]] && echo "touch $MODULE_BLACKLIST_FILE" >> "$KERNEL_ACTIONS_FILE"
+		echo "Kernel Modules [] : Your system doesn't have any modules blocked in $MODULE_BLACKLIST_FILE (it doesn't even exist)" >> "$MESSAGES_FILE"
 
 		for TYPE in $MOD_TYPES; do
-			if [[ $(_check_profile_file_function kernel module "$TYPE" check) == 1 ]]
+			if [[ $(_check_profile_file_function kernel modules "$TYPE" check) == 1 ]]
 			then
 				for MODULE in ${!TYPE}; do
 					[[ ! $RUNNING_MODULES =~ (^|[[:space:]])"$MODULE"($|[[:space:]]) ]] && continue
@@ -104,7 +104,7 @@ _check_module_blacklisting_function()	{
 					echo "Kernel Modules [$MODULE] : Kernel module $MODULE currently loaded and running on your system, it is recommended to be blacklisted, \
 because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
 
-					[[ $(_check_profile_file_function kernel module "$TYPE" action) == 1 ]] && {
+					[[ $(_check_profile_file_function kernel modules "$TYPE" action) == 1 ]] && {
 						{
 							echo "echo \"# $MODULE is not recommended to be loaded or used, to keep the system secure and hardened\" >> $MODULE_BLACKLIST_FILE"
 							echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE"
@@ -119,7 +119,7 @@ because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES
 
 	else 
 		for TYPE in $MOD_TYPES; do
-			if [[ $(_check_profile_file_function kernel module "$TYPE" check) == 1 ]]
+			if [[ $(_check_profile_file_function kernel modules "$TYPE" check) == 1 ]]
 			then
 				for MODULE in ${!TYPE}; do
 					[[ $RUNNING_MODULES =~ (^|[[:space:]])"$MODULE"($|[[:space:]]) ]] && {
@@ -134,12 +134,12 @@ running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
 					echo "Kernel-Module Modules [$MODULE] : Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, \
 or it's weak." >> "$MESSAGES_FILE"
 
-					[[ $(_check_profile_file_function kernel module "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$KERNEL_ACTIONS_FILE"
+					[[ $(_check_profile_file_function kernel modules "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$KERNEL_ACTIONS_FILE"
 				done
 			fi
 		done
 	fi
-	[[ $(_check_profile_file_function kernel module action) == 1 ]] && {
+	[[ $(_check_profile_file_function kernel modules action) == 1 ]] && {
 		echo "# run 'mkinitrd' to generate a new initrd image" >> "$KERNEL_ACTIONS_FILE"
 		echo "mkinitrd" >> "$KERNEL_ACTIONS_FILE"
 	}
@@ -149,7 +149,7 @@ or it's weak." >> "$MESSAGES_FILE"
 [[ $(_check_profile_file_function kernel action) == 1 ]] && printf '#!/usr/bin/env bash\n\n' >> "$KERNEL_ACTIONS_FILE"
 
 [[ $(_check_profile_file_function kernel check) == 1 ]] && _check_param_function
-[[ $(_check_profile_file_function kernel module check) == 1 ]] && _check_module_blacklisting_function
+[[ $(_check_profile_file_function kernel modules check) == 1 ]] && _check_module_blacklisting_function
 
 [[ $(_check_profile_file_function kernel action) == 1 ]] && echo "$KERNEL_ACTIONS_FILE" >> "$ACTIONS_FILE"	# Add approved actions to the actions file
 
