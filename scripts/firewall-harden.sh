@@ -137,7 +137,7 @@ write_action(){
 	CHECK_FIREWALL_SERVICES(){
 
 	local Flag=1 
-	IPTABLES_NEW_INSTALLATION=0
+	#IPTABLES_NEW_INSTALLATION=0
 
 
 	#Checking Firewalld Service:  
@@ -191,7 +191,7 @@ fi
 
 if [[ iptables_installed -ne 1 ]] ; then 
 
-    echo "$SCRIPT_NAME: iptables is not installed, iptables rules checking will be skipped" >&2
+    echo "$SCRIPT_NAME: iptables is not installed, iptables rules checking will be skipped. enable ection for firewall-harden script to install iptables and create your action file" >&2
     exit
 fi
 
@@ -202,14 +202,14 @@ fi
 iptables -S | grep "\-P INPUT DROP" ; POLICY_STATUS=$?
 if [[ $POLICY_STATUS -ne 0 ]]; then 
 	echo "$SCRIPT_NAME : POLICY CHECK : POLICY NOT MATCHED : The current iptables policy for the INPUT chain is ACCEPT but the recommended policy is DROP" >> $MESSAGES_FILE
-	echo "iptables -P INPUT DROP" >> $FIREWALL_ACTION_FILE
+	[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo "iptables -P INPUT DROP" >> $FIREWALL_ACTION_FILE
 fi
 
 #OUTPUT chain: 
 iptables -S | grep "\-P OUTPUT DROP"  ; POLICY_STATUS=$? 
 if [[ $POLICY_STATUS -ne 0 ]]; then 
 	echo "$SCRIPT_NAME : POLICY CHECK : POLICY NOT MATCHED : The current iptables policy for the OUTPUT chain is ACCEPT but the recommended policy is DROP"	>> $MESSAGES_FILE	 
-	echo "iptables -P OUTPUT DROP" >> $FIREWALL_ACTION_FILE
+	[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo "iptables -P OUTPUT DROP" >> $FIREWALL_ACTION_FILE
 fi
  
 
@@ -217,7 +217,7 @@ fi
 iptables -S | grep "\-P FORWARD DROP"  ; POLICY_STATUS=$? 
 if [[ $POLICY_STATUS -ne 0 ]]; then 
 	echo "$SCRIPT_NAME : POLICY CHECK : POLICY NOT MATCHED : The current iptables policy for the FORWARD chain is ACCEPT but the recommended policy is DROP" >>	$MESSAGES_FILE
-	echo "iptables -P FORWARD DROP" >> $FIREWALL_ACTION_FILE
+	[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo "iptables -P FORWARD DROP" >> $FIREWALL_ACTION_FILE
 fi
  
 
