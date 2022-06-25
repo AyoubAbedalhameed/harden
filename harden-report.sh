@@ -31,27 +31,32 @@ exec 6>&1 1>>"$REPORT_FILE"
 TYPES=$(jq '.[].name' "$PROFILE_FILE")
 
 echo > "$REPORT_FILE"
-echo '<html>'
-echo '<head>Hardening Scan Report</head>'
-echo '<title>Hardening Scan Report</title>'
-echo '<body>'
+{   echo '<html>'
+    echo '<head>Hardening Scan Report</head>'
+    echo '<title>Hardening Scan Report</title>'
+    echo '<body>'
+}>>"$REPORT_FILE"
 
 for TYPE in $TYPES; do
-    echo "<h3>${TYPE^^}</h3>"
-    echo '<ul>'
-    grep -iE "^$TYPE -\[*" "$MESSAGES_FILE" >& >(while read -r line; do echo >&1 "<li>${line#*-}</li>"; done;)
-    echo '</ul>'
+    {    echo "<h3>${TYPE^^}</h3>"
+        echo '<ul>'
+        grep -iE "^$TYPE -\[*" "$MESSAGES_FILE" >& >(while read -r line; do echo "<li>${line#*-}</li>"; done;)
+        sleep 0.01
+        echo '</ul>'
+    } >>"$REPORT_FILE"
 
     SUBS=$(jq ".[] | select(.name==$TYPE) | .$TYPE | keys" config/profile-file.json | grep -vE '(action|check|question|\[|\])')
     SUBS=${SUBS//\"/}
     SUBS=${SUBS//,/}
 
     [[ -n $SUBS ]] && for SUB in $SUBS; do
-            echo "<h4>${SUB^^}</h4>"
+        {   echo "<h4>${SUB^^}</h4>"
             echo '<ul>'
-            grep -iE "^$TYPE $SUB -\[*" "$MESSAGES_FILE" >& >(while read -r line; do echo >&1 "<li>${line#*-}</li>"; done;)
+            grep -iE "^$TYPE $SUB -\[*" "$MESSAGES_FILE" >& >(while read -r line; do echo "<li>${line#*-}</li>"; done;)
+            sleep 0.01
             echo '</ul>'
-        done
+        } >>"$REPORT_FILE"
+    done
 done
 
 echo '</body>'
