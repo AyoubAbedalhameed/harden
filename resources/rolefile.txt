@@ -1,29 +1,29 @@
-sudoers_file permission -r--r-----. root root /etc/sudoers IS a file linux and unix adminstrators use to allocate system rights to system users
-passwd_file permission -rw-r--r--. root root /etc/passwd File contains user account information that is used by many utilities and thereore must be readable for these utilities to operate.
-group_file permission -rw-r--r--. root root /etc/group File Contains a list of all the valid groups defined in the system.
-shadow_file permission -rw-------. root root /etc/shadow File used to store the information about user accounts that is critical to the security of those accounts (hashed password,..)
-gshadow_file permission -rw-------. root root /etc/gshadow File used to store backup information about groups that is critical to the security of those accounts
-passwdb_file permission -rw-------. root root /etc/passwd- File contains backup user account information
-groupb_file permission -rw-------. root root /etc/group- File contains a backup list of all the valid groups defined in the system
-gshadowb_file permission -rw-------. root root /etc/gshadow- File used to store backup information about gropus that is critical to the security of those account
-shadowb_file permission -rw-------. root root /etc/shadow- File used to store backup information about suer accounts that is critical to the security of those account
-bootgrub_file permission -rw-------. root root /boot/grub2/grub.cfg File used to create the list of operating systems to boot in GRUB's menu interface
-etcgrub_file permission -rw-------. root root /etc/grub2.cfg File used to create the list of operating systems to boot in GRUB's menu interface    
-defaultgrub_file permission -rw-r--r--. root root /etc/default/grub IT'S function to take over from BIOS at boot time ,load itself,load the linux kernel into memroy and turn over execution to the kernel
-anacrontab_file permission -rw-------. root root /etc/anacrontab File used to execute commands periodically with a frequancy apecified in days
-crontab_file permission -rw-------. root root /etc/crontab File a sipmle text conyaining a list of commands meant to be run at specified times.
-host.conf_file permission -rw-r--r--. root root /etc/host.conf IS a short plain text file that specifies how host names on a network are resolved,matched their corresponding IP addresses.
-hosts_file permission -rw-r--r--. root root /etc/hosts IS a file used by the operating system to translate hostname to IP-address
-hostname_file permission -rw-r--r--. root root /etc/hostname All local hostname confegration in this file
-sshd_config_file permission -rw-------. root root /etc/ssh/sshd_config File is used by the OpenSSH deamon and contains configration data
-resolved.conf_file permission -rw-------. root root /etc/systemd/resolved.conf file used in various operating system to configure the systems Domain Name System (DNS) resolver
-varrun_utmp_file permission -rw-rw-r--. root utmp var/run/utmp File contain all current and past logins and additionals information about system reboot
-varlog_wtmp_file permission -rw-rw-r--. root utmp var/log/wtmp File contains all current and past logins and additional  information about system reboots
-cron.d_dir permission drw-------. root root /etc/cron.d/ A Directory containing a list of cron jobs to be read by the cron service 
-cron.hourly_dir permission drw-------. root root /etc/cron.hourly Directory contains system cron jobs that to run on an hourly basis
-cron.daily_dir permission drw-------. root root /etc/cron.daily Directory contains system cron jobs that to run on an daily basis
-cron.weekly_dir permission drw-------. root root /etc/cron.weekly Directory contains system cron jobs that to run on an weekly basis
-cron.monthly_dir permission drw-------. root root /etc/cron.monthly Directory contains system cron jobs that to run on an monthly basis
-exports_file permission -rw-r--r--. root root /etc/exports File indicates all directories that a server exports to its client
-cronspool_file permission drw-------. root root /var/spool/cron Is where the individual user crontabs live 
+sudoers_file permission -r--r-----. root root /etc/sudoers =+@IS a file linux and unix adminstrators use to allocate system rights to system users
+passwd_file permission -rw-r--r--. root root /etc/passwd =+@File contains user account information that is used by many utilities and thereore must be readable for these utilities to operate.
+group_file permission -rw-r--r--. root root /etc/group =+@File Contains a list of all the valid groups defined in the system.
+shadow_file permission -rw-------. root root /etc/shadow =+@File used to store the information about user accounts that is critical to the security of those accounts (hashed password,..)
+gshadow_file permission -rw-------. root root /etc/gshadow =+@File used to store backup information about groups that is critical to the security of those accounts
+passwdb_file permission -rw-------. root root /etc/passwd- =+@File contains backup user account information
+groupb_file permission -rw-------. root root /etc/group- =+@File contains a backup list of all the valid groups defined in the system
+gshadowb_file permission -rw-------. root root /etc/gshadow- =+@File used to store backup information about gropus that is critical to the security of those account
+shadowb_file permission -rw-------. root root /etc/shadow- =+@File used to store backup information about suer accounts that is critical to the security of those account
+bootgrub_file permission -rw-------. root root /boot/grub2/grub.cfg =+@File used to create the list of operating systems to boot in GRUB's menu interface
+etcgrub_file permission -rw-------. root root /etc/grub2.cfg =+@File used to create the list of operating systems to boot in GRUB's menu interface    
+defaultgrub_file permission -rw-r--r--. root root /etc/default/grub =+@IT'S function to take over from BIOS at boot time ,load itself,load the linux kernel into memroy and turn over execution to the kernel
+anacrontab_file permission -rw-------. root root /etc/anacrontab =+@File used to execute commands periodically with a frequancy apecified in days
+crontab_file permission -rw-------. root root /etc/crontab =+@File a sipmle text conyaining a list of commands meant to be run at specified times.
+host.conf_file permission -rw-r--r--. root root /etc/host.conf =+@Is a short plain text file that specifies how host names on a network are resolved,matched their corresponding IP addresses.
+hosts_file permission -rw-r--r--. root root /etc/hosts =+@Is a file used by the operating system to translate hostname to IP-address
+hostname_file permission -rw-r--r--. root root /etc/hostname =+@All local hostname confegration in this file
+sshd_config_file permission -rw-------. root root /etc/ssh/sshd_config =+@File is used by the OpenSSH deamon and contains configration data
+resolved.conf_file permission -rw-------. root root /etc/systemd/resolved.conf =+@File used in various operating system to configure the systems Domain Name System (DNS) resolver
+varrun_utmp_file permission -rw-rw-r--. root utmp var/run/utmp =+@File contain all current and past logins and additionals information about system reboot
+varlog_wtmp_file permission -rw-rw-r--. root utmp var/log/wtmp =+@File contains all current and past logins and additional  information about system reboots
+cron.d_dir permission drw-------. root root /etc/cron.d/ =+@A Directory containing a list of cron jobs to be read by the cron service 
+cron.hourly_dir permission drw-------. root root /etc/cron.hourly =+@Directory contains system cron jobs that to run on an hourly basis
+cron.daily_dir permission drw-------. root root /etc/cron.daily =+@Directory contains system cron jobs that to run on an daily basis
+cron.weekly_dir permission drw-------. root root /etc/cron.weekly =+@Directory contains system cron jobs that to run on an weekly basis
+cron.monthly_dir permission drw-------. root root /etc/cron.monthly =+@Directory contains system cron jobs that to run on an monthly basis
+exports_file permission -rw-r--r--. root root /etc/exports =+@File indicates all directories that a server exports to its client
+cronspool_file permission drw-------. root root /var/spool/cron =+@Is where the individual user crontabs live 
 
