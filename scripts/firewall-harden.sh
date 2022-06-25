@@ -8,11 +8,6 @@
 
 
 
-#Prevent overwriting files 
-set -C
-
-
-
 #Checking the execution case, (whether the script has been called by the hardening main module)
 [[ $__RAN_BY_HARDEN_MAIN != 1 ]] && {
 	echo >&2 "$0 should be called by harden-main"
@@ -66,7 +61,7 @@ fi
 GENERAL_ACTIONS_ACCEPTENCE=$( echo $PROFILE | jq '.firewall.action' )
 
 #Cheking the Acceptance of firewall-hardening Actions: 
-[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo -e "#!/usr/bin/env bash" >> $FIREWALL_ACTION_FILE
+[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo -e "#!/usr/bin/env bash" > $FIREWALL_ACTION_FILE
 
 
 
