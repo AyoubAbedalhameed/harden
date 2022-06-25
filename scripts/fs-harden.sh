@@ -65,10 +65,10 @@ _check_mount_options_function()	{
 		M=${L_MOUNT_POINT//\//_}
 		M=${M//-/_}
 		echo "mounts${M}_${opt//=/_}=1" >> "$STATUS_FILE"
-		echo "FileSystem Mounts [$L_MOUNT_POINT] : Mount option $opt is not currently set for $L_MOUNT_POINT mount point, it's recommended to be used." >> "$MESSAGES_FILE"
+		echo "FileSystem Mounts -[$L_MOUNT_POINT]: Mount option $opt is not currently set for $L_MOUNT_POINT mount point, it's recommended to be used." >> "$MESSAGES_FILE"
 
 		opt=${opt%=*}
-		[[ -n ${!opt} ]] && echo "FileSystem Mounts [$L_MOUNT_POINT] : $opt: ${!opt}" >> "$MESSAGES_FILE"
+		[[ -n ${!opt} ]] && echo "FileSystem Mounts -[$L_MOUNT_POINT]: $opt: ${!opt}" >> "$MESSAGES_FILE"
 	done
 }
 
@@ -95,7 +95,7 @@ _cmp_fstab_function()	{
 		D=${FSTAB_DEVICE//\//_}
 		D=${D//-/_}
 		echo "fstab${M}_$D=0" >> "$STATUS_FILE"
-		echo "FileSystem fstab [$L_MOUNT_POINT] : Mount point device $L_DEVICE is different from the one in /etc/fstab which is $FSTAB_DEVICE." >> "$MESSAGES_FILE"
+		echo "FileSystem fstab -[$L_MOUNT_POINT]: Mount point device $L_DEVICE is different from the one in /etc/fstab which is $FSTAB_DEVICE." >> "$MESSAGES_FILE"
 	fi
 
 	# Compare file system type used for moint point
@@ -104,9 +104,9 @@ _cmp_fstab_function()	{
 		M=${M//-/_}
 		echo "fstab${M}_$FSTAB_FS_TYPE=0" >> "$STATUS_FILE"
 
-		echo "FileSystem fstab [$L_MOUNT_POINT] : Mount point currenlty applied file system type $L_FS_TYPE is different from the one in /etc/fstab which is $FSTAB_FS_TYPE."$'\n'"$FSTAB_FS_TYPE: $([[ -n ${!FSTAB_FS_TYPE} ]] && echo ${!FSTAB_FS_TYPE})" >> "$MESSAGES_FILE"
+		echo "FileSystem fstab -[$L_MOUNT_POINT]: Mount point currenlty applied file system type $L_FS_TYPE is different from the one in /etc/fstab which is $FSTAB_FS_TYPE."$'\n'"$FSTAB_FS_TYPE: $([[ -n ${!FSTAB_FS_TYPE} ]] && echo ${!FSTAB_FS_TYPE})" >> "$MESSAGES_FILE"
 
-		[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem fstab [$L_MOUNT_POINT] : $L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
+		[[ -n ${!L_FS_TYPE} ]] && echo "FileSystem fstab -[$L_MOUNT_POINT]: $L_FS_TYPE: ${!L_FS_TYPE}" >> "$MESSAGES_FILE"
 	fi
 
 	if [[ $FSTAB_MOUNT_OPTIONS != "defaults" ]]; then
@@ -116,10 +116,10 @@ _cmp_fstab_function()	{
 			M=${L_MOUNT_POINT//\//_}
 			M=${M//-/_}
 			echo "fstab${M}_${opt//=/_}=0" >> "$STATUS_FILE"
-			echo "FileSystem fstab [$L_MOUNT_POINT]: Mount point currently running (applied) mount options is missing $opt option which is specified in /etc/fstab, if it wasn't from you and feels suspeciuos, remount it by (mount -a)." >> "$MESSAGES_FILE"
+			echo "FileSystem fstab -[$L_MOUNT_POINT]: Mount point currently running (applied) mount options is missing $opt option which is specified in /etc/fstab, if it wasn't from you and feels suspeciuos, remount it by (mount -a)." >> "$MESSAGES_FILE"
 
 			opt=${opt%=*}
-			[[ -n ${!opt} ]] && echo "FileSystem fstab [$L_MOUNT_POINT]: $opt: ${!opt}" >> "$MESSAGES_FILE"
+			[[ -n ${!opt} ]] && echo "FileSystem fstab -[$L_MOUNT_POINT]: $opt: ${!opt}" >> "$MESSAGES_FILE"
 		done
 	fi
 }
@@ -140,10 +140,10 @@ _check_mount_point_function()	{
 			M=${L_MOUNT_POINT//\//_}
 			M=${M//-/_}
 			echo "mounts${M}_$L_FS_TYPE=1" >> "$STATUS_FILE"
-			echo "FileSystem Mounts [$L_MOUNT_POINT] : the currently used file system type $L_FS_TYPE \
+			echo "FileSystem Mounts -[$L_MOUNT_POINT]: the currently used file system type $L_FS_TYPE \
 is different from the expected one ${REC_FS_TYPE//\// or }." >> "$MESSAGES_FILE"
 
-			[[ -n ${!REC_FS_TYPE} ]] && echo "FileSystem Mounts [$L_MOUNT_POINT] : recommended file \
+			[[ -n ${!REC_FS_TYPE} ]] && echo "FileSystem Mounts -[$L_MOUNT_POINT]: recommended file \
 system type is $REC_FS_TYPE: ${!REC_FS_TYPE}" >> "$MESSAGES_FILE"
 		fi
 

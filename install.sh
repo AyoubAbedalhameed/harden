@@ -11,23 +11,23 @@ dnf list installed jq >& /dev/null || {
 	echo 'Installed Package "jq" succesfully'
 }
 
-if [[ $(pwd) != $MAIN_DIR ]]; then
+if [[ $(pwd) != "$MAIN_DIR" ]]; then
 	if [[ ! -d $MAIN_DIR ]]; then
 		mkdir $MAIN_DIR
 		cp -r ./* $MAIN_DIR/
 	fi
-	cd $MAIN_DIR
+	cd "$MAIN_DIR" || exit
 fi
 
 mkdir -p /etc/harden
-ln -s $MAIN_DIR/config/profle-file.json /etc/harden/profile-file.json
+ln -fs $MAIN_DIR/config/profile-file.json /etc/harden/profile-file.json
 
-ln -s $MAIN_DIR/systemd-units/harden.service /usr/lib/systemd/system/harden.service
-ln -s $MAIN_DIR/systemd-units/harden.timer /usr/lib/systemd/system/harden.timer
-ln -s $MAIN_DIR/systemd-units/harden-cleanup.service /usr/lib/systemd/system/harden-cleanup.service
-ln -s $MAIN_DIR/systemd-units/harden-cleanup.timer /usr/lib/systemd/system/harden-cleanup.timer
+ln -fs $MAIN_DIR/systemd-units/harden.service /usr/lib/systemd/system/harden.service
+ln -fs $MAIN_DIR/systemd-units/harden.timer /usr/lib/systemd/system/harden.timer
+ln -fs $MAIN_DIR/systemd-units/harden-cleanup.service /usr/lib/systemd/system/harden-cleanup.service
+ln -fs $MAIN_DIR/systemd-units/harden-cleanup.timer /usr/lib/systemd/system/harden-cleanup.timer
 
-ln -s $MAIN_DIR/harden-run.sh /usr/bin/harden-run
+ln -fs $MAIN_DIR/harden-run.sh /usr/bin/harden-run
 
 systemctl start harden.timer
 systemctl enable harden.timer

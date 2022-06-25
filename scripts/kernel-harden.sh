@@ -63,7 +63,7 @@ _check_param_function()	{
 		# Compare current value with recommended one
 		[[ "$CURRENT_VAL" == "$RECOMMENDED_VAL" ]] && continue
 		# Print Message
-		echo "Kernel Parameters [$PARAM] : (recommended value = ${RECOMMENDED_VAL//$'\t'/,} // current value = ${CURRENT_VAL//$'\t'/,}). $MESSAGE" >> "$MESSAGES_FILE"
+		echo "Kernel Parameters -[$PARAM]: (recommended value = ${RECOMMENDED_VAL//$'\t'/,} // current value = ${CURRENT_VAL//$'\t'/,}). $MESSAGE" >> "$MESSAGES_FILE"
 
 		P=${PARAM//./_}
 		P=${P//-/_}
@@ -92,7 +92,7 @@ _check_module_blacklisting_function()	{
 
 	if [[ ! -f $MODULE_BLACKLIST_FILE ]]; then
 		[[ $(_check_profile_file_function kernel modules action) == 1 ]] && echo "touch $MODULE_BLACKLIST_FILE" >> "$KERNEL_ACTIONS_FILE"
-		echo "Kernel Modules [] : Your system doesn't have any modules blocked in $MODULE_BLACKLIST_FILE (it doesn't even exist)" >> "$MESSAGES_FILE"
+		echo "Kernel Modules -[blacklist file]: Your system doesn't have any modules blocked in $MODULE_BLACKLIST_FILE (it doesn't even exist)" >> "$MESSAGES_FILE"
 
 		for TYPE in $MOD_TYPES; do
 			if [[ $(_check_profile_file_function kernel modules "$TYPE" check) == 1 ]]
@@ -101,7 +101,7 @@ _check_module_blacklisting_function()	{
 					[[ ! $RUNNING_MODULES =~ (^|[[:space:]])"$MODULE"($|[[:space:]]) ]] && continue
 
 					echo "kernel_module_$MODULE=1" >> "$STATUS_FILE"
-					echo "Kernel Modules [$MODULE] : Kernel module $MODULE currently loaded and running on your system, it is recommended to be blacklisted, \
+					echo "Kernel Modules -[$MODULE]: Kernel module $MODULE currently loaded and running on your system, it is recommended to be blacklisted, \
 because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES_FILE"
 
 					[[ $(_check_profile_file_function kernel modules "$TYPE" action) == 1 ]] && {
@@ -124,14 +124,14 @@ because either it has a history of vulnerabilities, or it's weak." >> "$MESSAGES
 				for MODULE in ${!TYPE}; do
 					[[ $RUNNING_MODULES =~ (^|[[:space:]])"$MODULE"($|[[:space:]]) ]] && {
 						echo "modprobe -r $MODULE" >> "$KERNEL_ACTIONS_FILE"
-						echo "Kernel Modules [$MODULE] : Warning!! Kernel module $MODULE is loaded on you currently \
+						echo "Kernel Modules -[$MODULE]: Warning!! Kernel module $MODULE is loaded on you currently \
 running system, but it's dangerous for security reasons." >> "$MESSAGES_FILE"
 					}
 
 					grep -q "$MODULE" "$MODULE_BLACKLIST_FILE" && continue
 
 					echo "kernel_module_$MODULE=1" >> "$STATUS_FILE"
-					echo "Kernel-Module Modules [$MODULE] : Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, \
+					echo "Kernel-Module Modules -[$MODULE]: Kernel module $MODULE is recommended to be blacklisted, because either it has a history of vulnerabilities, \
 or it's weak." >> "$MESSAGES_FILE"
 
 					[[ $(_check_profile_file_function kernel modules "$TYPE" action) == 1 ]] && echo "echo \"blacklist $MODULE\" >> $MODULE_BLACKLIST_FILE" >> "$KERNEL_ACTIONS_FILE"

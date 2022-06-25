@@ -227,12 +227,16 @@ RESOURCES_DIR="$MAIN_DIR/resources" # Default Scripts Resources Directory
 STATUS_DIR="$MAIN_DIR/status"	# Default Status Directory
 MESSAGES_DIR="$MAIN_DIR/messages"	# Default Messages Directory
 ACTIONS_DIR="$MAIN_DIR/actions"	# Default Actions Directory
+REPORT_DIR="$MAIN_DIR/reports"	# Default Reports Directory
+
 mkdir -p $STATUS_DIR	# 'mkdir' command with '-p' option won't give an error if the dir. exists, otherwise it will create
 mkdir -p $MESSAGES_DIR
 mkdir -p $ACTIONS_DIR
+mkdir -p $MAIN_DIR/reports
 
 MESSAGES_FILE="$MESSAGES_DIR/harden-messages_$RUNTIME_DATE"	# Currently used messages file
 ACTIONS_FILE="$ACTIONS_DIR/harden-recommended-actions_$RUNTIME_DATE"	# Currently used Actions file
+REPORT_FILE="$MAIN_DIR/reports/harden-report_$RUNTIME_DATE.html"
 
 # Queue the requested value from the JSON profile file by jq
 _check_profile_file_function()  {
@@ -259,8 +263,8 @@ and it is responsible for all the oprations offered in this service."
 # note that the subshells that these variables are exported to will not inherit to it the
 # readonly attribute, but no matter how many, or what changes happens to the varibale,
 # it's value in the parent shell (this shell) will still the same.
-declare -rx MAIN_DIR SCRIPTS_DIR RESOURCES_DIR STATUS_DIR MESSAGES_DIR ACTIONS_DIR
-declare -rx CONFIG_FILE PROFILE_FILE MESSAGES_FILE ACTIONS_FILE
+declare -rx MAIN_DIR SCRIPTS_DIR RESOURCES_DIR STATUS_DIR MESSAGES_DIR ACTIONS_DIR REPORT_DIR
+declare -rx CONFIG_FILE PROFILE_FILE MESSAGES_FILE ACTIONS_FILE REPORT_FILE
 declare -rx OPERATE_MODE DATE_TO_LIST RUNTIME_DATE __DEBUG_X __RAN_BY_HARDEN_RUN 
 
 # Export only variables that is needed by the child subprocesses/scripts

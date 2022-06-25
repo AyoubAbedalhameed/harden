@@ -28,6 +28,7 @@ _harden_run_function()   {
 	# Create/relink a symlink to the last (actions,messages) files, '-f' option will force even if dest. file exists
 	ln -fs "$MESSAGES_FILE" "$MESSAGES_DIR/harden-last-messages"
 	ln -fs "$ACTIONS_FILE" "$ACTIONS_DIR/harden-last-action"
+	ln -fs "$REPORT_FILE" "$REPORT_DIR/harden-last-report.html"
 
 	SCRIPTS_NAMES=$(jq '.[].script' "$PROFILE_FILE")
 	SCRIPTS_NAMES=${SCRIPTS_NAMES//\"/}
@@ -39,8 +40,6 @@ _harden_run_function()   {
 
 	for script in $SCRIPTS_NAMES; do
 		if [[ -e $script ]]; then
-#			if [[ ${script%"$(basename $script)"} != "$SCRIPTS_DIR/" ]]; then
-			# check if the file exactly resides in the scripts directory, not even in a subdirectory inside
 			if [[ ! $script =~ ^$SCRIPTS_DIR/[a-z,A-Z,0-9,=,_,.,:,\,,\-]+$ ]]; then
 				echo >&2 "$0: Script $script does not exist in the scripts directory $SCRIPTS_DIR. Skipping $script, due to it's suspecious location."
 				continue
@@ -51,6 +50,9 @@ _harden_run_function()   {
 			echo >&2 "$0: Script $script does not exist. Please, check what is wrong either in the profile-file.json, or if there's any missing package files."
 		fi
 	done
+
+	# Create a HTML report of the scan
+	./harden-report.sh
 }
 
 _take_action_function()   {

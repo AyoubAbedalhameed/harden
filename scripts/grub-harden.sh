@@ -57,7 +57,7 @@ _check_param_function()	{
 			P=${PARAM//=/_}
 			P=${P//./_}
 			echo "GRUB_$P=1" >> "$STATUS_FILE"
-			echo "GRUB General [$PARAM] : $PARAM option is recommended for grub in GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub. $PARAM: ${!P}" >> "$MESSAGES_FILE"
+			echo "GRUB General -[$PARAM]: $PARAM option is recommended for grub in GRUB_CMDLINE_LINUX_DEFAULT variable in /etc/default/grub. $PARAM: ${!P}" >> "$MESSAGES_FILE"
 
 			GRUB_ACTION="$GRUB_ACTION $PARAM"
 		done
@@ -82,8 +82,8 @@ _check_param_function()	{
 
 		if [[ $CPU_MIT == 0 ]]; then
 		{
-			echo "GRUB CPU_Mitigations : These recommended CPU mitigations are not applied: $CPU_MIT_MISSED."
-			echo "GRUB CPU_Mitigations : $GRUB_CPU_MIT_MESSAGE"
+			echo "GRUB CPU_Mitigations -[Missed]: These recommended CPU mitigations are not applied: $CPU_MIT_MISSED."
+			echo "GRUB CPU_Mitigations -[]: $GRUB_CPU_MIT_MESSAGE"
 		} >> "$MESSAGES_FILE"
 		fi
 	fi
