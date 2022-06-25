@@ -1,0 +1,5 @@
+NIS-Client ypbind The NIS service is inherently an insecure system that has been vulnerable to DOS attacks, buffer overflows and has poor authentication for querying NIS maps,  It is recommended that the service be removed.
+rsh-client rsh These legacy clients contain numerous security exposures and have been replaced with the more secure SSH package.
+talk-client talk This software presents a security risk as it uses unencrypted protocols for communication. 
+telnet-client telnet The telnet protocol is insecure and unencrypted. The use of an unencrypted transmission medium could allow an unauthorized user to steal credentials. The ssh package provides an encrypted session and stronger security and is included in most Linux distributions. 
+LDAP-Client openldap-clients If the system will not need to act as an LDAP client, it is recommended that the software be removed to reduce the potential attack surface.

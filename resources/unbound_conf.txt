@@ -1,0 +1,28 @@
+harden-algo-downgrade no This option is about Harden against algorithm downgrade when multiple algorithms are advertised in the DS record, if no allows the weakest algorithm to validate the zone. Default is no. Zone signers must produce zones that allow this feature to work, but sometimes they do not, and turning this option off avoids that validation failure.
+harden-below-nxdomain yes returns nxdomain to queries for a name below another name that is already known to be nxdomain. Very old software might return nxdomain for empty nonterminals, and thus may be incompatible with this. To try to avoid this only DNSSEC-secure nxdomains are used, because the old software does not have DNSSEC.
+harden-dnssec-stripped yes Require DNSSEC data for trust-anchored zones, if such data is absent, the zone becomes bogus. If turned off, and no DNSSEC data is received (or the DNSKEY data fails to validate), then the zone is made insecure, this behaves like there is no trust anchor.
+harden-glue yes Trust glue only if it is within the servers authority.
+harden-large-queries yes Very large queries are ignored.
+harden-referral-path no This is experimental option and used to harden the referral path by performing additional queries for infrastructure data. it burdens the authority servers, and it is not RFC standard, and could lead to performance problems because of the extra query load that is generated.
+harden-short-bufsize yes Very small EDNS buffer sizes from queries are ignore.
+hide-identity yes This option decides if id.server and hostname.bind queries are refused or accepted, obviously giving less information is better so we want to ensure that this option is enabled.
+hide-version yes This option decides if version.server and version.bind queries are refused or accepted, obviously giving less information is better so we want to ensure that this option is enable.
+unwanted-reply-threshold 10000 If set, a total number of unwanted replies is kept track of in every thread. When it reaches the threshold, a defensive action is taken and a warning is printed to the log.The defensive action is to clear the rrset and message caches, hopefully flushing away any poison.
+use-caps-for-id no This perturbs the lowercase and uppercase of query names sent to authority servers and checks if the reply still has the correct casing, it gives many false errors.
+val-clean-additional yes Help protect users that rely on this validator for authentication from potentially bad data in the additional section. Messages that are insecure, bogus, indeterminate or unchecked are not affected.
+aggressive-nsec yes This increases performance, decreases latency and resource utilization on both authoritative and recursive servers, and increases privacy. Also, it may help increase resilience to certain DoS attacks in some circumstances.
+minimal-responses yes This reduces response size significantly, and may avoid TCP fallback for some responses. This may cause a slight speedup.
+so-reuseport yes open dedicated listening sockets for incoming queries for each thread and try to set the SO_REUSEPORT socket option on each socket. May distribute incoming queries to threads more evenly.
+prefetch yes This only applies to domains that have been frequently queried.Turning it on gives about 10 percent more traffic and load on the machine, but popular items do not expire from the cache.
+prefetch-key yes This lowers the latency of requests at the expense of little more CPU usage.
+serve-expired yes Have unbound attempt to serve old responses from cache with a TTL of 0 in the response without waiting for the actual resolution to finish. The actual resolution answer ends up in the cache later on. 
+delay-close 10000 This prevents very delayed answer packets from the upstream (recursive) servers from bouncing against closed ports and setting off all sort of close-port counters, with eg. 1500 msec.
+control-enable no The option is used to enable remote control, if turned off, the server does not listen for control commands.
+qname-minimisation yes Send minimum amount of information to upstream servers to enhance privacy. Only send minimum required labels of the QNAME and set QTYPE to A when possible.
+deny-any yes Deny queries of type ANY with an empty response.
+verbosity 0 The verbosity number, level 0 means no verbosity, only errors. Level 1 gives operational information. Level 2 gives detailed operational information. Level 3 gives query level information, output per query. Level 4 gives algorithm level information. Level 5 logs client identification for cache misses.
+log-queries no Do not print one line per query to the log to Minimize logs.
+log-replies no Do not print one line per reply to the log to Minimize logs.
+log-servfail no Do not print log lines that say why queries return SERVFAIL to clients to Minimize logs.
+log-local-actions no Do not print log lines to inform about local zone actions to Minimize logs.
+logfile /dev/null Do not print log lines that say why queries return SERVFAIL to clients to Minimize logs
