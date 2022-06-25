@@ -62,7 +62,7 @@ do
    [[ -z $CURRENT_VAL ]]  && continue
 
 
-   [[ $CURRENT_VAL != $RECOM_VAL ]] && echo "ssh-parameter-Hardening[$PARA]: (recommended value = $RECOM_VAL // current value = $CURRENT_VAL). $MESSAGE" >> "$MESSAGES_FILE" 
+   [[ $CURRENT_VAL != $RECOM_VAL ]] && echo "SSH -[$PARA]: (recommended value = $RECOM_VAL // current value = $CURRENT_VAL). $MESSAGE" >> "$MESSAGES_FILE" 
 
    
    # echo "Option $RECOM_PAR is set to $CURRENT_VAL" >> $STATUS_FILE
@@ -78,7 +78,7 @@ then
 ALLOWED=$(grep -i "AllowUsers" /etc/ssh/sshd_config)
 ALLOWED_VAL=$(echo $ALLOWED | awk '{print $NF}')
 
-[[ -n $ALLOWED_VAL ]]  && echo "ssh-parameter-Hardening[AllowUsers]:You didn't define any user for the AllowUsers option, \
+[[ -n $ALLOWED_VAL ]]  && echo "SSH -[AllowUsers]: You didn't define any user for the AllowUsers option, \
 This keeps off any other users who might try to gain entry to your system without your approval \
 it's recommended to define the users who require ssh connection here. " >> $MESSAGES_FILE 
 
@@ -91,7 +91,7 @@ then
 PORT=$(grep -i "port" /etc/ssh/sshd_config)
 PORT_VAL=$(echo $PORT | awk '{print $NF}')
 
-[[ $PORT_VAL == 22 ]]  && echo "ssh-parameter-Hardening[port]:(recommended value = not the default(22) // current value = $PORT_VAL).change from the default(22) to make it a bit harder for the bad guys, you can change it to what you want. " >> $MESSAGES_FILE 
+[[ $PORT_VAL == 22 ]]  && echo "SSH -[port]: (recommended value = not the default(22) // current value = $PORT_VAL).change from the default(22) to make it a bit harder for the bad guys, you can change it to what you want. " >> $MESSAGES_FILE 
 
 [[ $(_check_profile_file_function action) == 0 ]]  && exit	# Skip actions for this parameter if profile file says so
 echo "sed -i -e "/.*$PORT*./ s/.*/port 2234/" /etc/ssh/sshd_config" >> $SSH_ACTIONS_FILE
