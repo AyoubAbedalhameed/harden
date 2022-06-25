@@ -21,6 +21,11 @@ ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
 
+[[ $(_check_profile_file_function file_permission check) == 0 ]] && exit
+
+
+
+
 PARAMETER_FILE="$MAIN_DIR/resources/rolefile.txt"
 echo "check permission start ..."
 
