@@ -2,6 +2,12 @@
 
 MAIN_DIR='/usr/share/harden'
 
+[[ $(id -u) != 0 ]] && {
+	echo >&2 "$0: Must run as a root (uid=0,gid=0)"
+	_usage_function
+	exit 0
+}
+
 dnf list installed jq >& /dev/null || {
 	echo 'Package "jq" is a dependancy, but not installed. Installing "jq" package...'
 	dnf install jq -y && {
@@ -28,6 +34,8 @@ ln -fs $MAIN_DIR/systemd-units/harden-cleanup.service /usr/lib/systemd/system/ha
 ln -fs $MAIN_DIR/systemd-units/harden-cleanup.timer /usr/lib/systemd/system/harden-cleanup.timer
 
 ln -fs $MAIN_DIR/harden-run.sh /usr/bin/harden-run
+
+systemctl daemon-reload
 
 systemctl start harden.timer
 systemctl enable harden.timer

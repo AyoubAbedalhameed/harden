@@ -27,30 +27,25 @@ private_address="$MAIN_DIR/resources/private.txt"
 DNS_ACTIONS_FILE="/usr/share/harden/actions/dns-actions.sh"
 
 #Cheking the Acceptance of dns-hardening Checks: 
-if [[ `echo $PROFILE | jq '.dns.check' ` -ne 1 ]] ; then 
+if [[ $(_check_profile_file_function dns check ) -ne 1 ]] ; then 
 echo "$RUNTIME_DATE:$SCRIPT_NAME:Terminates, Checking is now allowed"
 exit
 fi
 
 
 #Fetching the Actions User's Acceptance.
-GENERAL_ACTIONS_ACCEPTENCE=$( echo $PROFILE | jq '.dns.action' )
+GENERAL_ACTIONS_ACCEPTENCE=$(_check_profile_file_function dns action )
 
 #Cheking the Acceptance of dns-hardening Actions: 
-[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo -e "#!/usr/bin/env bash" >> $DNS_ACTION_FILE
+[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo -e "#!/usr/bin/env bash" >> $DNS_ACTIONS_FILE
 
 
 
 
-#Functions Definitions: 
 
-## To query a value from JSON profile file
-check-pf()  { return $(echo $PROFILE | jq ".dns.$1.$2");  }
-
-
-
-if [[ $(systemctl is-active unbound) == "inactive" ]] && [[ $(check-pf install action) == 1 ]]
+if [[ $(systemctl is-active unbound) == "inactive" ]] && [[ $(_check_profile_file_function install action) == 1 ]]
 then 
+    yum -y install unbound
     systemctl start unbound 
     systemctl enable unbound 
 fi 
@@ -63,7 +58,7 @@ do
     RECOM_VAL_U=$(echo $line | awk '{print $2;}')           # the second is the recommended value 
     MESSAGE_U=$(echo $line | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}')  # the rest of the line is the message 
 
-    [[ $(check-pf parameter check) == 0 ]]  && continue
+    [[ $(_check_profile_file_function parameter check) == 0 ]]  && continue
 
     CURRENT_U=$(grep -i "$PARA_U" /etc/unbound/unbound.conf)
     CURRENT_VAL_U=$(echo $CURRENT_U | awk '{print $NF}')
@@ -73,7 +68,7 @@ do
     [[ $CURRENT_VAL_U != $RECOM_VAL_U ]] && echo "DNS-Hardening[$PARA_U]: (recommended value = $RECOM_VAL_U // current value = $CURRENT_U). $MESSAGE_U" >> "$MESSAGES_FILE"
     
 
-    [[ $(check-pf parameter action) == 0 ]]  && continue
+    [[ $(_check_profile_file_function parameter action) == 0 ]]  && continue
 
     echo "sed -i -e "/.*$CURRENT_U*./ s/.*/   $PARA_U: $RECOM_VAL_U/" /etc/unbound/unbound.conf" >> $DNS_ACTIONS_FILE
 
@@ -87,7 +82,7 @@ do
     pri_add_line=$(grep -m$i "private-address:" /etc/unbound/unbound.conf | tail -n1)
     pri_add=$(echo $pri_add_line | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}')
     
-    [[ $(check-pf private check) == 0 ]]  && continue
+    [[ $(_check_profile_file_function private check) == 0 ]]  && continue
 
     exist=$(grep -i "$pri_add" $private_address)
     
@@ -100,7 +95,7 @@ private network addresses are not allowed to be returned for public internet nam
 answers. Additionally, the DNSSEC validator may mark the answers bogus. " >> $MESSAGES_FILE
     
     
-    [[ $(check-pf private action) == 0 ]]  && continue
+    [[ $(_check_profile_file_function private action) == 0 ]]  && continue
     echo "sed '/$pri_add_line/d' /etc/unbound/unbound.conf" >> $DNS_ACTIONS_FILE
     
     fi

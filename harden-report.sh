@@ -18,7 +18,7 @@
 
 # Print startup message with run time settings
 echo >&2 "\
-Kernel Hardening is starting up as pid=$$ at $(date '+%F %T %s.%^4N')...
+Reporting script is starting up as pid=$$ at $(date '+%F %T %s.%^4N')...
 CONFIG_FILE = $CONFIG_FILE
 PROFILE_FILE = $PROFILE_FILE
 MESSAGES_FILE = $MESSAGES_FILE
@@ -35,10 +35,10 @@ echo > "$REPORT_FILE"
     echo '<head>Hardening Scan Report</head>'
     echo '<title>Hardening Scan Report</title>'
     echo '<body>'
-}>>"$REPORT_FILE"
+} >>"$REPORT_FILE"
 
 for TYPE in $TYPES; do
-    {    echo "<h3>${TYPE^^}</h3>"
+    {   echo "<h3>${TYPE^^}</h3>"
         echo '<ul>'
         grep -iE "^$TYPE -\[*" "$MESSAGES_FILE" >& >(while read -r line; do echo "<li>${line#*-}</li>"; done;)
         sleep 0.01
@@ -59,5 +59,6 @@ for TYPE in $TYPES; do
     done
 done
 
-echo '</body>'
-echo '</html>' 
+{   echo '</body>'
+    echo '</html>'
+} >>"$REPORT_FILE"

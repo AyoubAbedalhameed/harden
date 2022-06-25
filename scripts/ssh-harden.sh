@@ -29,28 +29,24 @@ SSH_ACTIONS_FILE="/usr/share/harden/actions/ssh-actions.sh"
 
 
 #Cheking the Acceptance of ssh-hardening Checks: 
-if [[ `echo $PROFILE | jq '.ssh.check' ` -ne 1 ]] ; then 
+if [[$(_check_profile_file_function ssh check) -ne 1 ]] ; then 
 echo "$RUNTIME_DATE:$SCRIPT_NAME:Terminates, Checking is now allowed"
 exit
 fi
 
 
 #Fetching the Actions User's Acceptance.
-GENERAL_ACTIONS_ACCEPTENCE=$( echo $PROFILE | jq '.ssh.action' )
+GENERAL_ACTIONS_ACCEPTENCE=$(_check_profile_file_function ssh action )
 
 #Cheking the Acceptance of ssh-hardening Actions: 
-[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo -e "#!/usr/bin/env bash" >> $SSH_ACTION_FILE
+[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo -e "#!/usr/bin/env bash" >> $SSH_ACTIONS_FILE
 
 
 
 
-#Functions Definitions: 
-
-## To query a value from JSON profile file
-check-pf()  { return $(echo $PROFILE | jq ".ssh.$1");  }
 
 
-[[ $(check-pf check) == 0 ]] && exit
+[[ $(_check_profile_file_function check) == 0 ]] && exit
 
 cat $PARAMETERS_FILE | while read line || [[ -n $line ]];
 do
@@ -58,7 +54,7 @@ do
    RECOM_VAL=$(echo $line | awk '{print $2;}')           # the second is the recommended value 
    MESSAGE=$(echo $line | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}')  # the rest of the line is the message 
 
-   [[ $(check-pf check) == 0 ]]  && continue	# Skip checking this parameter if profile file says so
+   [[ $(_check_profile_file_function check) == 0 ]]  && continue	# Skip checking this parameter if profile file says so
 
    CURRENT=$(grep -i "$PARA" /etc/ssh/sshd_config)
    CURRENT_VAL=$(echo $CURRENT | awk '{print $NF}')
@@ -71,12 +67,12 @@ do
    
    # echo "Option $RECOM_PAR is set to $CURRENT_VAL" >> $STATUS_FILE
    
-   [[ $(check-pf action) == 0 ]]  && continue	# Skip actions for this parameter if profile file says so
+   [[ $(_check_profile_file_function action) == 0 ]]  && continue	# Skip actions for this parameter if profile file says so
    echo "sed -i -e "/.*$CURRENT*./ s/.*/$PARA $RECOM_VAL/" /etc/ssh/sshd_config" >> $SSH_ACTIONS_FILE
 
 done
 
-if [[ $(check-pf check) == 1 ]]
+if [[ $(_check_profile_file_function check) == 1 ]]
 then 
 
 ALLOWED=$(grep -i "AllowUsers" /etc/ssh/sshd_config)
@@ -89,7 +85,7 @@ it's recommended to define the users who require ssh connection here. " >> $MESS
 fi
 
 
-if [[ $(check-pf check) == 1 ]]
+if [[ $(_check_profile_file_function check) == 1 ]]
 then 
 
 PORT=$(grep -i "port" /etc/ssh/sshd_config)
@@ -97,20 +93,20 @@ PORT_VAL=$(echo $PORT | awk '{print $NF}')
 
 [[ $PORT_VAL == 22 ]]  && echo "ssh-parameter-Hardening[port]:(recommended value = not the default(22) // current value = $PORT_VAL).change from the default(22) to make it a bit harder for the bad guys, you can change it to what you want. " >> $MESSAGES_FILE 
 
-[[ $(check-pf action) == 0 ]]  && exit	# Skip actions for this parameter if profile file says so
+[[ $(_check_profile_file_function action) == 0 ]]  && exit	# Skip actions for this parameter if profile file says so
 echo "sed -i -e "/.*$PORT*./ s/.*/port 2234/" /etc/ssh/sshd_config" >> $SSH_ACTIONS_FILE
 
 fi
 
-if [[ $(check-pf check) == 1 ]]
+if [[ $(_check_profile_file_function check) == 1 ]]
 then 
 
 MaxAuthTries=$(grep -i "MaxAuthTries" /etc/ssh/sshd_config)
 MaxAuthTries_VAL=$(echo $MaxAuthTries | awk '{print $NF}')
 
-[[ $MaxAuthTries_VAL >= 5 ]]  && echo "ssh-parameter-Hardening[MaxAuthTries]:(recommended value = Below 5 // current value = $MaxAuthTries_VAL).limiting the number of SSH login attempts such that after a number of failed attempts, the connection drops, 3 is usually good but you can change it to what suit your needs. " >> $MESSAGES_FILE 
+(( $MaxAuthTries_VAL >= 5 ))  && echo "ssh-parameter-Hardening[MaxAuthTries]:(recommended value = Below 5 // current value = $MaxAuthTries_VAL).limiting the number of SSH login attempts such that after a number of failed attempts, the connection drops, 3 is usually good but you can change it to what suit your needs. " >> $MESSAGES_FILE 
 
-[[ $(check-pf action) == 0 ]]  && exit	# Skip actions for this parameter if profile file says so
+[[ $(_check_profile_file_function action) == 0 ]]  && exit	# Skip actions for this parameter if profile file says so
 echo "sed -i -e "/.*$MaxAuthTries*./ s/.*/MaxAuthTries 3/" /etc/ssh/sshd_config" >> $SSH_ACTIONS_FILE
 
 fi
