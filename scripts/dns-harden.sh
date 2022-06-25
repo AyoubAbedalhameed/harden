@@ -65,7 +65,7 @@ do
     
     [[ -z $CURRENT_VAL_U ]]  && continue 
 
-    [[ $CURRENT_VAL_U != $RECOM_VAL_U ]] && echo "DNS-Hardening[$PARA_U]: (recommended value = $RECOM_VAL_U // current value = $CURRENT_U). $MESSAGE_U" >> "$MESSAGES_FILE"
+    [[ $CURRENT_VAL_U != $RECOM_VAL_U ]] && echo "DNS parameter -[$PARA_U]: (recommended value = $RECOM_VAL_U // current value = $CURRENT_U). $MESSAGE_U" >> "$MESSAGES_FILE"
     
 
     [[ $(_check_profile_file_function parameter action) == 0 ]]  && continue
@@ -90,7 +90,7 @@ do
 
     if [[ -z $exist ]] 
     then 
-        echo "DNS-Hardening[private address]:The private address $pri_add is not a private network address, the private-address parameter specifies \
+        echo "DNS private -[private address]: The private address $pri_add is not a private network address, the private-address parameter specifies \
 private network addresses are not allowed to be returned for public internet names. Any  occurrence of such addresses are removed from DNS \
 answers. Additionally, the DNSSEC validator may mark the answers bogus. " >> $MESSAGES_FILE
     
