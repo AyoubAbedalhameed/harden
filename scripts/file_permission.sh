@@ -29,10 +29,11 @@ cat $PARAMETER_FILE | while read line || [[ -n $line ]];
 do
  service=$(echo $line | awk '{print $1;}')
  recom_par=$(echo $line | awk '{print $2;}')
- recom_val1=$(echo $line | awk '{print $3;}')
- recom_val2=$(echo $line | awk '{print $4;}')
- recom_val3=$(echo $line | awk '{print $5;}')
- message=$(echo $line |awk '{for (i=6;i<NF;i++) print $i " "; print $NF}')
+ perm=$(echo $line | awk '{print $3;}')
+ user=$(echo $line | awk '{print $4;}')
+ group=$(echo $line | awk '{print $5;}')
+ message=${$line#*=+@}
+# message=$(echo $line |awk '{for (i=6;i<NF;i++) print $i " "; print $NF}')
  
 #///////////////////////////////////////////
 #check the status for passwd file and compare it with recommanded    
