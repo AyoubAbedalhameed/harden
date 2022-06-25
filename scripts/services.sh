@@ -37,7 +37,7 @@ do
 
  password_current_val=$(cat /etc/shadow |awk -F: '($2 == "" ) {print $1}')
  if [[ $service == "user_password" ]] && [[ ! -z $password_current_val ]]s
-    then echo "user-setting[$service]:($message ,but {$password_current_val } user dont have one lock it until implement a password). >> "$MESSAGES_FILE"
+    then echo "user-setting[$recom_par]:($message ,but {$password_current_val } user dont have one lock it until implement a password). >> "$MESSAGES_FILE"
      #echo "use the following command to lock the user unti check from it: #passwd -l <username>"   also you can use the following command to put a password for the user #passwd
  fi
 #//////////////////////////////////////////
@@ -47,7 +47,7 @@ do
   UID_current_val=$(cat /etc/passwd | awk -F: '($3 == 0) {print $1}')
   if [[ $service == "UID_harden" ]] && [[ $UID_current_val != $recom_val1 ]]
   then
-    echo "user-setting[$service]:($message , the current acount is {$UID_current_val} but the recommanded value is {$recom_val1}). >> "$MESSAGES_FILE"
+    echo "user-setting[$recom_par]:($message , the current acount is {$UID_current_val} but the recommanded value is {$recom_val1}). >> "$MESSAGES_FILE"
  fi
 #//////////////////////////////
 #check if there any netrc files
@@ -60,7 +60,7 @@ do
               done
               )
  if [[ $service == "FTP_service" ]] && [[ $netrc_current_val -ne null ]]
-   then  echo "user-setting[$service]:($message, the $service return with files $netrc_current_val {not null}  but the recommended value is {$recom_val1} or {$recom_val2}) >> "$MESSAGES_FILE"
+   then  echo "user-setting[$recom_par]:($message, the $service return with files $netrc_current_val {not null}  but the recommended value is {$recom_val1} or {$recom_val2}) >> "$MESSAGES_FILE"
     #echo "to remove these files use the following command:"
     # ./file
     #{for dir in `cat /etc/passwd | awk -F: '{ print $6  }'`; 
@@ -80,7 +80,7 @@ do
                         done     
                         )
  if [[ $service == "forward_file" ]] && [[ $forward_current_val -ne null ]]
-  then  echo "user-setting[$service]:($message ,the $service return with files $forward_current_val {not null} but the recommanded value is {$recom_val1} or {$recom_val2}). >> "$MESSAGES_FILE"
+  then  echo "user-setting[$recom_par]:($message ,the $service return with files $forward_current_val {not null} but the recommanded value is {$recom_val1} or {$recom_val2}). >> "$MESSAGES_FILE"
         echo "///////////////////////////////"
         #echo "to remove these return files use the following file"
         #./file
@@ -101,7 +101,7 @@ do
                     done    
                     )
  if [[ $service == "rhost_file" ]] && [[ $rhost_current_val -ne null ]]
-    then    echo "user-setting[$service]:($message,the $service return with files $rhost_current_val {not null} but the recommanded value is {$recom_val1} or {$recom_val2}). >> "$MESSAGES_FILE"
+    then    echo "user-setting[$recom_par]:($message,the $service return with files $rhost_current_val {not null} but the recommanded value is {$recom_val1} or {$recom_val2}). >> "$MESSAGES_FILE"
             echo "///////////////////////////////"
         #echo "to remove these return files use the following file"
         #./file
@@ -124,7 +124,7 @@ do
  fi
  done)
  if [[ $service == "duplicate_uid" ]] && [[ $Duplicate_UID -ne null ]]
-    then echo "user-setting[$service]:($message, there are these duplicated user IDs $Duplicate_UID {not null} but it recommanded to be {$recom_val1} or {$recom_val2}). >> "$MESSAGES_FILE"
+    then echo "user-setting[$recom_par]:($message, there are these duplicated user IDs $Duplicate_UID {not null} but it recommanded to be {$recom_val1} or {$recom_val2}). >> "$MESSAGES_FILE"
          #echo "the (useradd) programm will not let you create a diplicate User ID(UID),it is possible for an administrator to manually edit the /etc/passwd file and change the UID field" >> "$ACTIONS_FILE" 
  fi
 #/////////////////////////////////////////
@@ -138,7 +138,7 @@ do
  fi
  done)
  if [[ $service == "duplicate_gid" ]] && [[ $Duplicate_GID -ne null ]]
-    then echo "user-setting[$service]:($message, there are these duplicated group IDs $Duplicate_GID {not null} but it recommanded to be {$recom_val1} or {$recom_val2}). >> "$MESSAGES_FILE"
+    then echo "user-setting[$recom_par]:($message, there are these duplicated group IDs $Duplicate_GID {not null} but it recommanded to be {$recom_val1} or {$recom_val2}). >> "$MESSAGES_FILE"
         #echo "the (groupadd) programm will not let you create a diplicate Gropu ID(GID),it is possible for an administrator to manually edit the /etc/group file and change the GID field" >> "$ACTIONS_FILE"
  fi
 #/////////////////////////////////////////
@@ -153,7 +153,7 @@ username_currentval=$(cat /etc/passwd |cut -f1 -d":" |sort -n| uniq -c|while rea
                     done
 ) 
 if [[ $service == "duplicated_username" ]] && [[ ! -z $username_currentval ]]
-    then echo "user-setting[$service]:($message,but there a duplicate in it which is not recommended). >> "$MESSAGES_FILE"
+    then echo "user-setting[$recom_par]:($message,but there a duplicate in it which is not recommended). >> "$MESSAGES_FILE"
         #echo "useradd programm will not you create a duplicat username,it is possible for an adminstrator to manually edit the /etc/passwd file and chang it. ">> "$ACTIONS_FILE"
 
 fi
@@ -169,7 +169,7 @@ groupname_currentval=$(cat /etc/group |cut -f1 -d":" |sort -n| uniq -c|while rea
                     done
 ) 
 if [[ $service == "duplicated_groupname" ]] && [[ ! -z $groupname_currentval ]]
-    then echo "user-setting[$service]:($message,but there a duplicate in group name it which is not recommended). >> "$MESSAGES_FILE"
+    then echo "user-setting[$recom_par]:($message,but there a duplicate in group name it which is not recommended). >> "$MESSAGES_FILE"
         #echo "groupadd programm will not you create a duplicate groupname,it is possible for an adminstrator to manually edit the /etc/group file and chang it. ">> "$ACTIONS_FILE"
 
 fi
@@ -185,7 +185,7 @@ exist_file=$(for i in $(cut -s -d: -f4 /etc/passwd | sort -u ); do
             done
             )
 if [[ $service == "group_passwd_file" ]] && [[ ! -z $exist_file ]]
-    then echo "user-setting[$service]:($message,but there this GID in /etc/passwd but does not exist in /etc/group). >> "$MESSAGES_FILE"
+    then echo "user-setting[$recom_par]:($message,but there this GID in /etc/passwd but does not exist in /etc/group). >> "$MESSAGES_FILE"
     #echo Analyze the output of the Audit step above and perform the appropriate action to correct any discrepancies found.>> "$ACTIONS_FILE"
 fi 
 
@@ -196,7 +196,7 @@ dir_currentval=$(find / -path /proc -prune -o -path /run -prune -o -path /tmp -p
 
 if [[ $service == "dir_file_unowned" ]] && [[ ! -z $dir_currentval ]] 
     then
-  echo "user-setting[$service]:($message, but there these {$dir_currentval} file or directory are unowned check them). >> "$MESSAGES_FILE"
+  echo "user-setting[$recom_par]:($message, but there these {$dir_currentval} file or directory are unowned check them). >> "$MESSAGES_FILE"
   #echo Locate files that are owned by users or groups not listed in the system configuration files, and reset the ownership of these files to some active user on the system as appropriate.  >> "$ACTIONS_FILE" 
 fi
 #////////////////////////////////////////////
@@ -204,7 +204,7 @@ fi
  
  passwd_current_val=$(grep '^+:' /etc/passwd) 
  if [[ $service == "legacy_passwd" ]] && [[ $passwd_current_val -ne null ]]
-    then echo "user-setting[$service]:($message,its not recommanded to be a "'+'" in passwd file). >> "$MESSAGES_FILE"   
+    then echo "user-setting[$recom_par]:($message,its not recommanded to be a "'+'" in passwd file). >> "$MESSAGES_FILE"   
     #echo use the folowing command to remove it :#sed -i '/+/d' passwd >> "$ACTIONS_FILE"
  fi
 #////////////////////////////////////////////
@@ -212,7 +212,7 @@ fi
  
  group_current_val=$(grep '^+:' /etc/group) 
  if [[ $service == "legacy_group" ]] && [[ $group_current_val -ne null ]]
-    then echo "user-setting[$service]:($message,its not recommanded to be a "'+'" in group file). >> "$MESSAGES_FILE"  
+    then echo "user-setting[$recom_par]:($message,its not recommanded to be a "'+'" in group file). >> "$MESSAGES_FILE"  
     #echo use the folowing command to remove it :#sed -i '/+/d' group >> "$ACTIONS_FILE"
  fi
 #////////////////////////////////////////////
@@ -220,7 +220,7 @@ fi
  
  shadow_current_val=$(grep '^+:' /etc/shadow) 
  if [[ $service == "legacy_shadow" ]] && [[ $shadow_current_val -ne null ]]
-    then echo "user-setting[$service]:($message,its not recommanded to be a "'+'" in shadow file). >> "$MESSAGES_FILE"    
+    then echo "user-setting[$recom_par]:($message,its not recommanded to be a "'+'" in shadow file). >> "$MESSAGES_FILE"    
     #echo use the folowing command to remove it :#sed -i '/+/d' shadow >> "$ACTIONS_FILE"
  fi 
 
@@ -228,7 +228,7 @@ fi
 #check that access to su command is restricted
 su_currentval=$(grep -v ^# /etc/pam.d/su |grep pam_wheel.so)
 if [[ $service == "su_restricted" ]] && [[ ! -z $su_currentval ]]
-  then echo "user-setting[$service]:($message). >> "$MESSAGES_FILE"
+  then echo "user-setting[$recom_par]:($message). >> "$MESSAGES_FILE"
        #echo "uncomment the following text in /etc/pam.d/su file to becom restricted">> "$ACTIONS_FILE"
        #echo auth required pam_wheel.so use_uid >> "$ACTIONS_FILE"
        
