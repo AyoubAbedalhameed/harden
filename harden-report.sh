@@ -39,7 +39,7 @@ echo '<body>'
 for TYPE in $TYPES; do
     echo "<h3>${TYPE^^}</h3>"
     echo '<ul>'
-    grep -iE "^$TYPE -\[*" "$MESSAGES_FILE" >& >(while read -r line; do echo >&1 "<li>${line#*-}</li>"; done)
+    grep -iE "^$TYPE -\[*" "$MESSAGES_FILE" >& >(while read -r line; do echo >&1 "<li>${line#*-}</li>"; done;)
     echo '</ul>'
 
     SUBS=$(jq ".[] | select(.name==$TYPE) | .$TYPE | keys" config/profile-file.json | grep -vE '(action|check|question|\[|\])')
@@ -49,7 +49,7 @@ for TYPE in $TYPES; do
     [[ -n $SUBS ]] && for SUB in $SUBS; do
             echo "<h4>${SUB^^}</h4>"
             echo '<ul>'
-            grep -iE "^$TYPE $SUB -\[*" "$MESSAGES_FILE" >& >(while read -r line; do echo >&1 "<li>${line#*-}</li>"; done)
+            grep -iE "^$TYPE $SUB -\[*" "$MESSAGES_FILE" >& >(while read -r line; do echo >&1 "<li>${line#*-}</li>"; done;)
             echo '</ul>'
         done
 done
