@@ -2,6 +2,15 @@
 
 MAIN_DIR='/usr/share/harden'
 
+dnf list installed jq >& /dev/null || {
+	echo 'Package "jq" is a dependancy, but not installed. Installing "jq" package...'
+	dnf install jq -y && {
+		echo 'The installation of package "jq" did not succeeded, aborting the installation...'
+		exit
+	}
+	echo 'Installed Package "jq" succesfully'
+}
+
 if [[ $(pwd) != $MAIN_DIR ]]; then
 	if [[ ! -d $MAIN_DIR ]]; then
 		mkdir $MAIN_DIR
