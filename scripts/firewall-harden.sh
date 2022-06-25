@@ -176,7 +176,6 @@ write_action(){
 
 
 CHECK_FIREWALL_SERVICES
-iptables_installed=1
 
 
 #Intsalling iptables if it is not installed: 
