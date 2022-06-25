@@ -59,7 +59,7 @@ do
 
     [[ -z $CURRENT_S ]]  && continue
 
-    [[ $CURRENT_S != $RECOM_VAL_S ]] && echo "SERVICE-Hardening[$SERVICE]: (recommended value = $RECOM_VAL_S // current value = $CURRENT_S). $MESSAGE_S" >> "$MESSAGES_FILE"
+    [[ $CURRENT_S != $RECOM_VAL_S ]] && echo "SPS RS -[$SERVICE]: (recommended value = $RECOM_VAL_S // current value = $CURRENT_S). $MESSAGE_S" >> "$MESSAGES_FILE"
 
 
     [[ $(_check_profile_file_function action) == 0 ]]  && continue
@@ -80,7 +80,7 @@ do
     
     [[ -z $CURRENT_C ]]  && continue
 
-    [[ $CURRENT_C != "not installed" ]] && echo "ClIENT-Hardening[$CLIENT]: (recommended value = $RECOM_VAL_C // current value = $CURRENT_C). $MESSAGE_C" >> "$MESSAGES_FILE"
+    [[ $CURRENT_C != "not installed" ]] && echo "SPS RC -[$CLIENT]: (recommended value = $RECOM_VAL_C // current value = $CURRENT_C). $MESSAGE_C" >> "$MESSAGES_FILE"
     
     [[ $(_check_profile_file_function rc action) == 0 ]]  && continue
     echo "yum -y remove $RECOM_PAR_C" >> $SPS_ACTION_FILE
