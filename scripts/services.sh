@@ -20,7 +20,7 @@ MESSAGES_FILE = $MESSAGES_FILE
 ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
-PARAMETER_FILE="/home/mohammeananzeh/Desktop/services.txt"
+PARAMETER_FILE="$MAIN_DIR/resources/services.txt"
 echo "user and group hardening start ..."
 echo "////////////////////////////////"
 
