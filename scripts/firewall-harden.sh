@@ -151,8 +151,8 @@ write_action(){
 	firewalld_installed=1
 	else firewalld_enabled="disabled" ; firewalld_active="inactive" ; firewalld_installed=0; fi 
 
-	[[ ($GENERAL_ACTIONS_ACCEPTENCE -eq 1) && ($firewalld_enabled == "enabled") ]] && echo "systemctl disable firewalld" >> $ACTIONS_FILE
-	[[ ($GENERAL_ACTIONS_ACCEPTENCE -eq 1) && ($firewalld_active -eq 1) ]] && echo "systemctl stop firewalld" >> $ACTIONS_FILE
+	[[ ($GENERAL_ACTIONS_ACCEPTENCE -eq 1) && ($firewalld_enabled == "enabled") ]] && echo "systemctl disable firewalld" >> $FIREWALL_ACTION_FILE
+	[[ ($GENERAL_ACTIONS_ACCEPTENCE -eq 1) && ($firewalld_active -eq 1) ]] && echo "systemctl stop firewalld" >> $FIREWALL_ACTION_FILE
 
 	#Cheking Iptables Service:  
 	echo "$SCRIPT_NAME: Checking iptables service status" >&2
@@ -160,8 +160,8 @@ write_action(){
 	iptables_status=$? 
 
 	if [[ ! $iptables_status -eq  4 ]] ; then 
-	iptables_enabled=$(systemctl is-enabled iptables)  || echo "systemctl enable iptables" >> $ACTIONS_FILE
-	iptables_active=$(systemctl is-active iptables); Flag=$? ; [[ $Flag -ne 0 ]] && echo "systemctl start iptables" >> $ACTIONS_FILE
+	iptables_enabled=$(systemctl is-enabled iptables)  || echo "systemctl enable iptables" >> $FIREWALL_ACTION_FILE
+	iptables_active=$(systemctl is-active iptables); Flag=$? ; [[ $Flag -ne 0 ]] && echo "systemctl start iptables" >> $FIREWALL_ACTION_FILE
 	iptables_installed=1
 	else iptables_enabled="disabled" ; iptables_active="inactive" ; iptables_installed=0 ; fi 
 
@@ -202,14 +202,14 @@ fi
 iptables -S | grep "\-P INPUT DROP" ; POLICY_STATUS=$?
 if [[ $POLICY_STATUS -ne 0 ]]; then 
 	echo "$SCRIPT_NAME : POLICY CHECK : POLICY NOT MATCHED : The current iptables policy for the INPUT chain is ACCEPT but the recommended policy is DROP" >> $MESSAGES_FILE
-	echo "iptables -P INPUT DROP" >> $ACTIONS_FILE
+	echo "iptables -P INPUT DROP" >> $FIREWALL_ACTION_FILE
 fi
 
 #OUTPUT chain: 
 iptables -S | grep "\-P OUTPUT DROP"  ; POLICY_STATUS=$? 
 if [[ $POLICY_STATUS -ne 0 ]]; then 
 	echo "$SCRIPT_NAME : POLICY CHECK : POLICY NOT MATCHED : The current iptables policy for the OUTPUT chain is ACCEPT but the recommended policy is DROP"	>> $MESSAGES_FILE	 
-	echo "iptables -P OUTPUT DROP" >> $ACTIONS_FILE
+	echo "iptables -P OUTPUT DROP" >> $FIREWALL_ACTION_FILE
 fi
  
 
@@ -217,7 +217,7 @@ fi
 iptables -S | grep "\-P FORWARD DROP"  ; POLICY_STATUS=$? 
 if [[ $POLICY_STATUS -ne 0 ]]; then 
 	echo "$SCRIPT_NAME : POLICY CHECK : POLICY NOT MATCHED : The current iptables policy for the FORWARD chain is ACCEPT but the recommended policy is DROP" >>	$MESSAGES_FILE
-	echo "iptables -P FORWARD DROP" >> $ACTIONS_FILE
+	echo "iptables -P FORWARD DROP" >> $FIREWALL_ACTION_FILE
 fi
  
 
