@@ -4,6 +4,15 @@
 # Prevent overwriting files, if then the script will exit
 set -C
 
+dnf list installed jq >& /dev/null || {
+	echo 'Package "jq" is a dependancy, but not installed. Installing "jq" package...'
+	dnf install jq -y && {
+		echo 'The installation of package "jq" did not succeeded, aborting the installation...'
+		exit
+	}
+	echo 'Installed Package "jq" succesfully'
+}
+
 _usage_function() {
 	echo >&2 "Usage: $0 COMMAND [-c|-p|-d]"
 	printf >&2 '\nCOMMAND:\nAvailable commands are:\n'
