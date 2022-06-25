@@ -1,0 +1,19 @@
+Avahi-Server avahi-daemon disabled Avahi allows programs to publish and discover services and hosts running on a local network with no specific configuration, its not normally required for system functionality.
+CUPS cups disabled The Common Unix Print System (CUPS) provides the ability to print to both local and network printers, If the system does not need to print jobs or accept print jobs from other systems, it is recommended that CUPS be disabled to reduce the potential attack surface.
+LDAP-Server slapd disabled If the system will not need to act as an LDAP server, it is recommended that the software be disabled to reduce the potential attack surface. 
+NFS nfs disabled If the system does not export NFS shares or act as an NFS client, it is recommended that these services be disabled to reduce remote attack surface. 
+RPC rpcbind disabled If the system does not export NFS shares or act as an NFS client, it is recommended that these services be disabled to reduce remote attack surface. 
+FTP-Server vsftpd disabled FTP does not protect the confidentiality of data or authentication credentials. It is recommended sftp be used if file transfer is required. Unless there is a need to run the system as a FTP server (for example, to allow anonymous downloads), it is recommended that the package be deleted to reduce the potential attack surface.
+HTTP-Server httpd disabled unless there is a need to run the system as a web server, it is recommended that the package be deleted to reduce the potential attack surface.
+IMAP,POP3-Server dovecot disabled Unless POP3 and/or IMAP servers are to be provided by this system, it is recommended that the service be deleted to reduce the potential attack surface.
+Samba smb disabled If there is no need to mount directories and file systems to Windows systems, then this service can be deleted to reduce the potential attack surface.
+HTTP-Proxy-Server squid disabled If there is no need for a proxy server, it is recommended that the squid proxy be deleted to reduce the potential attack surface. 
+SNMP-Server snmpd disabled The SNMP server communicates using SNMP v1, which transmits data in the clear and does not require authentication to execute commands. Unless absolutely necessary, it is recommended that the SNMP service not be used.
+NIS-Server ypserv disabled The NIS service is inherently an insecure system that has been vulnerable to DOS attacks, buffer overflows and has poor authentication for querying NIS maps.
+RSH rsh.socket disabled The Berkeley rsh-server (rsh, rlogin, rexec) package contains legacy services that exchange credentials in clear-text.
+RLOGIN rlogin.socket disabled The Berkeley rsh-server (rsh, rlogin, rexec) package contains legacy services that exchange credentials in clear-text.
+REXEC rexec.socket disabled The Berkeley rsh-server (rsh, rlogin, rexec) package contains legacy services that exchange credentials in clear-text.
+telnet telnet.socket disabled The telnet protocol is insecure and unencrypted.
+tftp-server tftp.socket disabled TFTP does not support authentication nor does it ensure the confidentiality or integrity of data. It is recommended that TFTP be removed, unless there is a specific need for TFTP. 
+rsync-server rsyncd disabled The rsyncd service presents a security risk as it uses unencrypted protocols for communication.
+talk-server ntalk disabled The software presents a security risk as it uses unencrypted protocols for communication. 

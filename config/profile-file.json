@@ -183,5 +183,57 @@
             }
         }
 
+    },
+    {
+        "name":"ssh",
+        "script":"/usr/share/harden/scripts/ssh-harden.sh",
+        "ssh":{
+            "check":1,
+            "action":0
+        }
+
+    },
+    {
+        "name":"sps",
+        "script":"/usr/share/harden/scripts/sps-harden.sh",
+        "sps":{
+            "check":1,
+            "action":0,
+            "rc":{
+                "check":1,
+                "action":0,
+                "question":""
+            },
+            "rs":{
+                "check":1,
+                "action":0,
+                "question":""
+            }
+
+        }
+    },
+    {
+        "name":"dns",
+        "script":"/usr/share/harden/scripts/dns-harden.sh",
+        "dns":{
+            "check":1,
+            "action":0,
+            "install":{
+                "check":1,
+                "action":0,
+                "question":""
+            },
+            "parameter":{
+                "check":1,
+                "action":0,
+                "question":""
+            },
+            "private":{
+                "check":1,
+                "action":0,
+                "question":""
+            }
+
+        }
     }
 ]

@@ -1,0 +1,15 @@
+Protocol 2 ssh protocol version 1 is very flawed and should never be used and we should use version 2.
+PermitRootLogin no Allowing remote root login is invariably a bad idea that could jeopardize your system’s security.
+Ciphers aes256-gcm@openssh.com,aes256-ctr,chacha20-poly1305@openssh.com SSH gives us the ability to list all of the algorithms that we do want to enable and here we refer to either the FIPS or the NIST CNSA standards about the weak and recommended encryption algorithms.
+KexAlgorithms ecdh-sha2-nistp384 SSH gives us the ability to list all of the algorithms that we do want to enable and here we refer to either the FIPS or the NIST CNSA standards about the weak and recommended encryption algorithms.
+MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-256 SSH gives us the ability to list all of the algorithms that we do want to enable and here we refer to either the FIPS or the NIST CNSA standards about the weak and recommended encryption algorithms.
+PermitEmptyPasswords no disable SSH logins from users without passwords, sometimes system  administrators can create user accounts and forget to assign passwords.
+ClientAliveInterval 180 Leaving an idle SSH connection unattended for extended periods of time can pose a security risk. To address the issue we set an idle timeout limit which when exceeded, the SSH session will be closed.
+ClientAliveCountMax 0 Leaving an idle SSH connection unattended for extended periods of time can pose a security risk. To address the issue we set an idle timeout limit which when exceeded, the SSH session will be closed.
+X11Forwarding no The problem here is that the X11 protocol is that it has a few security weaknesses that make it somewhat dangerous to use remotely.
+AllowTcpForwarding no  SSH tunneling, or as it's sometimes called, SSH port forwarding, is a handy way to protect non-secure protocols disable SSH tunneling to avoid potential attacks.
+AllowStreamLocalForwarding no  SSH tunneling, or as it's sometimes called, SSH port forwarding, is a handy way to protect non-secure protocols disable SSH tunneling to avoid potential attacks.
+GatewayPorts no  SSH tunneling, or as it's sometimes called, SSH port forwarding, is a handy way to protect non-secure protocols disable SSH tunneling to avoid potential attacks.
+PermitTunnel no  SSH tunneling, or as it's sometimes called, SSH port forwarding, is a handy way to protect non-secure protocols disable SSH tunneling to avoid potential attacks.
+
+ 
