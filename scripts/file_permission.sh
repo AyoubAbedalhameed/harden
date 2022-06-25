@@ -21,7 +21,7 @@ ACTIONS_FILE = $ACTIONS_FILE
 LOG_FILE=$LOG_FILE"
 
 
-PARAMETER_FILE="/home/mohammeananzeh/Desktop/rolefile.txt"
+PARAMETER_FILE="$MAIN_DIR/resources/rolefile.txt"
 echo "check permission start ..."
 echo "/////////////////////////////////"
 sleep 3
