@@ -19,7 +19,7 @@
 
 # Print startup message with run time settings. 
 echo >&2 "\
-auditd Hardening is starting at $(date '+%F %T %s.%^4N')...
+Firewall Hardening is starting at $(date '+%F %T %s.%^4N')...
 CONFIG_FILE = $CONFIG_FILE
 MAIN_DIR = $MAIN_DIR
 PROFILE_FILE = $PROFILE_FILE
@@ -162,11 +162,11 @@ write_action(){
 
 
 	if [[ iptables_installed -eq 0 && firewalld_installed -eq 0 ]] 
-	then echo "Firewall-Hardening[iptables-service-checking]: No Firewall Service Installed on this machine, at least one firewall service should be running" >> $MESSAGES_FILE
+	then echo "Firewall rules -[iptables-service-checking]: No Firewall Service Installed on this machine, at least one firewall service should be running" >> $MESSAGES_FILE
 	NoFireWall=0 ; fi
 
 
-	[[ $Flag -ne 0 ]] && echo "Firewall-Hardening[iptables-service-checking]: Firewall services are not enabled on this machine, you should enable one firewall service at least on your system" >> $MESSAGES_FILE 
+	[[ $Flag -ne 0 ]] && echo "Firewall rules -[iptables-service-checking]: Firewall services are not enabled on this machine, you should enable one firewall service at least on your system" >> $MESSAGES_FILE 
 }
 
 
@@ -178,7 +178,7 @@ iptables_installed=0
 if [[ (iptables_installed -ne 1) && (GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] ; then 
 									[[ $DEBUG -eq 1 ]] && echo "$SCRIPT_NAME:$RUNTIME_DATE: Installing iptables .. "
 	yum -y install iptables >&2 && IPTABLES_NEW_INSTALLATION=1
-	yum list installed  | grep "iptables-services" && iptables_installed=1 && echo "Firewall-Hardening[iptables-service-checking]: iptables is installed succesfully" >> $MESSAGES_FILE
+	yum list installed  | grep "iptables-services" && iptables_installed=1 && echo "Firewall-rules -[iptables-service-checking]: iptables is installed succesfully" >> $MESSAGES_FILE
 	
 fi
 
@@ -196,14 +196,14 @@ fi
 #INPUT chain  
 iptables -S | grep "\-P INPUT DROP" ; POLICY_STATUS=$?
 if [[ $POLICY_STATUS -ne 0 ]]; then 
-	echo "Firewall-Hardening[POLICY CHECK]: POLICY NOT MATCHED: The current iptables policy for the INPUT chain is ACCEPT but the recommended policy is DROP" >> $MESSAGES_FILE
+	echo "Firewall rules -[POLICY CHECK]: POLICY NOT MATCHED: The current iptables policy for the INPUT chain is ACCEPT but the recommended policy is DROP" >> $MESSAGES_FILE
 	[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo "iptables -P INPUT DROP" >> $FIREWALL_ACTION_FILE
 fi
 
 #OUTPUT chain: 
 iptables -S | grep "\-P OUTPUT DROP"  ; POLICY_STATUS=$? 
 if [[ $POLICY_STATUS -ne 0 ]]; then 
-	echo "Firewall-Hardening[POLICY CHECK]: POLICY NOT MATCHED: The current iptables policy for the OUTPUT chain is ACCEPT but the recommended policy is DROP"	>> $MESSAGES_FILE	 
+	echo "Firewall rules -[POLICY CHECK]: POLICY NOT MATCHED: The current iptables policy for the OUTPUT chain is ACCEPT but the recommended policy is DROP"	>> $MESSAGES_FILE	 
 	[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo "iptables -P OUTPUT DROP" >> $FIREWALL_ACTION_FILE
 fi
  
@@ -211,7 +211,7 @@ fi
 #FORWARD chain: 
 iptables -S | grep "\-P FORWARD DROP"  ; POLICY_STATUS=$? 
 if [[ $POLICY_STATUS -ne 0 ]]; then 
-	echo "Firewall-Hardening[POLICY CHECK]: POLICY NOT MATCHED: The current iptables policy for the FORWARD chain is ACCEPT but the recommended policy is DROP" >>	$MESSAGES_FILE
+	echo "Firewall rules -[POLICY CHECK]: POLICY NOT MATCHED: The current iptables policy for the FORWARD chain is ACCEPT but the recommended policy is DROP" >>	$MESSAGES_FILE
 	[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo "iptables -P FORWARD DROP" >> $FIREWALL_ACTION_FILE
 fi
  
@@ -271,7 +271,7 @@ for RULE in $( echo "${!FW_Rules[@]}" | sed 's/[a-z\0-9\.\_\-]*,[d\1-9]//g' ); d
 
 							[[ $DEBUG -eq 1  ]] && echo -e "\nRULE NOT MATCHED, logging message"
 
-		echo -e "\nFirewall-Hardening[$RULE]:  RULE NOT MATCHED:  $DESCRIPTION" >> $MESSAGES_FILE 
+		echo -e "\nFirewall rules -[$RULE]:  RULE NOT MATCHED:  $DESCRIPTION" >> $MESSAGES_FILE 
 		[[ (USER_ACTION_ACCEPTENCE -eq 1)  && (GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] && echo -e $FINAL_RULE | write_action
 	fi
 done

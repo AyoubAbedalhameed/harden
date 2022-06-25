@@ -28,25 +28,21 @@ SPS_ACTIONS_FILE="/usr/share/harden/actions/sps-actions.sh"
 
 
 #Cheking the Acceptance of sps-hardening Checks: 
-if [[ `echo $PROFILE | jq '.sps.check' ` -ne 1 ]] ; then 
+if [[ $(_check_profile_file_function sps check) -ne 1 ]] ; then 
 echo "$RUNTIME_DATE:$SCRIPT_NAME:Terminates, Checking is now allowed"
 exit
 fi
 
 
 #Fetching the Actions User's Acceptance.
-GENERAL_ACTIONS_ACCEPTENCE=$( echo $PROFILE | jq '.sps.action' )
+GENERAL_ACTIONS_ACCEPTENCE=$(_check_profile_file_function sps action)
 
 #Cheking the Acceptance of sps-hardening Actions: 
-[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo -e "#!/usr/bin/env bash" >> $SPS_ACTION_FILE
+[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]] && echo -e "#!/usr/bin/env bash" >> $SPS_ACTIONS_FILE
 
 
 
 
-#Functions Definitions: 
-
-## To query a value from JSON profile file
-check-pf()  { return $(echo $PROFILE | jq ".sps.$1.$2");  }
 
 
 
@@ -57,7 +53,7 @@ do
     RECOM_VAL_S=$(echo $line | awk '{print $3;}')
     MESSAGE_S=$(echo $line | awk '{for (i=4; i<NF; i++) printf $i " "; print $NF}')
     
-    [[ $(check-pf rs check) == 0 ]]  && continue
+    [[ $(_check_profile_file_function check) == 0 ]]  && continue
     
     CURRENT_S=$(systemctl is-enabled $RECOM_PAR_S)
 
@@ -66,7 +62,7 @@ do
     [[ $CURRENT_S != $RECOM_VAL_S ]] && echo "SERVICE-Hardening[$SERVICE]: (recommended value = $RECOM_VAL_S // current value = $CURRENT_S). $MESSAGE_S" >> "$MESSAGES_FILE"
 
 
-    [[ $(check-pf rs action) == 0 ]]  && continue
+    [[ $(_check_profile_file_function action) == 0 ]]  && continue
 
     echo "systemctl disable $RECOM_PAR_S" >> $SPS_ACTIONS_FILE
 done
@@ -77,7 +73,7 @@ do
     RECOM_PAR_C=$(echo $line | awk '{print $2;}')
     MESSAGE_C=$(echo $line | awk '{for (i=3; i<NF; i++) printf $i " "; print $NF}')
     
-    [[ $(check-pf rc check) == 0 ]]  && continue
+    [[ $(_check_profile_file_function rc check) == 0 ]]  && continue
 
     CURRENT_C=$(rpm -q $RECOM_PAR_C | awk '{for (i=4; i<NF; i++) printf $i " "; print $NF}')
 
@@ -86,8 +82,8 @@ do
 
     [[ $CURRENT_C != "not installed" ]] && echo "ClIENT-Hardening[$CLIENT]: (recommended value = $RECOM_VAL_C // current value = $CURRENT_C). $MESSAGE_C" >> "$MESSAGES_FILE"
     
-    [[ $(check-pf rc action) == 0 ]]  && continue
-    echo "yum remove $RECOM_PAR_C" >> $SPS_ACTION_FILE
+    [[ $(_check_profile_file_function rc action) == 0 ]]  && continue
+    echo "yum -y remove $RECOM_PAR_C" >> $SPS_ACTION_FILE
 
 
 done

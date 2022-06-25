@@ -115,7 +115,7 @@ check_rule()
 		fi
     
         if [[ $RULE_STATUS -eq 1 ]] ; then 
-            echo "Auditd-Hardening[$PARAM]  ($RULE)  RULE NOT MATCHED. $DESCRIPTION" >> $MESSAGES_FILE
+            echo "Auditd rules -[$PARAM]  ($RULE)  RULE NOT MATCHED. $DESCRIPTION" >> $MESSAGES_FILE
             [[ ($USER_ACTION_ACCEPTENCE -eq 1) && ($GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] && echo "$RULE" >> $ADDED_AUDIT_RULES_FILE 
         fi
     	                                [[ $DEBUG -eq 1 ]] && echo "check_rule: Rule status $RULE_STATUS"
