@@ -113,10 +113,10 @@ case $OPERATE_MODE in
 		unlink actions/harden-last-action &> /dev/null
 		unlink messages/harden-last-messages &> /dev/null
 		unlink /var/log/harden/harden-last-log &> /dev/null
-		[[ -d ./messages ]] && rm -r ./messages/*
-		[[ -d ./actions ]] && rm -r ./actions/*
-		[[ -d ./status ]] && rm -r ./status/*
-		[[ -d ./reports ]] && rm -r ./reports/*
+		[[ -d messages ]] && rm -r ./messages/*
+		[[ -d actions ]] && rm -r ./actions/*
+		[[ -d status ]] && rm -r ./status/*
+		[[ -d reports ]] && rm -r ./reports/*
 		[[ -d /var/log/harden ]] && rm -r /var/log/harden/*
 #		rm -r messages/* actions/* status/* reports/* /var/log/harden/*		# Dangerous and still needs more testing
 		;;
