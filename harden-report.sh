@@ -5,22 +5,29 @@
 [[ $__DEBUG_X == 1 ]] && set -x
 
 [[ $__RAN_BY_HARDEN_MAIN != 1 ]] && {
+    RUNTIME_DATE=$(date '+%s_%F')
+    DATE=$(date)
+
     MAIN_DIR='/usr/share/harden'
     PROFILE_FILE='/etc/harden/profile-file.json'
-    MESSAGES_FILE="$MAIN_DIR/messages/harden-last-messages"
+    [[ ! -h $MAIN_DIR/messages/harden-last-messages ]] && { echo "No messages found"; exit; }
+    MESSAGES_FILE=$(readlink $MAIN_DIR/messages/harden-last-messages)
+    [[ ! -f $MESSAGES_FILE ]] && { echo "No messages found"; exit; }
 
-    REPORT_FILE="$MAIN_DIR/reports/last-report.html"
+    REPORT_FILE="$MAIN_DIR/reports/harden-report_$RUNTIME_DATE.html"
     mkdir -p $MAIN_DIR/reports
 
-    RUNTIME_DATE_FROM=$(ls -l "$MESSAGES_FILE" | awk '{print $11;}')
+    RUNTIME_DATE_FROM=$(readlink "$MESSAGES_FILE")
     RUNTIME_DATE_FROM=${RUNTIME_DATE_FROM#*_}
     RUNTIME_DATE_FROM=${RUNTIME_DATE_FROM%_*}
-#	echo >&2 "$0 should be called only by harden-main"
-#	exit 1
+    RUNTIME_DATE_FROM=$(date -d @$RUNTIME_DATE_FROM)
 }
 
-[[ -n $RUNTIME_DATE ]] && RUNTIME_DATE=${RUNTIME_DATE%_*} || RUNTIME_DATE=$(date)
-RUNTIME_DATE_FROM=${RUNTIME_DATE_FROM:=$RUNTIME_DATE}
+DATE=${DATE:=DATE}
+RUNTIME_DATE_FROM=${RUNTIME_DATE_FROM:=$DATE}
+
+[[ ! -h $MAIN_DIR/messages/harden-last-messages ]] && { echo "No messages found"; exit; }
+[[ ! -f $MESSAGES_FILE ]] && { echo "No messages found"; exit; }
 
 # Print startup message with run time settings
 echo >&2 "\
@@ -41,7 +48,8 @@ TYPES=${TYPES//\"/}
 
 echo '<html>'
 echo "<h1>Hardening Scan Report</h1>"
-echo "<h2>Created at: ($RUNTIME_DATE) From the messages of a scan at: ($(date -d @$RUNTIME_DATE_FROM))</h2>"
+echo "<h3>Created at: ($DATE) From a scan at: ($RUNTIME_DATE_FROM)</h3>"
+echo "<h3>Info obtained from the messages file $MESSAGES_FILE</h3>"
 echo '<title>Hardening Scan Report</title>'
 echo '<body>'
 
@@ -69,3 +77,5 @@ done
 
 echo '</body>'
 echo '</html>'
+
+echo >&6 "Report created succefully and saved by at file $REPORT_FILE"

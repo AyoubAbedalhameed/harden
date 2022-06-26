@@ -40,6 +40,7 @@ _usage_function() {
 }
 
 RUNTIME_DATE=$(date '+%s_%F')	# Runtime date and time
+DATE=$(date)
 
 # First argument should specify which mode we are running in
 OPERATE_MODE=$1
@@ -265,7 +266,7 @@ and it is responsible for all the oprations offered in this service."
 # it's value in the parent shell (this shell) will still the same.
 declare -rx MAIN_DIR SCRIPTS_DIR RESOURCES_DIR STATUS_DIR MESSAGES_DIR ACTIONS_DIR REPORT_DIR
 declare -rx CONFIG_FILE PROFILE_FILE MESSAGES_FILE ACTIONS_FILE REPORT_FILE
-declare -rx OPERATE_MODE DATE_TO_LIST RUNTIME_DATE __DEBUG_X __RAN_BY_HARDEN_RUN 
+declare -rx OPERATE_MODE DATE_TO_LIST RUNTIME_DATE __DEBUG_X __RAN_BY_HARDEN_RUN DATE
 
 # Export only variables that is needed by the child subprocesses/scripts
 #export MAIN_DIR SCRIPTS_DIR RESOURCES_DIR STATUS_DIR MESSAGES_DIR ACTIONS_DIR 
