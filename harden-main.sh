@@ -52,7 +52,7 @@ _harden_run_function()   {
 	done
 
 	# Create a HTML report of the scan
-	./harden-report.sh
+	bash harden-report.sh
 }
 
 _take_action_function()   {
@@ -109,13 +109,19 @@ case $OPERATE_MODE in
 		_show_messages_function
 		;;
 	clear-all)		# Clean all (non core) data files created by us in the past
-		unlink $ACTIONS_DIR/harden-last-action &> /dev/null
-		unlink $MESSAGES_DIR/harden-last-messages &> /dev/null
-		unlink $LOGS_DIR/harden-last-log &> /dev/null
-#		rm -f $MESSAGES_DIR/* $ACTIONS_DIR/* $STATUS_DIR/* $LOGS_DIR/*		# Dangerous and still needs more testing
+		cd "$MAIN_DIR" || exit
+		unlink actions/harden-last-action &> /dev/null
+		unlink messages/harden-last-messages &> /dev/null
+		unlink /var/log/harden/harden-last-log &> /dev/null
+		[[ -d ./messages ]] && rm -r ./messages/*
+		[[ -d ./actions ]] && rm -r ./actions/*
+		[[ -d ./status ]] && rm -r ./status/*
+		[[ -d ./reports ]] && rm -r ./reports/*
+		[[ -d /var/log/harden ]] && rm -r /var/log/harden/*
+#		rm -r messages/* actions/* status/* reports/* /var/log/harden/*		# Dangerous and still needs more testing
 		;;
 	rotate)	# Remove old/unuseful (actions, messsages, logs) files that are more than a month old (30 days)
-		find $MESSAGES_DIR/ $ACTIONS_DIR/ $LOGS_DIR/ -maxdepth 1 -atime +30 -type f -delete
+		find $MESSAGES_DIR/ $ACTIONS_DIR/ $LOGS_DIR/ $REPORT_DIR/ -maxdepth 1 -atime +30 -type f -delete
 		;;
 esac
 

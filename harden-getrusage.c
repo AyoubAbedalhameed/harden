@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <sys/resource.h>
 
+/*Reference: https://man7.org/linux/man-pages/man2/getrusage.2.html */
+
 int main(int argc, char** argv) {
 	system(argv[1]);	/*pass the argument to system to run as a child process*/
 

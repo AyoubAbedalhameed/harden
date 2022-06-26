@@ -33,15 +33,15 @@ while read -r line; do
 	file=$(echo $line | awk '{print $5;}')
 	message=${line#*=+@}
 
-	[[ $(_check_profile_file_function file_permission permissions check) == 1 ]] && find $file -perm $perm >& /dev/null && {
-		echo "File_Permission permissions -[$service]:'$file' file permissions user/owner group is not as recommended ($perm). $message" >> "$MESSAGES_FILE"
+	[[ $(_check_profile_file_function file_permission permissions check) == 1 ]] && find $file -perm $perm >& /dev/null || {
+		echo "File_Permission permissions -[$service]:'$file' file permissions is not as recommended ($perm). $message" >> "$MESSAGES_FILE"
 	}
 
-	[[ $(_check_profile_file_function file_permission owner_user check) == 1 ]] && find $file -user $user >& /dev/null && {
+	[[ $(_check_profile_file_function file_permission owner_user check) == 1 ]] && find $file -user $user >& /dev/null || {
 		echo "File_Permission Owner_User -[$service]:'$file' file owner user is not as recommended ($user). $message" >> "$MESSAGES_FILE"
 	}
 
-	[[ $(_check_profile_file_function file_permission owner_group check) == 1 ]] && find $file -group $group >& /dev/null && {
+	[[ $(_check_profile_file_function file_permission owner_group check) == 1 ]] && find $file -group $group >& /dev/null || {
 		echo "File_Permission Owner_Group -[$service]:'$file' file owner group is not as recommended ($group). $message" >> "$MESSAGES_FILE"
 	}
 done < "$PARAMETER_FILE"
