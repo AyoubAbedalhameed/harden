@@ -217,10 +217,10 @@
         "script":"/usr/share/harden/scripts/dns-harden.sh",
         "dns":{
             "check":1,
-            "action":0,
+            "action":1,
             "install":{
                 "check":1,
-                "action":0,
+                "action":1,
                 "question":""
             },
             "parameter":{
@@ -234,6 +234,18 @@
                 "question":""
             }
 
+        }
+    },
+    {
+        "name":"file_permission",
+        "script":"/usr/share/harden/scripts/file_permission.sh",
+        "file_permission":
+        {
+            "check":1,
+            "action":0,
+            "permissions":{"check":1,"action":0},
+            "owner_user":{"check":1,"action":0},
+            "owner_group":{"check":1,"action":0}
         }
     }
 ]
