@@ -64,7 +64,7 @@ GENERAL_ACTIONS_ACCEPTENCE=$( echo $PROFILE | jq '.auditd.action' )
 
 #Adding -c option at the beggining of the harden-custom-audit.rules to Continue loading rules in spite of an error when (augenrules) runs.
 #Do not stop on error 
-[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]]	&& echo "-c" >> $ADDED_AUDIT_RULES_FILE && echo -e "#!/usr/bin/env bash" > $AUDITD_ACTIONS_FILE
+[[ $GENERAL_ACTIONS_ACCEPTENCE -eq 1 ]]	&& echo "-c" > $ADDED_AUDIT_RULES_FILE && echo -e "#!/usr/bin/env bash" > $AUDITD_ACTIONS_FILE
 
 
  
