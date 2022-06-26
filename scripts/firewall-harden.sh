@@ -171,14 +171,12 @@ write_action(){
 
 
 CHECK_FIREWALL_SERVICES
-iptables_installed=0
-
 
 #Intsalling iptables if it is not installed: 
 if [[ (iptables_installed -ne 1) && (GENERAL_ACTIONS_ACCEPTENCE -eq 1) ]] ; then 
 									[[ $DEBUG -eq 1 ]] && echo "$SCRIPT_NAME:$RUNTIME_DATE: Installing iptables .. "
-	yum -y install iptables >&2 && IPTABLES_NEW_INSTALLATION=1
-	yum list installed  | grep "iptables-services" && iptables_installed=1 && echo "Firewall-rules -[iptables-service-checking]: iptables is installed succesfully" >> $MESSAGES_FILE
+	echo "yum -y install iptables-services.x86_64" >> $FIREWALL_ACTION_FILE && IPTABLES_NEW_INSTALLATION=1
+	dnf list installed iptables-services && iptables_installed=1 && echo "Firewall-rules -[iptables-service-checking]: iptables is installed succesfully" >> $MESSAGES_FILE
 	
 fi
 
