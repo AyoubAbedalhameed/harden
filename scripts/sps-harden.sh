@@ -55,7 +55,7 @@ do
     
     [[ $(_check_profile_file_function check) == 0 ]]  && continue
     
-    CURRENT_S=$(systemctl is-enabled $RECOM_PAR_S)
+    CURRENT_S=$(systemctl is-enabled $RECOM_PAR_S) 2> /dev/null
 
     [[ -z $CURRENT_S ]]  && continue
 
@@ -75,7 +75,7 @@ do
     
     [[ $(_check_profile_file_function rc check) == 0 ]]  && continue
 
-    CURRENT_C=$(rpm -q $RECOM_PAR_C | awk '{for (i=4; i<NF; i++) printf $i " "; print $NF}')
+    CURRENT_C=$(rpm -q $RECOM_PAR_C | awk '{for (i=4; i<NF; i++) printf $i " "; print $NF}') 2> /dev/null
 
     
     [[ -z $CURRENT_C ]]  && continue
@@ -83,7 +83,7 @@ do
     [[ $CURRENT_C != "not installed" ]] && echo "SPS RC -[$CLIENT]: (recommended value = $RECOM_VAL_C // current value = $CURRENT_C). $MESSAGE_C" >> "$MESSAGES_FILE"
     
     [[ $(_check_profile_file_function rc action) == 0 ]]  && continue
-    echo "yum -y remove $RECOM_PAR_C" >> $SPS_ACTION_FILE
+    echo "yum -y remove $RECOM_PAR_C" >> $SPS_ACTIONS_FILE
 
 
 done
