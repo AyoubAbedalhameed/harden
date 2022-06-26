@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 #This script is a part of harden project, it will be used for hardening auditd with recommended rules.
