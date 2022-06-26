@@ -163,7 +163,7 @@ augenrules --load >&2
 CURRENT_AUDIT_RULES=`cat /etc/audit/audit.rules`
 
 
-for PARAM in $( echo "${!audit_rules[@]}" | sed 's/[a-z\0-9\.\_\-]*,[d\1-9]//g' | sed 's/ [0-9]//g') | cut -f 2- -d ' ' ; do
+for PARAM in $( echo "${!audit_rules[@]}" | sed 's/[a-z\0-9\.\_\-]*,[d\1-9]//g' | sed 's/ [0-9]//g' | cut -f 2- -d ' '); do
                 
                             [[ $DEBUG -eq 1 ]] && echo "----------------------NEW_RULE_CHAIN---------------------------"
                             [[ $DEBUG -eq 1 ]] && echo "RULE_CHAIN: KEY_NAME= ($PARAM)"
