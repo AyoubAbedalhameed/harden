@@ -228,7 +228,7 @@ done
 				echo 'HARDEN_CUSTOM_RULES_FILE="/etc/audit/rules.d/harden-custom-audit.rules"'
 				echo '[[ ! -f $UNMATCHED_RULES_FILE ]] && echo "unmatched_rules file does not exist, Skipping action." && exit 1'
 				echo "while read RULE ; do"
-				echo '    grep -e "$RULE" $HARDEN_CUSTOM_RULES_FILE >> /dev/null ||  echo "$RULE" >> $HARDEN_CUSTOM_RULES_FILE ; done <"$UNMATCHED_RULES_FILE"'
+				echo '    grep -e "$RULE" $HARDEN_CUSTOM_RULES_FILE 2>> /dev/null ||  echo "$RULE" >> $HARDEN_CUSTOM_RULES_FILE ; done <"$UNMATCHED_RULES_FILE"'
 				echo 'augenrules --load > /dev/null'
 				
 			} >> "$AUDITD_ACTIONS_FILE"
