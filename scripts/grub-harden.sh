@@ -81,9 +81,8 @@ _check_param_function()	{
 		done
 
 		if [[ $CPU_MIT == 0 ]]; then
-		{
-			echo "GRUB CPU_Mitigations -[Missed]: These recommended CPU mitigations are not applied: $CPU_MIT_MISSED."
-			echo "GRUB CPU_Mitigations -[]: $GRUB_CPU_MIT_MESSAGE"
+		{	echo "GRUB CPU_Metigations -[Missed]: These recommended CPU mitigations are not applied: $CPU_MIT_MISSED."
+			echo "GRUB CPU_Metigations -[Missed]: $GRUB_CPU_MIT_MESSAGE"
 		} >> "$MESSAGES_FILE"
 		fi
 	fi

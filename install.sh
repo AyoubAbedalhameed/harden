@@ -42,3 +42,5 @@ systemctl enable harden.timer
 
 systemctl start harden-cleanup.timer
 systemctl enable harden-cleanup.timer
+
+sudo gcc -o harden-get-resource-usage getrusage.c
