@@ -43,11 +43,12 @@ GENERAL_ACTIONS_ACCEPTENCE=$(_check_profile_file_function dns action )
 
 
 
-if [[ $(systemctl is-active unbound) == "inactive" ]] && [[ $(_check_profile_file_function install action) == 1 ]]
+if [[ $(systemctl is-active unbound) != "active" ]] && [[ $(_check_profile_file_function install action) == 1 ]]
 then 
-    yum -y install unbound
-    systemctl start unbound 
-    systemctl enable unbound 
+    echo "yum -y install unbound" >> $DNS_ACTIONS_FILE
+    echo "systemctl start unbound" >> $DNS_ACTIONS_FILE
+    echo "systemctl enable unbound" >> $DNS_ACTIONS_FILE 
+    exit
 fi 
 
 
@@ -86,7 +87,7 @@ do
 
     exist=$(grep -i "$pri_add" $private_address)
     
-    [[ -n $exist ]] && sed -i -e "/.*$exist*./ s/.*/$pri_add yes/" $private_address
+    [[ -n $exist ]] && $(sed -i -e "/.*$exist*./ s/.*/$pri_add yes/" $private_address)
 
     if [[ -z $exist ]] 
     then 
