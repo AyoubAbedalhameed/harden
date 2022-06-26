@@ -1,6 +1,7 @@
 [Unit]
 Description=Linux Hardening service
 Documentation="file:/usr/share/harden/docs"
+# Don't let it run more than once in 10 seconds
 StartLimitIntervalSec=10
 StartLimitBurst=1
 
