@@ -48,6 +48,7 @@ then
     echo "yum -y install unbound" >> $DNS_ACTIONS_FILE
     echo "systemctl start unbound" >> $DNS_ACTIONS_FILE
     echo "systemctl enable unbound" >> $DNS_ACTIONS_FILE 
+    echo "DNS install -[unbound]: unbound is not installed on your system." >> "$MESSAGES_FILE"
     exit
 fi 
 
